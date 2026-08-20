@@ -51,4 +51,13 @@ describe('policy synchronization', () => {
         expect(plan.policies).to.be.empty;
         expect(plan.updateNative).to.equal(true);
     });
+
+    it('deduplicates central policies so an exact array replacement can converge', () => {
+        const plan = createPolicySynchronizationPlan([nativePolicy, { ...nativePolicy }], 200, [
+            { id: nativePolicy.stateId, objectTimestamp: 100, custom: { enabled: true } },
+        ]);
+
+        expect(plan.policies).to.deep.equal([nativePolicy]);
+        expect(plan.updateNative).to.equal(true);
+    });
 });

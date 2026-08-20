@@ -139,11 +139,10 @@ visible in the local Admin UI.
 
 ## Changelog
 
-### 0.5.0 (2026-08-20)
+### 0.5.1 (2026-08-20)
 
-- Added permission-gated, bounded trigger-to-light learning without device actions.
-- Added held-out context feature selection, seasonal solar conditions, deterministic
-  confidence explanations, and candidate aging.
+- Fixed repeated restarts when duplicate central policies had to be normalized.
+- Made asynchronous startup terminate cleanly without closed-database errors.
 
 Older details are available in [CHANGELOG.md](CHANGELOG.md).
 

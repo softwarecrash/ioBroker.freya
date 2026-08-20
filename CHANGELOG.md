@@ -7,6 +7,15 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-08-20
+
+### Fixed
+
+- Replace the complete central policy array instead of deep-merging it, allowing
+  duplicate policy cleanup to converge without a controller restart loop.
+- Abort asynchronous startup and adapter-owned status writes cleanly when ioBroker
+  requests termination, preventing closed-database promise rejections.
+
 ## [0.5.0] - 2026-08-20
 
 ### Added

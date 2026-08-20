@@ -44,10 +44,17 @@ class SmartBrainAdapter extends utils.Adapter {
     private observedStateIds: string[] = [];
     private policyStateIds = new Set<string>();
     private policySyncTimer?: ioBroker.Timeout;
+    private unloading = false;
 
     public constructor(options: Partial<utils.AdapterOptions> = {}) {
         super({ ...options, name: 'smartbrain' });
-        this.on('ready', this.onReady.bind(this));
+        this.on('ready', () => {
+            void this.onReady().catch(error => {
+                if (!this.unloading) {
+                    this.log.error(`[Lifecycle] Startup failed: ${(error as Error).message}`);
+                }
+            });
+        });
         this.on('message', this.onMessage.bind(this));
         this.on('objectChange', this.onObjectChange.bind(this));
         this.on('stateChange', this.onStateChange.bind(this));
@@ -57,7 +64,14 @@ class SmartBrainAdapter extends utils.Adapter {
     private async onReady(): Promise<void> {
         const config = createRuntimeConfig(this.config);
         this.policySynchronizer = new IoBrokerPolicySynchronizer(this);
-        const synchronizedPolicies = await this.policySynchronizer.synchronize(config.statePolicies);
+        const synchronization = await this.policySynchronizer.synchronize(config.statePolicies);
+        if (this.unloading || synchronization.instanceUpdated) {
+            if (synchronization.instanceUpdated && !this.unloading) {
+                this.log.info('[Permissions] Normalized central policies; waiting for the configured restart');
+            }
+            return;
+        }
+        const synchronizedPolicies = synchronization.policies;
         this.policyStateIds = new Set(synchronizedPolicies.map(policy => policy.stateId));
         await this.subscribeForeignObjectsAsync('*');
         const timeProvider = new TimeContextProvider();
@@ -69,7 +83,7 @@ class SmartBrainAdapter extends utils.Adapter {
         this.runtime = new SmartBrainRuntime(
             {
                 setState: async (id, value) => {
-                    await this.setStateAsync(id, value, true);
+                    await this.setOwnState(id, value);
                 },
                 warn: message => this.log.warn(message),
             },
@@ -77,6 +91,9 @@ class SmartBrainAdapter extends utils.Adapter {
         );
 
         await this.runtime.start();
+        if (this.unloading) {
+            return;
+        }
         await this.initializeObservationStatus();
         if (config.discoveryEnabled) {
             this.discovery = new DiscoveryService(new IoBrokerDiscoverySource(this), {
@@ -86,17 +103,23 @@ class SmartBrainAdapter extends utils.Adapter {
             });
             const coordinator = new DiscoveryCoordinator(this.discovery, {
                 setState: async (id, value) => {
-                    await this.setStateAsync(id, value, true);
+                    await this.setOwnState(id, value);
                 },
                 info: message => this.log.info(message),
                 warn: message => this.log.warn(message),
             });
             const discoveryResult = await coordinator.run().catch(() => undefined);
+            if (this.unloading) {
+                return;
+            }
             if (discoveryResult) {
                 await this.setupObservation(discoveryResult, timeProvider, sunProvider, config.learningEnabled);
             }
         } else {
-            await this.setStateAsync('discovery.status', 'disabled', true);
+            await this.setOwnState('discovery.status', 'disabled');
+        }
+        if (this.unloading) {
+            return;
         }
         await this.setupHistory(config.historyInstance);
         this.log.info(
@@ -107,10 +130,10 @@ class SmartBrainAdapter extends utils.Adapter {
     }
 
     private async initializeObservationStatus(): Promise<void> {
-        await this.setStateAsync('observation.subscribedStateCount', 0, true);
-        await this.setStateAsync('observation.retainedCount', 0, true);
-        await this.setStateAsync('observation.droppedCount', 0, true);
-        await this.setStateAsync('observation.lastTimestamp', 0, true);
+        await this.setOwnState('observation.subscribedStateCount', 0);
+        await this.setOwnState('observation.retainedCount', 0);
+        await this.setOwnState('observation.droppedCount', 0);
+        await this.setOwnState('observation.lastTimestamp', 0);
     }
 
     private async setupHistory(configuredProvider: string): Promise<void> {
@@ -119,6 +142,9 @@ class SmartBrainAdapter extends utils.Adapter {
             candidates = await new HistoryProviderDiscovery(new IoBrokerHistoryInstanceSource(this)).candidates();
         } catch (error) {
             this.log.warn(`[History] Provider discovery failed: ${(error as Error).message.slice(0, 160)}`);
+        }
+        if (this.unloading) {
+            return;
         }
         const available = candidates.filter(descriptor => descriptor.enabled && descriptor.alive);
         this.historyProviderOptions = historyProviderSelectOptions(candidates);
@@ -139,12 +165,12 @@ class SmartBrainAdapter extends utils.Adapter {
 
     private async publishHistorySummary(): Promise<void> {
         const summary = await this.historyService?.summary();
-        await this.setStateAsync('history.activeProvider', summary?.activeProvider ?? 'none', true);
-        await this.setStateAsync('history.availableProviderCount', summary?.availableProviders ?? 0, true);
-        await this.setStateAsync('history.available', summary?.available ?? false, true);
-        await this.setStateAsync('history.queryCount', summary?.queryCount ?? 0, true);
-        await this.setStateAsync('history.failedQueryCount', summary?.failedQueries ?? 0, true);
-        await this.setStateAsync('history.lastQueryTimestamp', summary?.lastQueryTimestamp ?? 0, true);
+        await this.setOwnState('history.activeProvider', summary?.activeProvider ?? 'none');
+        await this.setOwnState('history.availableProviderCount', summary?.availableProviders ?? 0);
+        await this.setOwnState('history.available', summary?.available ?? false);
+        await this.setOwnState('history.queryCount', summary?.queryCount ?? 0);
+        await this.setOwnState('history.failedQueryCount', summary?.failedQueries ?? 0);
+        await this.setOwnState('history.lastQueryTimestamp', summary?.lastQueryTimestamp ?? 0);
     }
 
     private async setupObservation(
@@ -190,13 +216,16 @@ class SmartBrainAdapter extends utils.Adapter {
             this.contextEngine,
             {
                 onObservation: async observation => {
+                    if (this.unloading) {
+                        return;
+                    }
                     this.patternEngine?.observe(observation);
                     const summary = this.observationEngine?.summary();
                     const patternSummary = this.patternEngine?.summary(observation.timestamp);
-                    await this.setStateAsync('observation.retainedCount', summary?.retainedObservations ?? 0, true);
-                    await this.setStateAsync('observation.droppedCount', summary?.droppedEvents ?? 0, true);
-                    await this.setStateAsync('observation.lastTimestamp', observation.timestamp, true);
-                    await this.setStateAsync('patterns.candidateCount', patternSummary?.candidates ?? 0, true);
+                    await this.setOwnState('observation.retainedCount', summary?.retainedObservations ?? 0);
+                    await this.setOwnState('observation.droppedCount', summary?.droppedEvents ?? 0);
+                    await this.setOwnState('observation.lastTimestamp', observation.timestamp);
+                    await this.setOwnState('patterns.candidateCount', patternSummary?.candidates ?? 0);
                 },
                 onError: message => this.log.warn(message),
                 debug: message => this.log.debug(message),
@@ -204,10 +233,13 @@ class SmartBrainAdapter extends utils.Adapter {
             this.observedStateIds.length,
             { maxQueue: 500, maxRetained: 500 },
         );
-        await this.setStateAsync('learning.observedStateCount', this.observedStateIds.length, true);
-        await this.setStateAsync('observation.subscribedStateCount', this.observedStateIds.length, true);
+        await this.setOwnState('learning.observedStateCount', this.observedStateIds.length);
+        await this.setOwnState('observation.subscribedStateCount', this.observedStateIds.length);
         if (this.observedStateIds.length) {
             const initialStates = await this.getForeignStatesAsync(this.observedStateIds);
+            if (this.unloading) {
+                return;
+            }
             this.observationEngine.prime(initialStates);
             await this.subscribeForeignStatesAsync(this.observedStateIds);
         }
@@ -231,6 +263,9 @@ class SmartBrainAdapter extends utils.Adapter {
     }
 
     private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
+        if (this.unloading) {
+            return;
+        }
         const metadata = this.observationMetadata.get(id);
         if (metadata) {
             this.observationEngine?.ingest(id, state ?? null, metadata);
@@ -238,6 +273,9 @@ class SmartBrainAdapter extends utils.Adapter {
     }
 
     private onObjectChange(id: string, object: ioBroker.Object | null | undefined): void {
+        if (this.unloading) {
+            return;
+        }
         const custom = object?.type === 'state' ? object.common.custom?.[this.namespace] : undefined;
         if (!custom && !this.policyStateIds.has(id)) {
             return;
@@ -248,8 +286,8 @@ class SmartBrainAdapter extends utils.Adapter {
         this.policySyncTimer = this.setTimeout(() => {
             void this.policySynchronizer
                 ?.synchronize()
-                .then(policies => {
-                    this.policyStateIds = new Set(policies.map(policy => policy.stateId));
+                .then(result => {
+                    this.policyStateIds = new Set(result.policies.map(policy => policy.stateId));
                 })
                 .catch(error => this.log.warn(`[Permissions] Synchronization failed: ${(error as Error).message}`));
         }, 250);
@@ -377,7 +415,14 @@ class SmartBrainAdapter extends utils.Adapter {
     }
 
     private onUnload(callback: () => void): void {
+        this.unloading = true;
         void this.shutdown(callback);
+    }
+
+    private async setOwnState(id: string, value: ioBroker.StateValue): Promise<void> {
+        if (!this.unloading) {
+            await this.setStateAsync(id, value, true);
+        }
     }
 
     private async shutdown(callback: () => void): Promise<void> {

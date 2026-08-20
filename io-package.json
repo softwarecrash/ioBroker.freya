@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "smartbrain",
-        "version": "0.5.0",
+        "version": "0.5.1",
         "news": {
+            "0.5.1": {
+                "en": "Fix repeated policy-normalization restarts and shutdown races",
+                "de": "Wiederholte Policy-Normalisierungs-Neustarts und Shutdown-Rennen behoben"
+            },
             "0.5.0": {
                 "en": "Add bounded explainable trigger-to-light pattern learning",
                 "de": "Begrenztes, erklärbares Lernen von Auslöser-zu-Licht-Mustern hinzugefügt"

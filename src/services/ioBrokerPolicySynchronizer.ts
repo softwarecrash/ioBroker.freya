@@ -2,10 +2,15 @@ import type { StatePolicyInput } from '../discovery/types';
 import { createPolicySynchronizationPlan, type PolicyObjectEntry } from '../permissions/policySynchronizer';
 
 /** Synchronize adapter-native policies with common.custom policies on state objects. */
+export interface PolicySynchronizationResult {
+    policies: StatePolicyInput[];
+    instanceUpdated: boolean;
+}
+
 export class IoBrokerPolicySynchronizer {
     public constructor(private readonly adapter: ioBroker.Adapter) {}
 
-    public async synchronize(nativePolicies?: StatePolicyInput[]): Promise<StatePolicyInput[]> {
+    public async synchronize(nativePolicies?: StatePolicyInput[]): Promise<PolicySynchronizationResult> {
         const instanceId = `system.adapter.${this.adapter.namespace}`;
         const [instance, states] = await Promise.all([
             this.adapter.getForeignObjectAsync(instanceId),
@@ -37,10 +42,14 @@ export class IoBrokerPolicySynchronizer {
             });
         }
         if (plan.updateNative) {
-            await this.adapter.extendForeignObjectAsync(instanceId, {
-                native: { statePolicies: plan.policies },
+            if (!instance || instance.type !== 'instance') {
+                throw new Error('adapter_instance_object_missing');
+            }
+            await this.adapter.setForeignObjectAsync(instanceId, {
+                ...instance,
+                native: { ...instance.native, statePolicies: plan.policies },
             });
         }
-        return plan.policies;
+        return { policies: plan.policies, instanceUpdated: plan.updateNative };
     }
 }
