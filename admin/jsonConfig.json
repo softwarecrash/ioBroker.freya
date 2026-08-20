@@ -443,6 +443,124 @@
                 }
             }
         },
+        "llm": {
+            "type": "panel",
+            "label": { "en": "Optional LLM", "de": "Optionales LLM" },
+            "items": {
+                "llmNotice": {
+                    "type": "staticText",
+                    "text": {
+                        "en": "LLMs are advisory only and cannot authorize or execute actions. Rules Only is local and is the default. External analysis is sent only by an explicit Admin request and contains allow-listed aggregates without state IDs, room names, raw values, or persons. Use previewLlmDisclosure to inspect the exact payload first.",
+                        "de": "LLMs beraten nur und können Aktionen weder autorisieren noch ausführen. Rules Only ist lokal und Standard. Externe Analyse wird nur durch eine explizite Admin-Anfrage gesendet und enthält ausschließlich freigegebene Aggregate ohne State-IDs, Raumnamen, Rohwerte oder Personen. Mit previewLlmDisclosure kann die exakte Nutzlast vorher geprüft werden."
+                    },
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "llmProvider": {
+                    "type": "select",
+                    "label": { "en": "Provider", "de": "Provider" },
+                    "options": [
+                        { "label": { "en": "Disabled", "de": "Deaktiviert" }, "value": "disabled" },
+                        { "label": { "en": "Rules Only (local)", "de": "Nur Regeln (lokal)" }, "value": "rules" },
+                        { "label": "Ollama", "value": "ollama" },
+                        { "label": "OpenAI", "value": "openai" },
+                        { "label": "OpenAI-compatible", "value": "openai-compatible" }
+                    ],
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "llmModel": {
+                    "type": "text",
+                    "label": { "en": "Model", "de": "Modell" },
+                    "help": {
+                        "en": "Required for Ollama, OpenAI, and compatible providers; no model is silently substituted",
+                        "de": "Für Ollama, OpenAI und kompatible Provider erforderlich; es wird kein Modell stillschweigend ersetzt"
+                    },
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "llmTimeoutSeconds": {
+                    "type": "number",
+                    "label": { "en": "Timeout (seconds)", "de": "Timeout (Sekunden)" },
+                    "min": 1,
+                    "max": 60,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "llmBaseUrl": {
+                    "type": "text",
+                    "label": { "en": "Base URL", "de": "Basis-URL" },
+                    "help": {
+                        "en": "Ollama accepts loopback HTTP only; compatible remote providers require HTTPS",
+                        "de": "Ollama akzeptiert nur Loopback-HTTP; kompatible entfernte Provider benötigen HTTPS"
+                    },
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 8,
+                    "md": 8,
+                    "lg": 8,
+                    "xl": 8
+                },
+                "llmApiKey": {
+                    "type": "password",
+                    "label": { "en": "API key", "de": "API-Schlüssel" },
+                    "help": {
+                        "en": "Stored in protected and encrypted native configuration; never logged or included in previews",
+                        "de": "Wird geschützt und verschlüsselt in der nativen Konfiguration gespeichert; erscheint nie in Logs oder Vorschauen"
+                    },
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "llmEffectiveProvider": {
+                    "type": "state",
+                    "label": { "en": "Effective provider", "de": "Effektiver Provider" },
+                    "oid": "llm.provider",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "llmExternal": {
+                    "type": "state",
+                    "label": { "en": "External disclosure enabled", "de": "Externe Übertragung aktiv" },
+                    "oid": "llm.external",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "llmLastResult": {
+                    "type": "state",
+                    "label": { "en": "Last advisory result", "de": "Letztes Beratungsergebnis" },
+                    "oid": "llm.lastResult",
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                }
+            }
+        },
         "activity": {
             "type": "panel",
             "label": { "en": "Activity", "de": "Aktivität" },

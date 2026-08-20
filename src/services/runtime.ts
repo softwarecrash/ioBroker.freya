@@ -45,6 +45,9 @@ export class SmartBrainRuntime {
         await this.port.setState('activity.lastTimestamp', 0);
         await this.port.setState('actions.lastResult', 'none');
         await this.port.setState('actions.auditCount', 0);
+        await this.port.setState('llm.provider', this.config.llmProvider);
+        await this.port.setState('llm.external', ['openai', 'openai-compatible'].includes(this.config.llmProvider));
+        await this.port.setState('llm.lastResult', 'none');
         const status =
             this.config.autonomyLevel === 3
                 ? 'controlled-actions'

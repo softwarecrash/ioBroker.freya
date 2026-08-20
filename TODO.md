@@ -131,13 +131,13 @@ Last updated: 2026-08-20
 
 ## Phase 8 — optional LLM providers
 
-- [ ] Implement strict provider and response contracts.
-- [ ] Keep Disabled/Rules Only as default.
-- [ ] Add Ollama, OpenAI, then OpenAI-compatible providers as separate adapters.
-- [ ] Add allow-listed compact context and data-disclosure preview.
-- [ ] Store secrets only in protected native configuration; redact all logs.
-- [ ] Prove malformed or adversarial LLM responses cannot reach Action Executor.
-- [ ] Update documentation and changelog; commit and push.
+- [x] Implement strict provider and response contracts.
+- [x] Keep Disabled/Rules Only as default.
+- [x] Add Ollama, OpenAI, then OpenAI-compatible providers as separate adapters.
+- [x] Add allow-listed compact context and data-disclosure preview.
+- [x] Store secrets only in protected native configuration; redact all logs.
+- [x] Prove malformed or adversarial LLM responses cannot reach Action Executor.
+- [x] Update documentation and changelog; commit and push.
 
 ## Phase 9 — feedback learning
 

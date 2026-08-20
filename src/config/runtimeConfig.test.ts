@@ -16,6 +16,11 @@ describe('runtime configuration', () => {
             minimumActionConfidence: 0.7,
             actionCooldownSeconds: 300,
             blockedStateIds: [],
+            llmProvider: 'rules',
+            llmModel: '',
+            llmBaseUrl: 'http://127.0.0.1:11434',
+            llmApiKey: '',
+            llmTimeoutSeconds: 20,
             unsafeConfigurationIgnored: false,
         });
     });
@@ -47,6 +52,24 @@ describe('runtime configuration', () => {
             unsafeConfigurationIgnored: true,
         });
         expect(result.blockedStateIds).to.deep.equal(['state.0.one']);
+    });
+
+    it('sanitizes optional LLM configuration without exposing secrets', () => {
+        const valid = createRuntimeConfig({
+            llmProvider: 'ollama',
+            llmModel: 'gemma3:latest',
+            llmBaseUrl: 'http://localhost:11434',
+            llmApiKey: 'secret-value',
+            llmTimeoutSeconds: 500,
+        });
+        expect(valid).to.include({
+            llmProvider: 'ollama',
+            llmModel: 'gemma3:latest',
+            llmBaseUrl: 'http://localhost:11434',
+            llmApiKey: 'secret-value',
+            llmTimeoutSeconds: 60,
+        });
+        expect(createRuntimeConfig({ llmProvider: 'unknown' }).llmProvider).to.equal('disabled');
     });
 
     it('accepts the complete safe configuration without a warning flag', () => {

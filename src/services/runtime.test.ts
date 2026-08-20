@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { SmartBrainRuntime, type RuntimePort } from './runtime';
 
 describe('SmartBrainRuntime', () => {
-    it('publishes only safe, adapter-owned Phase 6 status', async () => {
+    it('publishes only safe, adapter-owned runtime status', async () => {
         const writes: Array<[string, ioBroker.StateValue]> = [];
         const warnings: string[] = [];
         const port: RuntimePort = {
@@ -23,6 +23,11 @@ describe('SmartBrainRuntime', () => {
             minimumActionConfidence: 0.7,
             actionCooldownSeconds: 300,
             blockedStateIds: [],
+            llmProvider: 'rules',
+            llmModel: '',
+            llmBaseUrl: 'http://127.0.0.1:11434',
+            llmApiKey: '',
+            llmTimeoutSeconds: 20,
             unsafeConfigurationIgnored: false,
         });
 
@@ -65,6 +70,11 @@ describe('SmartBrainRuntime', () => {
                 minimumActionConfidence: 0.7,
                 actionCooldownSeconds: 300,
                 blockedStateIds: [],
+                llmProvider: 'rules',
+                llmModel: '',
+                llmBaseUrl: 'http://127.0.0.1:11434',
+                llmApiKey: '',
+                llmTimeoutSeconds: 20,
                 unsafeConfigurationIgnored: false,
             },
         );
@@ -74,6 +84,6 @@ describe('SmartBrainRuntime', () => {
         await runtime.stop();
         await runtime.stop();
 
-        expect(writes).to.have.length(16);
+        expect(writes).to.have.length(19);
     });
 });

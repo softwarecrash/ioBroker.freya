@@ -400,10 +400,21 @@ configuration, never in ordinary states or logs.
 
 ### Optional LLM layer
 
-`DisabledRulesProvider` is the default. Later providers receive compact, allow-listed,
-structured context. Responses must validate against a strict schema and may reference
-only supplied pattern and action IDs. LLM output is advisory and always precedes the
-Decision and Safety Engines. No cloud request occurs without explicit configuration.
+`RulesOnlyLlmProvider` is the local default and `DisabledLlmProvider` is available.
+Optional providers are loopback-only Ollama, OpenAI Responses, and an HTTPS or loopback
+OpenAI-compatible endpoint. They receive a compact allow-listed disclosure containing
+only aggregate evidence and semantic condition values, never state IDs, room names,
+raw values, person data, prior explanations, or secrets. The exact payload and endpoint
+origin are previewable before transmission.
+
+Responses validate against a closed schema containing only `summary`, `riskLevel`, and
+bounded `concerns`. Extra keys invalidate the complete response. The LLM modules import
+neither the Action Executor nor its request types; advisory output cannot authorize,
+target, parameterize, or execute an action. External calls occur only through an
+explicit Admin command, have time and response-size bounds, are cancelled on shutdown,
+and never occur merely because a provider is configured. API keys use ioBroker's
+protected and encrypted native configuration and are absent from states, previews,
+payloads, and logs.
 
 ### Admin UI
 

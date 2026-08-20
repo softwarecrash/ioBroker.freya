@@ -1,5 +1,6 @@
 import type { EnvironmentMappingInput, StatePolicyInput } from '../discovery/types';
 import type { AutonomyLevel } from '../actions/types';
+import type { LlmProviderKind } from '../llm/types';
 
 /** Effective runtime settings available in the read-only learning phase. */
 export interface RuntimeConfig {
@@ -26,6 +27,11 @@ export interface RuntimeConfig {
     actionCooldownSeconds: number;
     /** Explicit deny-list evaluated at the write boundary. */
     blockedStateIds: string[];
+    llmProvider: LlmProviderKind;
+    llmModel: string;
+    llmBaseUrl: string;
+    llmApiKey: string;
+    llmTimeoutSeconds: number;
     /** Indicates that potentially unsafe persisted settings were ignored. */
     unsafeConfigurationIgnored: boolean;
 }
@@ -58,6 +64,20 @@ export function createRuntimeConfig(config: Partial<ioBroker.AdapterConfig>): Ru
               ),
           ].slice(0, 500)
         : [];
+    const supportedLlmProviders = new Set<LlmProviderKind>([
+        'disabled',
+        'rules',
+        'ollama',
+        'openai',
+        'openai-compatible',
+    ]);
+    const requestedLlmProvider = typeof config.llmProvider === 'string' ? config.llmProvider : 'rules';
+    const llmProvider = supportedLlmProviders.has(requestedLlmProvider as LlmProviderKind)
+        ? (requestedLlmProvider as LlmProviderKind)
+        : 'disabled';
+    const requestedLlmModel = typeof config.llmModel === 'string' ? config.llmModel.trim() : '';
+    const llmModel = /^[a-z0-9._:/-]{0,120}$/i.test(requestedLlmModel) ? requestedLlmModel : '';
+    const requestedLlmTimeout = Number(config.llmTimeoutSeconds ?? 20);
     return {
         autonomyLevel,
         learningEnabled: config.learningEnabled === true,
@@ -77,6 +97,18 @@ export function createRuntimeConfig(config: Partial<ioBroker.AdapterConfig>): Ru
             ? Math.max(5, Math.min(86_400, Math.floor(requestedCooldown)))
             : 300,
         blockedStateIds,
-        unsafeConfigurationIgnored: autonomyLevel !== requestedAutonomy || !validHistory,
+        llmProvider,
+        llmModel,
+        llmBaseUrl:
+            typeof config.llmBaseUrl === 'string' ? config.llmBaseUrl.trim().slice(0, 500) : 'http://127.0.0.1:11434',
+        llmApiKey: typeof config.llmApiKey === 'string' ? config.llmApiKey : '',
+        llmTimeoutSeconds: Number.isFinite(requestedLlmTimeout)
+            ? Math.max(1, Math.min(60, Math.floor(requestedLlmTimeout)))
+            : 20,
+        unsafeConfigurationIgnored:
+            autonomyLevel !== requestedAutonomy ||
+            !validHistory ||
+            llmProvider !== requestedLlmProvider ||
+            llmModel !== requestedLlmModel,
     };
 }

@@ -15,6 +15,11 @@ declare global {
             minimumActionConfidence: number;
             actionCooldownSeconds: number;
             blockedStateIds: Array<string | { stateId: string }>;
+            llmProvider: string;
+            llmModel: string;
+            llmBaseUrl: string;
+            llmApiKey: string;
+            llmTimeoutSeconds: number;
         }
     }
 }

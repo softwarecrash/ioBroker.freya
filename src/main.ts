@@ -22,6 +22,8 @@ import type { DiscoveryResult, DiscoveredStateView } from './discovery/types';
 import { HistoryService } from './history/historyService';
 import { IoBrokerHistoryProvider, IoBrokerHistoryTransport } from './history/ioBrokerHistoryProvider';
 import { NoneHistoryProvider } from './history/noneHistoryProvider';
+import { LlmService } from './llm/llmService';
+import { createLlmProvider } from './llm/providerFactory';
 import {
     HistoryProviderDiscovery,
     IoBrokerHistoryInstanceSource,
@@ -49,9 +51,11 @@ class SmartBrainAdapter extends utils.Adapter {
     private suggestionService?: SuggestionService;
     private actionExecutor?: ActionExecutor;
     private readonly actionAudit = new ActionAuditStore();
+    private llmService?: LlmService;
     private historyService?: HistoryService;
     private historyProviderOptions: HistoryProviderSelectOption[] = historyProviderSelectOptions([]);
     private readonly historyControllers = new Set<AbortController>();
+    private readonly llmControllers = new Set<AbortController>();
     private observationMetadata = new Map<string, ObservationMetadata>();
     private observedStateIds: string[] = [];
     private policyStateIds = new Set<string>();
@@ -75,6 +79,19 @@ class SmartBrainAdapter extends utils.Adapter {
 
     private async onReady(): Promise<void> {
         const config = createRuntimeConfig(this.config);
+        try {
+            const provider = createLlmProvider(config);
+            const endpointOrigin =
+                provider.kind === 'openai'
+                    ? 'https://api.openai.com'
+                    : provider.kind === 'ollama' || provider.kind === 'openai-compatible'
+                      ? new URL(config.llmBaseUrl).origin
+                      : undefined;
+            this.llmService = new LlmService(provider, endpointOrigin);
+        } catch (error) {
+            this.log.warn(`[LLM] Optional provider disabled: ${(error as Error).message.slice(0, 80)}`);
+            this.llmService = new LlmService(createLlmProvider({ ...config, llmProvider: 'disabled' }));
+        }
         this.policySynchronizer = new IoBrokerPolicySynchronizer(this);
         const synchronization = await this.policySynchronizer.synchronize(config.statePolicies);
         if (this.unloading || synchronization.instanceUpdated) {
@@ -103,6 +120,7 @@ class SmartBrainAdapter extends utils.Adapter {
         );
 
         await this.runtime.start();
+        await this.publishLlmStatus();
         if (this.unloading) {
             return;
         }
@@ -380,6 +398,55 @@ class SmartBrainAdapter extends utils.Adapter {
             this.sendTo(message.from, message.command, this.suggestionService?.summary() ?? null, message.callback);
             return;
         }
+        if (message.command === 'getLlmStatus') {
+            this.sendTo(message.from, message.command, this.llmService?.status() ?? null, message.callback);
+            return;
+        }
+        if (message.command === 'previewLlmDisclosure') {
+            const input = this.messageInput(message.message);
+            const patternId = typeof input.patternId === 'string' ? input.patternId : '';
+            const suggestion = /^[a-f0-9]{16}$/.test(patternId) ? this.suggestionService?.find(patternId) : undefined;
+            if (!suggestion || !this.llmService) {
+                this.sendTo(message.from, message.command, { error: 'pattern_not_found' }, message.callback);
+                return;
+            }
+            this.sendTo(
+                message.from,
+                message.command,
+                this.llmService.preview(suggestion, randomUUID()),
+                message.callback,
+            );
+            return;
+        }
+        if (message.command === 'analyzePattern') {
+            const input = this.messageInput(message.message);
+            const patternId = typeof input.patternId === 'string' ? input.patternId : '';
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(message.from, message.command, { error: 'analysis_source_denied' }, message.callback);
+                return;
+            }
+            const suggestion = /^[a-f0-9]{16}$/.test(patternId) ? this.suggestionService?.find(patternId) : undefined;
+            if (!suggestion || !this.llmService) {
+                this.sendTo(message.from, message.command, { error: 'pattern_not_found' }, message.callback);
+                return;
+            }
+            const requestId = randomUUID();
+            const controller = new AbortController();
+            this.llmControllers.add(controller);
+            try {
+                const analysis = await this.llmService.analyze(suggestion, requestId, controller.signal);
+                await this.setOwnState('llm.lastResult', JSON.stringify({ requestId, ...analysis }).slice(0, 2_000));
+                this.sendTo(message.from, message.command, { requestId, analysis }, message.callback);
+            } catch (error) {
+                const rawCode = (error as Error).message;
+                const errorCode = /^llm_[a-z0-9_]+$/.test(rawCode) ? rawCode : 'llm_failed';
+                await this.setOwnState('llm.lastResult', JSON.stringify({ requestId, error: errorCode }));
+                this.sendTo(message.from, message.command, { requestId, error: errorCode }, message.callback);
+            } finally {
+                this.llmControllers.delete(controller);
+            }
+            return;
+        }
         if (message.command === 'getSuggestions') {
             const input = this.messageInput(message.message);
             const requestedStatus = typeof input.status === 'string' ? input.status : undefined;
@@ -605,6 +672,13 @@ class SmartBrainAdapter extends utils.Adapter {
         await this.setOwnState('actions.auditCount', this.actionAudit.page(0, 1).total);
     }
 
+    private async publishLlmStatus(): Promise<void> {
+        const status = this.llmService?.status();
+        await this.setOwnState('llm.provider', status?.provider ?? 'disabled');
+        await this.setOwnState('llm.external', status?.external ?? false);
+        await this.setOwnState('llm.lastResult', 'none');
+    }
+
     private async setOwnState(id: string, value: ioBroker.StateValue): Promise<void> {
         if (!this.unloading) {
             await this.setStateAsync(id, value, true);
@@ -620,6 +694,10 @@ class SmartBrainAdapter extends utils.Adapter {
                 controller.abort();
             }
             this.historyControllers.clear();
+            for (const controller of this.llmControllers) {
+                controller.abort();
+            }
+            this.llmControllers.clear();
             if (this.observedStateIds.length) {
                 await this.unsubscribeForeignStatesAsync(this.observedStateIds);
             }

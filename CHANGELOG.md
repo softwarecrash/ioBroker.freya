@@ -7,6 +7,26 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-08-20
+
+### Added
+
+- Strict advisory provider and response contracts with local Rules Only and Disabled
+  modes, loopback-only Ollama, OpenAI Responses, and HTTPS/loopback
+  OpenAI-compatible providers.
+- Exact allow-listed disclosure previews, bounded transport response/timeout handling,
+  shutdown cancellation, and Admin-only on-demand analysis.
+- Protected and encrypted native API-key configuration plus effective provider,
+  external-disclosure, and last-result states.
+
+### Security
+
+- LLM payloads exclude state IDs, names, room names, raw values, person data, prior
+  explanations, and secrets. External providers are never called automatically.
+- Responses accept exactly summary, risk level, and bounded concerns. Any executable,
+  approval, target, or value field invalidates the whole response, and the LLM module
+  has no dependency on the Action Executor.
+
 ## [0.7.0] - 2026-08-20
 
 ### Added

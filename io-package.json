@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "smartbrain",
-        "version": "0.7.0",
+        "version": "0.8.0",
         "news": {
+            "0.8.0": {
+                "en": "Add isolated optional LLM advisory providers and disclosure previews",
+                "de": "Isolierte optionale LLM-Berater und Übertragungsvorschau hinzugefügt"
+            },
             "0.7.0": {
                 "en": "Add deny-by-default controlled actions with last-moment safety validation",
                 "de": "Standardmäßig gesperrte Aktionen mit Sicherheitsprüfung unmittelbar vor Ausführung hinzugefügt"
@@ -76,6 +80,11 @@
         "minimumActionConfidence": 0.7,
         "actionCooldownSeconds": 300,
         "blockedStateIds": [],
+        "llmProvider": "rules",
+        "llmModel": "",
+        "llmBaseUrl": "http://127.0.0.1:11434",
+        "llmApiKey": "",
+        "llmTimeoutSeconds": 20,
         "learningEnabled": false,
         "historyInstance": "none",
         "discoveryEnabled": true,
@@ -85,6 +94,8 @@
         "manualLatitude": null,
         "manualLongitude": null
     },
+    "protectedNative": ["llmApiKey"],
+    "encryptedNative": ["llmApiKey"],
     "objects": [],
     "instanceObjects": [
         {
@@ -610,6 +621,51 @@
                 "write": false,
                 "min": 0,
                 "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "llm",
+            "type": "channel",
+            "common": { "name": { "en": "LLM advisory", "de": "LLM-Beratung" } },
+            "native": {}
+        },
+        {
+            "_id": "llm.provider",
+            "type": "state",
+            "common": {
+                "name": { "en": "Effective LLM provider", "de": "Effektiver LLM-Provider" },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": "rules"
+            },
+            "native": {}
+        },
+        {
+            "_id": "llm.external",
+            "type": "state",
+            "common": {
+                "name": { "en": "External LLM disclosure", "de": "Externe LLM-Übertragung" },
+                "type": "boolean",
+                "role": "indicator",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "llm.lastResult",
+            "type": "state",
+            "common": {
+                "name": { "en": "Last LLM result", "de": "Letztes LLM-Ergebnis" },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": "none"
             },
             "native": {}
         }

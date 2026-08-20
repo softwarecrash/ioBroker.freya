@@ -5,7 +5,7 @@ selected states, discovers repeatable home-automation patterns, and turns them i
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
 
-The project is currently in **Phase 7 (controlled actions)**. The TypeScript daemon
+The project is currently in **Phase 8 (optional advisory LLM providers)**. The TypeScript daemon
 scans ioBroker object metadata, classifies supported state semantics, ranks environment
 sources, synchronizes explicit state policies, and subscribes only to states with an
 explicit `observe` permission. Each relevant change becomes a bounded, in-memory
@@ -134,6 +134,25 @@ or object lookup is unavailable. `getActionAudit` exposes the bounded newest-fir
 summary states are available below `smartbrain.0.actions`. Cooldowns and audit records
 are intentionally volatile until the persistence and feedback phase.
 
+## Optional LLM advisory
+
+`Rules Only` is the local, network-free default; `Disabled` is also available. Ollama
+is restricted to the loopback interface. OpenAI uses the Responses endpoint with
+`store: false` and a strict JSON schema; an OpenAI-compatible provider uses HTTPS (or
+loopback HTTP) and the corresponding structured response format. Model names are
+always explicit and SmartBrain does not silently substitute one. See the official
+[OpenAI Responses API](https://developers.openai.com/api/reference/typescript/resources/beta/subresources/responses/methods/create)
+and [Ollama structured output documentation](https://docs.ollama.com/capabilities/structured-outputs).
+
+External calls happen only through the Admin-only `analyzePattern` command. Beforehand,
+`previewLlmDisclosure` shows the exact allow-listed payload and destination origin.
+The payload contains aggregate evidence and selected semantic context features, but no
+state IDs, room names, raw values, person data, or API key. Keys are declared both
+protected and encrypted native configuration. Responses are size/time bounded and
+must contain exactly a short summary, risk level, and bounded concerns. Extra fields,
+including targets, values, approval, or execution instructions, invalidate the entire
+response. The LLM layer has no dependency on or route into the Action Executor.
+
 ## Development
 
 ```bash
@@ -167,10 +186,10 @@ visible in the local Admin UI.
 
 ## Changelog
 
-### 0.7.0 (2026-08-20)
+### 0.8.0 (2026-08-20)
 
-- Added deny-by-default controlled execution for approved patterns, with immediate
-  object/context revalidation, cooldowns, blocking, correlation IDs, and bounded audit.
+- Added local Rules Only, loopback Ollama, OpenAI Responses, and HTTPS
+  OpenAI-compatible advisory providers with strict schemas and disclosure previews.
 
 Older details are available in [CHANGELOG.md](CHANGELOG.md).
 
