@@ -57,7 +57,7 @@ Last updated: 2026-08-20
 - [x] Implement permission registry and validation invariants.
 - [x] Add paginated/bounded Devices/States API and initial Admin UI.
 - [x] Test with anonymized fixtures; do not copy production objects.
-- [ ] Update documentation and changelog; commit and push.
+- [x] Update documentation and changelog; commit, push, deploy locally, and verify.
 
 ## Phase 3 — observation
 
