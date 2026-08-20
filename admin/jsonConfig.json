@@ -1,4 +1,5 @@
 {
+    "i18n": false,
     "type": "tabs",
     "items": {
         "overview": {
@@ -11,13 +12,19 @@
                         "en": "Phase 2 performs metadata-only discovery. Learning, history access, subscriptions, and automatic actions remain disabled.",
                         "de": "Phase 2 führt ausschließlich eine Metadaten-Erkennung durch. Lernen, History-Zugriff, Subscriptions und automatische Aktionen bleiben deaktiviert."
                     },
-                    "newLine": true
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
                 },
                 "discoveryStatus": {
                     "type": "state",
                     "label": { "en": "Discovery status", "de": "Erkennungsstatus" },
                     "oid": "discovery.status",
                     "newLine": true,
+                    "xs": 12,
                     "sm": 6,
                     "md": 4,
                     "lg": 3,
@@ -27,6 +34,7 @@
                     "type": "state",
                     "label": { "en": "Scanned states", "de": "Gescannte States" },
                     "oid": "discovery.scannedStateCount",
+                    "xs": 12,
                     "sm": 6,
                     "md": 4,
                     "lg": 3,
@@ -36,6 +44,7 @@
                     "type": "state",
                     "label": { "en": "Classified states", "de": "Klassifizierte States" },
                     "oid": "discovery.classifiedStateCount",
+                    "xs": 12,
                     "sm": 6,
                     "md": 4,
                     "lg": 3,
@@ -45,6 +54,7 @@
                     "type": "state",
                     "label": { "en": "Unknown states", "de": "Unbekannte States" },
                     "oid": "discovery.unknownStateCount",
+                    "xs": 12,
                     "sm": 6,
                     "md": 4,
                     "lg": 3,
@@ -55,12 +65,13 @@
                     "label": { "en": "Autonomy level", "de": "Autonomie-Level" },
                     "min": 0,
                     "max": 0,
-                    "disabled": true,
+                    "disabled": "true",
                     "help": {
                         "en": "Fixed at observe-only in Phase 2",
                         "de": "In Phase 2 fest auf nur beobachten gesetzt"
                     },
                     "newLine": true,
+                    "xs": 12,
                     "sm": 4,
                     "md": 4,
                     "lg": 4,
@@ -69,7 +80,8 @@
                 "learningEnabled": {
                     "type": "checkbox",
                     "label": { "en": "Enable learning", "de": "Lernen aktivieren" },
-                    "disabled": true,
+                    "disabled": "true",
+                    "xs": 12,
                     "sm": 4,
                     "md": 4,
                     "lg": 4,
@@ -79,7 +91,8 @@
                     "type": "select",
                     "label": { "en": "History provider", "de": "History-Provider" },
                     "options": [{ "label": { "en": "Disabled", "de": "Deaktiviert" }, "value": "none" }],
-                    "disabled": true,
+                    "disabled": "true",
+                    "xs": 12,
                     "sm": 4,
                     "md": 4,
                     "lg": 4,
@@ -95,6 +108,7 @@
                     "type": "checkbox",
                     "label": { "en": "Enable metadata discovery", "de": "Metadaten-Erkennung aktivieren" },
                     "newLine": true,
+                    "xs": 12,
                     "sm": 6,
                     "md": 4,
                     "lg": 4,
@@ -106,6 +120,7 @@
                     "min": 100,
                     "max": 50000,
                     "newLine": true,
+                    "xs": 12,
                     "sm": 6,
                     "md": 4,
                     "lg": 4,
@@ -117,7 +132,12 @@
                         "en": "All permissions default to off. Control is stored for future phases only and cannot execute actions in Phase 2. Locks and security states remain denied.",
                         "de": "Alle Berechtigungen sind standardmäßig aus. Control wird nur für spätere Phasen gespeichert und kann in Phase 2 keine Aktionen ausführen. Schlösser und Sicherheits-States bleiben gesperrt."
                     },
-                    "newLine": true
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
                 },
                 "statePolicies": {
                     "type": "table",
@@ -126,6 +146,11 @@
                         "de": "State-Berechtigungen und semantische Korrekturen"
                     },
                     "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
                     "items": [
                         {
                             "type": "objectId",
@@ -179,12 +204,22 @@
                         "en": "Mappings use semantic keys and may contain several prioritized sources. No adapter-specific state IDs are hard-coded.",
                         "de": "Zuordnungen verwenden semantische Schlüssel und können mehrere priorisierte Quellen enthalten. Es sind keine adapterspezifischen State-IDs fest codiert."
                     },
-                    "newLine": true
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
                 },
                 "environmentMappings": {
                     "type": "table",
                     "label": { "en": "Manual source priorities", "de": "Manuelle Quellenprioritäten" },
                     "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
                     "items": [
                         {
                             "type": "select",
@@ -226,6 +261,37 @@
                             "default": false
                         }
                     ]
+                },
+                "manualLatitude": {
+                    "type": "number",
+                    "label": { "en": "Manual latitude override", "de": "Manueller Breitengrad" },
+                    "help": {
+                        "en": "Leave empty to use ioBroker system coordinates",
+                        "de": "Leer lassen, um die ioBroker-Systemkoordinaten zu verwenden"
+                    },
+                    "min": -90,
+                    "max": 90,
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "manualLongitude": {
+                    "type": "number",
+                    "label": { "en": "Manual longitude override", "de": "Manueller Längengrad" },
+                    "help": {
+                        "en": "Both manual values are required for an override",
+                        "de": "Für eine manuelle Übersteuerung sind beide Werte erforderlich"
+                    },
+                    "min": -180,
+                    "max": 180,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
                 }
             }
         }

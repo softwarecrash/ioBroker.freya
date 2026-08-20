@@ -1,0 +1,89 @@
+{
+    "i18n": false,
+    "type": "panel",
+    "items": {
+        "notice": {
+            "type": "staticText",
+            "text": {
+                "en": "This policy is synchronized with SmartBrain's Devices / States table. All permissions default to off; Phase 3 remains read-only.",
+                "de": "Diese Regel wird mit der SmartBrain-Tabelle Geräte / States synchronisiert. Alle Berechtigungen sind standardmäßig aus; Phase 3 bleibt schreibgeschützt."
+            },
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 12,
+            "lg": 12,
+            "xl": 12
+        },
+        "semanticType": {
+            "type": "select",
+            "label": { "en": "Semantic type", "de": "Semantischer Typ" },
+            "default": "auto",
+            "newLine": true,
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 6,
+            "xl": 6,
+            "options": [
+                { "label": "Auto", "value": "auto" },
+                { "label": "Light", "value": "light" },
+                { "label": "Dimmer", "value": "dimmer" },
+                { "label": "Motion", "value": "motion" },
+                { "label": "Presence", "value": "presence" },
+                { "label": "Illuminance", "value": "illuminance" },
+                { "label": "Temperature", "value": "temperature" },
+                { "label": "Humidity", "value": "humidity" },
+                { "label": "Cloud cover", "value": "cloudCover" },
+                { "label": "Precipitation", "value": "precipitation" },
+                { "label": "Wind speed", "value": "windSpeed" },
+                { "label": "Contact", "value": "contact" },
+                { "label": "Lock", "value": "lock" },
+                { "label": "Alarm", "value": "alarm" },
+                { "label": "Switch", "value": "switch" },
+                { "label": "Unknown", "value": "unknown" }
+            ]
+        },
+        "observe": {
+            "type": "checkbox",
+            "label": "Observe",
+            "default": false,
+            "newLine": true,
+            "xs": 12,
+            "sm": 6,
+            "md": 3,
+            "lg": 3,
+            "xl": 3
+        },
+        "learn": {
+            "type": "checkbox",
+            "label": "Learn",
+            "default": false,
+            "xs": 12,
+            "sm": 6,
+            "md": 3,
+            "lg": 3,
+            "xl": 3
+        },
+        "suggest": {
+            "type": "checkbox",
+            "label": "Suggest",
+            "default": false,
+            "xs": 12,
+            "sm": 6,
+            "md": 3,
+            "lg": 3,
+            "xl": 3
+        },
+        "control": {
+            "type": "checkbox",
+            "label": "Control",
+            "default": false,
+            "xs": 12,
+            "sm": 6,
+            "md": 3,
+            "lg": 3,
+            "xl": 3
+        }
+    }
+}

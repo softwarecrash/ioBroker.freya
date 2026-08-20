@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "smartbrain",
-        "version": "0.1.0",
+        "version": "0.2.0",
         "news": {
+            "0.2.0": {
+                "en": "Add synchronized object custom policies and provider-based time and solar context",
+                "de": "Synchronisierte Objekt-Einstellungen und Provider-basierten Zeit- und Sonnenkontext hinzugefügt"
+            },
             "0.1.0": {
                 "en": "Add safe metadata discovery, semantic classification and deny-by-default permissions",
                 "de": "Sichere Metadaten-Erkennung, semantische Klassifizierung und standardmäßig verweigerte Berechtigungen hinzugefügt"
@@ -40,11 +44,12 @@
         "dataSource": "assumption",
         "dataFolder": "smartbrain.%INSTANCE%",
         "messagebox": true,
+        "supportCustoms": true,
         "adminUI": {
             "config": "json"
         },
         "dependencies": [{ "js-controller": ">=6.0.11" }],
-        "globalDependencies": [{ "admin": ">=7.0.23" }]
+        "globalDependencies": [{ "admin": ">=7.6.20" }]
     },
     "native": {
         "autonomyLevel": 0,
@@ -53,7 +58,9 @@
         "discoveryEnabled": true,
         "discoveryMaxStates": 20000,
         "statePolicies": [],
-        "environmentMappings": []
+        "environmentMappings": [],
+        "manualLatitude": null,
+        "manualLongitude": null
     },
     "objects": [],
     "instanceObjects": [

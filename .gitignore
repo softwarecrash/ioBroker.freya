@@ -1,9 +1,9 @@
 node_modules/
 build/
+.commitinfo
 coverage/
 *.log
 .DS_Store
 .dev-server/
 .idea/
 *.tgz
-

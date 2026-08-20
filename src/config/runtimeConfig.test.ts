@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { createRuntimeConfig } from './runtimeConfig';
 
-describe('Phase 2 runtime configuration', () => {
+describe('Phase 3 runtime configuration', () => {
     it('uses read-only defaults', () => {
         expect(createRuntimeConfig({})).to.deep.equal({
             autonomyLevel: 0,
@@ -11,6 +11,8 @@ describe('Phase 2 runtime configuration', () => {
             discoveryMaxStates: 20_000,
             statePolicies: [],
             environmentMappings: [],
+            manualLatitude: undefined,
+            manualLongitude: undefined,
             unsafeConfigurationIgnored: false,
         });
     });

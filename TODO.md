@@ -63,14 +63,14 @@ Last updated: 2026-08-20
 
 - [ ] Subscribe only to explicitly observed states.
 - [ ] Normalize state changes into `Observation` records.
-- [ ] Define `ContextProvider`, `ContextRequest`, `ContextSnapshot`, provenance, quality,
+- [x] Define `ContextProvider`, `ContextRequest`, `ContextSnapshot`, provenance, quality,
       timeout, and partial-failure contracts.
-- [ ] Implement `TimeContextProvider`.
-- [ ] Evaluate a lightweight maintained local solar library for license, size, accuracy,
+- [x] Implement `TimeContextProvider`.
+- [x] Evaluate a lightweight maintained local solar library for license, size, accuracy,
       Node versions, ARM/x64, and maintenance.
-- [ ] Implement `SunContextProvider` with manual coordinate override, ioBroker system
+- [x] Implement `SunContextProvider` with manual coordinate override, ioBroker system
       coordinate fallback, sunrise/sunset, elevation, azimuth, phases, and relative time.
-- [ ] Implement `EnvironmentContextProvider`, `WeatherContextProvider`,
+- [x] Implement `EnvironmentContextProvider`, `WeatherContextProvider`,
       `PresenceContextProvider`, and bounded `DeviceContextProvider` ports.
 - [ ] Compose a context snapshot at the timestamp of each relevant observation.
 - [ ] Add previous value, provider context, enum context, role, source, and bounded

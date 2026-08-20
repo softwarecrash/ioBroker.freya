@@ -5,10 +5,10 @@ selected states, discovers repeatable home-automation patterns, and turns them i
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
 
-The project is currently in **Phase 2 (read-only semantic discovery)**. The TypeScript
+The project is currently in **Phase 3 (read-only context foundation)**. The TypeScript
 daemon scans ioBroker object metadata, classifies supported state semantics, ranks
-environment sources, and exposes only bounded aggregate status plus a paginated
-message API. It does not read state values, subscribe to foreign states, access
+environment sources, synchronizes explicit state policies, and can compose bounded
+time/solar context snapshots. It does not subscribe to foreign state values, access
 history, learn patterns, or execute actions.
 
 ## Design goals
@@ -41,7 +41,7 @@ implementation plan.
 
 ## Safety status
 
-No foreign production state is changed by this project. Phase 2 enforces autonomy
+No foreign production state value is changed by this project. Phase 3 enforces autonomy
 level 0, learning disabled, no history provider, and deny-by-default state permissions,
 even if unsupported persisted settings request otherwise. Lock and alarm states cannot
 receive control permission. Until the controlled-actions phase is implemented and
@@ -89,6 +89,19 @@ created when needed and is enabled only after its effective configuration has be
 verified as autonomy level 0. Admin assets are uploaded after changes so they are
 visible in the local Admin UI.
 
+## Changelog
+
+### 0.2.0 (2026-08-20)
+
+- Added bounded context-provider foundations and local solar calculations.
+- Added synchronized central and per-object custom state policy configuration.
+- Added a local ioBroker repository-checker release gate and bounded Dependabot
+  auto-merge policy.
+
+Older details are available in [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 
-A license will be selected and added with the generated adapter skeleton in Phase 1.
+Copyright (c) 2026 softwarecrash
+
+This project is licensed under the MIT License.

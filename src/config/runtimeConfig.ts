@@ -1,8 +1,8 @@
 import type { EnvironmentMappingInput, StatePolicyInput } from '../discovery/types';
 
-/** Effective runtime settings available in the read-only discovery phase. */
+/** Effective runtime settings available in the read-only context phase. */
 export interface RuntimeConfig {
-    /** Effective autonomy level; Phase 2 is always observe-only. */
+    /** Effective autonomy level; Phase 3 is always observe-only. */
     autonomyLevel: 0;
     /** Learning remains disabled until its engine and tests exist. */
     learningEnabled: false;
@@ -16,12 +16,15 @@ export interface RuntimeConfig {
     statePolicies: StatePolicyInput[];
     /** Explicit environment source priorities. */
     environmentMappings: EnvironmentMappingInput[];
+    /** Optional complete manual coordinate override. */
+    manualLatitude?: number;
+    manualLongitude?: number;
     /** Indicates that potentially unsafe persisted settings were ignored. */
     unsafeConfigurationIgnored: boolean;
 }
 
 /**
- * Convert persisted settings to the only configuration supported in Phase 2.
+ * Convert persisted settings to the only configuration supported in Phase 3.
  *
  * @param config Persisted adapter configuration.
  */
@@ -37,6 +40,8 @@ export function createRuntimeConfig(config: Partial<ioBroker.AdapterConfig>): Ru
             : 20_000,
         statePolicies: Array.isArray(config.statePolicies) ? config.statePolicies : [],
         environmentMappings: Array.isArray(config.environmentMappings) ? config.environmentMappings : [],
+        manualLatitude: typeof config.manualLatitude === 'number' ? config.manualLatitude : undefined,
+        manualLongitude: typeof config.manualLongitude === 'number' ? config.manualLongitude : undefined,
         unsafeConfigurationIgnored:
             (config.autonomyLevel !== undefined && config.autonomyLevel !== 0) ||
             config.learningEnabled === true ||

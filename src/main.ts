@@ -1,23 +1,42 @@
 import * as utils from '@iobroker/adapter-core';
 import { createRuntimeConfig } from './config/runtimeConfig';
+import { ContextEngine } from './context/contextEngine';
+import { IoBrokerCoordinateSource } from './context/providers/ioBrokerCoordinateSource';
+import { SunContextProvider } from './context/providers/sunContextProvider';
+import { TimeContextProvider } from './context/providers/timeContextProvider';
 import { DiscoveryService } from './discovery/discoveryService';
 import { IoBrokerDiscoverySource } from './discovery/ioBrokerDiscoverySource';
 import { DiscoveryCoordinator } from './services/discoveryCoordinator';
+import { IoBrokerPolicySynchronizer } from './services/ioBrokerPolicySynchronizer';
 import { SmartBrainRuntime } from './services/runtime';
 
 class SmartBrainAdapter extends utils.Adapter {
     private runtime?: SmartBrainRuntime;
     private discovery?: DiscoveryService;
+    private policySynchronizer?: IoBrokerPolicySynchronizer;
+    private contextEngine?: ContextEngine;
+    private policyStateIds = new Set<string>();
+    private policySyncTimer?: ioBroker.Timeout;
 
     public constructor(options: Partial<utils.AdapterOptions> = {}) {
         super({ ...options, name: 'smartbrain' });
         this.on('ready', this.onReady.bind(this));
         this.on('message', this.onMessage.bind(this));
+        this.on('objectChange', this.onObjectChange.bind(this));
         this.on('unload', this.onUnload.bind(this));
     }
 
     private async onReady(): Promise<void> {
         const config = createRuntimeConfig(this.config);
+        this.policySynchronizer = new IoBrokerPolicySynchronizer(this);
+        const synchronizedPolicies = await this.policySynchronizer.synchronize(config.statePolicies);
+        this.policyStateIds = new Set(synchronizedPolicies.map(policy => policy.stateId));
+        await this.subscribeForeignObjectsAsync('*');
+        const timeProvider = new TimeContextProvider();
+        const sunProvider = new SunContextProvider(
+            new IoBrokerCoordinateSource(this, config.manualLatitude, config.manualLongitude),
+        );
+        this.contextEngine = new ContextEngine(timeProvider, [sunProvider], { providerTimeoutMs: 1_000 });
 
         this.runtime = new SmartBrainRuntime(
             {
@@ -33,7 +52,7 @@ class SmartBrainAdapter extends utils.Adapter {
         if (config.discoveryEnabled) {
             this.discovery = new DiscoveryService(new IoBrokerDiscoverySource(this), {
                 maxStates: config.discoveryMaxStates,
-                policies: config.statePolicies,
+                policies: synchronizedPolicies,
                 environmentMappings: config.environmentMappings,
             });
             const coordinator = new DiscoveryCoordinator(this.discovery, {
@@ -47,10 +66,28 @@ class SmartBrainAdapter extends utils.Adapter {
         } else {
             await this.setStateAsync('discovery.status', 'disabled', true);
         }
-        this.log.info('[Observation] SmartBrain started in read-only Phase 2 mode');
+        this.log.info('[Observation] SmartBrain started in read-only Phase 3 context mode');
     }
 
-    private onMessage(message: ioBroker.Message): void {
+    private onObjectChange(id: string, object: ioBroker.Object | null | undefined): void {
+        const custom = object?.type === 'state' ? object.common.custom?.[this.namespace] : undefined;
+        if (!custom && !this.policyStateIds.has(id)) {
+            return;
+        }
+        if (this.policySyncTimer) {
+            this.clearTimeout(this.policySyncTimer);
+        }
+        this.policySyncTimer = this.setTimeout(() => {
+            void this.policySynchronizer
+                ?.synchronize()
+                .then(policies => {
+                    this.policyStateIds = new Set(policies.map(policy => policy.stateId));
+                })
+                .catch(error => this.log.warn(`[Permissions] Synchronization failed: ${(error as Error).message}`));
+        }, 250);
+    }
+
+    private async onMessage(message: ioBroker.Message): Promise<void> {
         if (!message.callback) {
             return;
         }
@@ -74,6 +111,26 @@ class SmartBrainAdapter extends utils.Adapter {
             );
             return;
         }
+        if (message.command === 'getContextSnapshot') {
+            const input =
+                typeof message.message === 'object' && message.message
+                    ? (message.message as Record<string, unknown>)
+                    : {};
+            const requestedTimestamp = typeof input.timestamp === 'number' ? input.timestamp : Date.now();
+            const timestamp = Number.isFinite(requestedTimestamp) ? requestedTimestamp : Date.now();
+            try {
+                const snapshot = await this.contextEngine?.snapshot({ timestamp });
+                this.sendTo(message.from, message.command, snapshot ?? null, message.callback);
+            } catch (error) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { error: 'context_snapshot_failed', message: (error as Error).message },
+                    message.callback,
+                );
+            }
+            return;
+        }
         this.sendTo(message.from, message.command, { error: 'unsupported_command' }, message.callback);
     }
 
@@ -83,6 +140,9 @@ class SmartBrainAdapter extends utils.Adapter {
 
     private async shutdown(callback: () => void): Promise<void> {
         try {
+            if (this.policySyncTimer) {
+                this.clearTimeout(this.policySyncTimer);
+            }
             await this.runtime?.stop();
         } catch (error) {
             this.log.error(`[Lifecycle] Shutdown failed: ${(error as Error).message}`);

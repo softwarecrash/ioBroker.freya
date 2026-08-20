@@ -7,6 +7,27 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-20
+
+### Added
+
+- Provider-neutral context snapshots with provenance, confidence, timeouts, and
+  independent optional-provider failures.
+- Time, Sun, Environment, Weather, Presence, and bounded Device context providers.
+- Local sunrise, sunset, elevation, azimuth, phase, and relative-time calculation using
+  ioBroker system coordinates or an optional manual override.
+- Per-object SmartBrain custom settings synchronized with the central state-policy
+  table using last-edit timestamps.
+- A pinned local ioBroker repository-checker release gate and guarded npm-only
+  Dependabot patch/minor auto-merge workflow.
+
+### Security
+
+- Existing Dependabot major-update pull requests remain manual; GitHub Actions updates
+  and all major dependency changes are excluded from automatic merging.
+- State-value providers are bounded and not activated until observation permissions
+  are wired; the running adapter remains free of foreign-state reads and writes.
+
 ## [0.1.0] - 2026-08-20
 
 ### Added

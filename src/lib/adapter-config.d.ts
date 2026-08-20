@@ -10,6 +10,8 @@ declare global {
             discoveryMaxStates: number;
             statePolicies: StatePolicyInput[];
             environmentMappings: EnvironmentMappingInput[];
+            manualLatitude?: number;
+            manualLongitude?: number;
         }
     }
 }

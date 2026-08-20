@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { SmartBrainRuntime, type RuntimePort } from './runtime';
 
 describe('SmartBrainRuntime', () => {
-    it('publishes only safe, adapter-owned Phase 2 status', async () => {
+    it('publishes only safe, adapter-owned Phase 3 status', async () => {
         const writes: Array<[string, ioBroker.StateValue]> = [];
         const warnings: string[] = [];
         const port: RuntimePort = {
