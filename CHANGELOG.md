@@ -7,6 +7,29 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-20
+
+### Added
+
+- Bounded, metadata-only discovery of ioBroker states, ancestors, roles, units, rooms,
+  functions, capabilities, and selected non-secret native type hints.
+- Conservative semantic classification with confidence evidence and an `unknown`
+  fallback.
+- Ranked semantic environment mappings with multiple candidates, manual priorities,
+  and pinning without adapter-specific IDs.
+- Paginated discovery message API, aggregate discovery states, and JSON Config views.
+- Deny-by-default per-state permissions with dependency validation and hard control
+  denial for locks, alarms, unknown semantics, and non-writable states.
+- Unit tests for classification, mappings, object normalization, discovery paging,
+  permissions, and status publication.
+
+### Security
+
+- Discovery reads object metadata only and excludes SmartBrain-owned states; it does
+  not read foreign values, subscribe to changes, access history, or execute actions.
+
+## [0.0.1] - 2026-08-20
+
 ### Added
 
 - Initial repository bootstrap and authenticated GitHub workflow.

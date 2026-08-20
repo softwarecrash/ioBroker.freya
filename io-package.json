@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "smartbrain",
-        "version": "0.0.1",
+        "version": "0.1.0",
         "news": {
+            "0.1.0": {
+                "en": "Add safe metadata discovery, semantic classification and deny-by-default permissions",
+                "de": "Sichere Metadaten-Erkennung, semantische Klassifizierung und standardmäßig verweigerte Berechtigungen hinzugefügt"
+            },
             "0.0.1": {
                 "en": "Initial read-only adapter skeleton",
                 "de": "Initiales schreibgeschütztes Adaptergerüst"
@@ -35,6 +39,7 @@
         "connectionType": "local",
         "dataSource": "assumption",
         "dataFolder": "smartbrain.%INSTANCE%",
+        "messagebox": true,
         "adminUI": {
             "config": "json"
         },
@@ -44,7 +49,11 @@
     "native": {
         "autonomyLevel": 0,
         "learningEnabled": false,
-        "historyInstance": "none"
+        "historyInstance": "none",
+        "discoveryEnabled": true,
+        "discoveryMaxStates": 20000,
+        "statePolicies": [],
+        "environmentMappings": []
     },
     "objects": [],
     "instanceObjects": [
@@ -153,6 +162,156 @@
             "type": "state",
             "common": {
                 "name": { "en": "Approved patterns", "de": "Freigegebene Muster" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "discovery",
+            "type": "channel",
+            "common": { "name": { "en": "Discovery", "de": "Erkennung" } },
+            "native": {}
+        },
+        {
+            "_id": "discovery.status",
+            "type": "state",
+            "common": {
+                "name": { "en": "Discovery status", "de": "Erkennungsstatus" },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": "idle"
+            },
+            "native": {}
+        },
+        {
+            "_id": "discovery.totalStateCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Available states", "de": "Verfügbare States" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "discovery.scannedStateCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Scanned states", "de": "Gescannte States" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "discovery.classifiedStateCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Classified states", "de": "Klassifizierte States" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "discovery.unknownStateCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Unknown states", "de": "Unbekannte States" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "discovery.sensitiveStateCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Sensitive states", "de": "Sensible States" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "discovery.environmentCandidateCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Environment candidates", "de": "Umgebungskandidaten" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "discovery.lastRun",
+            "type": "state",
+            "common": {
+                "name": { "en": "Last discovery", "de": "Letzte Erkennung" },
+                "type": "number",
+                "role": "value.time",
+                "read": true,
+                "write": false,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "permissions",
+            "type": "channel",
+            "common": { "name": { "en": "Permissions", "de": "Berechtigungen" } },
+            "native": {}
+        },
+        {
+            "_id": "permissions.configuredCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Configured policies", "de": "Konfigurierte Regeln" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "permissions.controllableCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Controllable states", "de": "Steuerbare States" },
                 "type": "number",
                 "role": "value",
                 "read": true,

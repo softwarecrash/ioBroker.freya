@@ -1,6 +1,6 @@
 import type { RuntimeConfig } from '../config/runtimeConfig';
 
-/** Minimal adapter boundary used by the Phase 1 runtime. */
+/** Minimal adapter boundary used by the Phase 2 runtime. */
 export interface RuntimePort {
     /** Write an adapter-owned status state. */
     setState(id: string, value: ioBroker.StateValue): Promise<void>;
@@ -8,7 +8,7 @@ export interface RuntimePort {
     warn(message: string): void;
 }
 
-/** Publishes the bounded, read-only lifecycle status for Phase 1. */
+/** Publishes the bounded, read-only lifecycle status for Phase 2. */
 export class SmartBrainRuntime {
     private started = false;
 
@@ -30,7 +30,7 @@ export class SmartBrainRuntime {
         }
 
         if (this.config.unsafeConfigurationIgnored) {
-            this.port.warn('[Safety] Unsupported Phase 1 configuration ignored; enforcing autonomy level 0');
+            this.port.warn('[Safety] Unsupported Phase 2 configuration ignored; enforcing autonomy level 0');
         }
 
         await this.port.setState('info.autonomyLevel', this.config.autonomyLevel);

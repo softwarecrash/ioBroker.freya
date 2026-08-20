@@ -1,39 +1,233 @@
 {
-    "type": "panel",
+    "type": "tabs",
     "items": {
-        "phaseNotice": {
-            "type": "staticText",
-            "text": {
-                "en": "Phase 1 is intentionally read-only. Learning, history access, and automatic actions are disabled.",
-                "de": "Phase 1 arbeitet absichtlich nur lesend. Lernen, History-Zugriff und automatische Aktionen sind deaktiviert."
-            },
-            "newLine": true
+        "overview": {
+            "type": "panel",
+            "label": { "en": "Overview", "de": "Übersicht" },
+            "items": {
+                "phaseNotice": {
+                    "type": "staticText",
+                    "text": {
+                        "en": "Phase 2 performs metadata-only discovery. Learning, history access, subscriptions, and automatic actions remain disabled.",
+                        "de": "Phase 2 führt ausschließlich eine Metadaten-Erkennung durch. Lernen, History-Zugriff, Subscriptions und automatische Aktionen bleiben deaktiviert."
+                    },
+                    "newLine": true
+                },
+                "discoveryStatus": {
+                    "type": "state",
+                    "label": { "en": "Discovery status", "de": "Erkennungsstatus" },
+                    "oid": "discovery.status",
+                    "newLine": true,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "scannedStates": {
+                    "type": "state",
+                    "label": { "en": "Scanned states", "de": "Gescannte States" },
+                    "oid": "discovery.scannedStateCount",
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "classifiedStates": {
+                    "type": "state",
+                    "label": { "en": "Classified states", "de": "Klassifizierte States" },
+                    "oid": "discovery.classifiedStateCount",
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "unknownStates": {
+                    "type": "state",
+                    "label": { "en": "Unknown states", "de": "Unbekannte States" },
+                    "oid": "discovery.unknownStateCount",
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "autonomyLevel": {
+                    "type": "number",
+                    "label": { "en": "Autonomy level", "de": "Autonomie-Level" },
+                    "min": 0,
+                    "max": 0,
+                    "disabled": true,
+                    "help": {
+                        "en": "Fixed at observe-only in Phase 2",
+                        "de": "In Phase 2 fest auf nur beobachten gesetzt"
+                    },
+                    "newLine": true,
+                    "sm": 4,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "learningEnabled": {
+                    "type": "checkbox",
+                    "label": { "en": "Enable learning", "de": "Lernen aktivieren" },
+                    "disabled": true,
+                    "sm": 4,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "historyInstance": {
+                    "type": "select",
+                    "label": { "en": "History provider", "de": "History-Provider" },
+                    "options": [{ "label": { "en": "Disabled", "de": "Deaktiviert" }, "value": "none" }],
+                    "disabled": true,
+                    "sm": 4,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                }
+            }
         },
-        "autonomyLevel": {
-            "type": "number",
-            "label": { "en": "Autonomy level", "de": "Autonomie-Level" },
-            "min": 0,
-            "max": 0,
-            "disabled": true,
-            "help": { "en": "Fixed at observe-only in Phase 1", "de": "In Phase 1 fest auf nur beobachten gesetzt" },
-            "newLine": true,
-            "sm": 4
+        "states": {
+            "type": "panel",
+            "label": { "en": "Devices / States", "de": "Geräte / States" },
+            "items": {
+                "discoveryEnabled": {
+                    "type": "checkbox",
+                    "label": { "en": "Enable metadata discovery", "de": "Metadaten-Erkennung aktivieren" },
+                    "newLine": true,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "discoveryMaxStates": {
+                    "type": "number",
+                    "label": { "en": "Maximum states per scan", "de": "Maximale States pro Scan" },
+                    "min": 100,
+                    "max": 50000,
+                    "newLine": true,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "policyNotice": {
+                    "type": "staticText",
+                    "text": {
+                        "en": "All permissions default to off. Control is stored for future phases only and cannot execute actions in Phase 2. Locks and security states remain denied.",
+                        "de": "Alle Berechtigungen sind standardmäßig aus. Control wird nur für spätere Phasen gespeichert und kann in Phase 2 keine Aktionen ausführen. Schlösser und Sicherheits-States bleiben gesperrt."
+                    },
+                    "newLine": true
+                },
+                "statePolicies": {
+                    "type": "table",
+                    "label": {
+                        "en": "State permissions and semantic corrections",
+                        "de": "State-Berechtigungen und semantische Korrekturen"
+                    },
+                    "newLine": true,
+                    "items": [
+                        {
+                            "type": "objectId",
+                            "attr": "stateId",
+                            "title": { "en": "State", "de": "State" },
+                            "types": ["state"],
+                            "width": "32%",
+                            "filter": false,
+                            "sort": false
+                        },
+                        {
+                            "type": "select",
+                            "attr": "semanticType",
+                            "title": { "en": "Semantic type", "de": "Semantischer Typ" },
+                            "width": "18%",
+                            "default": "auto",
+                            "options": [
+                                { "label": "Auto", "value": "auto" },
+                                { "label": "Light", "value": "light" },
+                                { "label": "Dimmer", "value": "dimmer" },
+                                { "label": "Motion", "value": "motion" },
+                                { "label": "Presence", "value": "presence" },
+                                { "label": "Illuminance", "value": "illuminance" },
+                                { "label": "Temperature", "value": "temperature" },
+                                { "label": "Humidity", "value": "humidity" },
+                                { "label": "Cloud cover", "value": "cloudCover" },
+                                { "label": "Precipitation", "value": "precipitation" },
+                                { "label": "Wind speed", "value": "windSpeed" },
+                                { "label": "Contact", "value": "contact" },
+                                { "label": "Lock", "value": "lock" },
+                                { "label": "Alarm", "value": "alarm" },
+                                { "label": "Switch", "value": "switch" },
+                                { "label": "Unknown", "value": "unknown" }
+                            ]
+                        },
+                        { "type": "checkbox", "attr": "observe", "title": "Observe", "width": "8%", "default": false },
+                        { "type": "checkbox", "attr": "learn", "title": "Learn", "width": "8%", "default": false },
+                        { "type": "checkbox", "attr": "suggest", "title": "Suggest", "width": "8%", "default": false },
+                        { "type": "checkbox", "attr": "control", "title": "Control", "width": "8%", "default": false }
+                    ]
+                }
+            }
         },
-        "learningEnabled": {
-            "type": "checkbox",
-            "label": { "en": "Enable learning", "de": "Lernen aktivieren" },
-            "disabled": true,
-            "newLine": true,
-            "sm": 4
-        },
-        "historyInstance": {
-            "type": "select",
-            "label": { "en": "History provider", "de": "History-Provider" },
-            "options": [{ "label": { "en": "Disabled", "de": "Deaktiviert" }, "value": "none" }],
-            "disabled": true,
-            "newLine": true,
-            "sm": 4
+        "environment": {
+            "type": "panel",
+            "label": { "en": "Environment mappings", "de": "Umgebungs-Zuordnungen" },
+            "items": {
+                "environmentNotice": {
+                    "type": "staticText",
+                    "text": {
+                        "en": "Mappings use semantic keys and may contain several prioritized sources. No adapter-specific state IDs are hard-coded.",
+                        "de": "Zuordnungen verwenden semantische Schlüssel und können mehrere priorisierte Quellen enthalten. Es sind keine adapterspezifischen State-IDs fest codiert."
+                    },
+                    "newLine": true
+                },
+                "environmentMappings": {
+                    "type": "table",
+                    "label": { "en": "Manual source priorities", "de": "Manuelle Quellenprioritäten" },
+                    "newLine": true,
+                    "items": [
+                        {
+                            "type": "select",
+                            "attr": "key",
+                            "title": { "en": "Semantic key", "de": "Semantischer Schlüssel" },
+                            "width": "28%",
+                            "options": [
+                                { "label": "Outside temperature", "value": "outsideTemperature" },
+                                { "label": "Outside illuminance", "value": "outsideIlluminance" },
+                                { "label": "Humidity", "value": "humidity" },
+                                { "label": "Cloud cover", "value": "cloudCover" },
+                                { "label": "Precipitation", "value": "precipitation" },
+                                { "label": "Wind speed", "value": "windSpeed" }
+                            ]
+                        },
+                        {
+                            "type": "objectId",
+                            "attr": "stateId",
+                            "title": { "en": "Source state", "de": "Quell-State" },
+                            "types": ["state"],
+                            "width": "45%",
+                            "filter": false,
+                            "sort": false
+                        },
+                        {
+                            "type": "number",
+                            "attr": "priority",
+                            "title": { "en": "Priority", "de": "Priorität" },
+                            "width": "14%",
+                            "default": 0,
+                            "min": -100,
+                            "max": 100
+                        },
+                        {
+                            "type": "checkbox",
+                            "attr": "pinned",
+                            "title": { "en": "Pinned", "de": "Fixiert" },
+                            "width": "10%",
+                            "default": false
+                        }
+                    ]
+                }
+            }
         }
     }
 }
-

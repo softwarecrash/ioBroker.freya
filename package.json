@@ -1,6 +1,6 @@
 {
     "name": "iobroker.smartbrain",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "description": "Learns explainable smart-home patterns and proposes safety-controlled automations",
     "author": {
         "name": "softwarecrash",
@@ -8,7 +8,13 @@
     },
     "homepage": "https://github.com/softwarecrash/ioBroker.smartbrain",
     "license": "MIT",
-    "keywords": ["automation", "learning", "patterns", "smart-home", "local-first"],
+    "keywords": [
+        "automation",
+        "learning",
+        "patterns",
+        "smart-home",
+        "local-first"
+    ],
     "repository": {
         "type": "git",
         "url": "git@github.com:softwarecrash/ioBroker.smartbrain.git"
@@ -59,11 +65,22 @@
         "release": "release-script"
     },
     "nyc": {
-        "include": ["src/**/*.ts"],
-        "exclude": ["src/**/*.test.ts"],
-        "extension": [".ts"],
-        "require": ["ts-node/register"],
-        "reporter": ["text-summary", "html"],
+        "include": [
+            "src/**/*.ts"
+        ],
+        "exclude": [
+            "src/**/*.test.ts"
+        ],
+        "extension": [
+            ".ts"
+        ],
+        "require": [
+            "ts-node/register"
+        ],
+        "reporter": [
+            "text-summary",
+            "html"
+        ],
         "sourceMap": true,
         "instrument": true
     },

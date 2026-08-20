@@ -5,9 +5,11 @@ selected states, discovers repeatable home-automation patterns, and turns them i
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
 
-The project is currently in **Phase 1 (read-only adapter skeleton)**. The TypeScript
-daemon builds and exposes only bounded, adapter-owned status states. It does not
-subscribe to foreign states, access history, learn patterns, or execute actions.
+The project is currently in **Phase 2 (read-only semantic discovery)**. The TypeScript
+daemon scans ioBroker object metadata, classifies supported state semantics, ranks
+environment sources, and exposes only bounded aggregate status plus a paginated
+message API. It does not read state values, subscribe to foreign states, access
+history, learn patterns, or execute actions.
 
 ## Design goals
 
@@ -39,10 +41,22 @@ implementation plan.
 
 ## Safety status
 
-No production state has been changed by this project. Phase 1 enforces autonomy level
-0, learning disabled, and no history provider at runtime, even if unsupported persisted
-settings request otherwise. Until the controlled-actions phase is implemented and
+No foreign production state is changed by this project. Phase 2 enforces autonomy
+level 0, learning disabled, no history provider, and deny-by-default state permissions,
+even if unsupported persisted settings request otherwise. Lock and alarm states cannot
+receive control permission. Until the controlled-actions phase is implemented and
 tested, SmartBrain remains read-only by design.
+
+## Semantic discovery
+
+Discovery uses `common.role`, translated names, units, value type, ancestors, native
+type hints, and room/function enums. It deliberately stores no state values or raw
+object exports. Ambiguous metadata remains `unknown`; user corrections and permissions
+are kept separately in adapter configuration. Environment mappings support multiple
+ranked candidates and manual pinning without hard-coded adapter state IDs.
+
+The adapter message API provides `getDiscoverySummary` and `getDiscoveredStates`.
+State pages are capped at 100 entries and support a text query.
 
 ## Development
 

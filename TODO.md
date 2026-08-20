@@ -9,11 +9,11 @@ Last updated: 2026-08-20
 - [x] Keep production ioBroker inspection read-only.
 - [x] Install the Phase 1 package locally and verify `smartbrain.0` at autonomy level 0.
 - [ ] Never commit state IDs, room/device names, addresses, values, credentials, or raw
-  ioBroker exports.
+      ioBroker exports.
 - [ ] After every completed milestone: test, push to GitHub, build a local package,
-  install/upload it, then verify SmartBrain-owned states and logs.
+      install/upload it, then verify SmartBrain-owned states and logs.
 - [ ] Keep installation default at autonomy level 0 and `control: false` for every
-  discovered state.
+      discovered state.
 - [ ] Test every safety rule before implementing production action execution.
 
 ## Phase 0 — analysis and architecture
@@ -24,9 +24,9 @@ Last updated: 2026-08-20
 - [x] Identify active and stale history metadata.
 - [x] Review local adapter structures.
 - [x] Review current official adapter creator, adapter-core, JSON Config, publication,
-  persistence, and history guidance.
+      persistence, and history guidance.
 - [x] Define module boundaries, data flow, permissions, safety, persistence, history,
-  feedback, and LLM boundaries in `ARCHITECTURE.md`.
+      feedback, and LLM boundaries in `ARCHITECTURE.md`.
 - [x] Record and resolve the repository naming mismatch before publication.
 - [x] Review Phase 0 documentation and push the completed milestone.
 
@@ -40,23 +40,23 @@ Last updated: 2026-08-20
 - [x] Default to autonomy level 0 with no foreign-state subscriptions or writes.
 - [x] Add package, unit, integration, build, lint, and CI tests.
 - [x] Run the integration test in isolated CI; local execution correctly refuses to
-  interfere with the running production js-controller.
+      interfere with the running production js-controller.
 - [x] Update documentation and changelog; commit and push.
 
 ## Phase 2 — semantic discovery and permissions
 
-- [ ] Define semantic state, evidence, confidence-quality, and permission types.
-- [ ] Read objects, ancestors, rooms, functions, roles, units, and capabilities.
-- [ ] Implement conservative classifier with `unknown` fallback.
-- [ ] Define semantic environment mapping keys, candidate evidence, source quality,
-  priorities, manual pinning, and fallback provenance.
-- [ ] Discover multiple environment candidates from role, name, unit, enums, and
-  room/function assignments without hard-coded adapter state IDs.
-- [ ] Add deny-by-default sensitive-device classification.
-- [ ] Persist user corrections separately from discovered metadata.
-- [ ] Implement permission registry and validation invariants.
-- [ ] Add paginated/bounded Devices/States API and initial Admin UI.
-- [ ] Test with anonymized fixtures; do not copy production objects.
+- [x] Define semantic state, evidence, confidence-quality, and permission types.
+- [x] Read objects, ancestors, rooms, functions, roles, units, and capabilities.
+- [x] Implement conservative classifier with `unknown` fallback.
+- [x] Define semantic environment mapping keys, candidate evidence, source quality,
+      priorities, manual pinning, and fallback provenance.
+- [x] Discover multiple environment candidates from role, name, unit, enums, and
+      room/function assignments without hard-coded adapter state IDs.
+- [x] Add deny-by-default sensitive-device classification.
+- [x] Persist user corrections separately from discovered metadata.
+- [x] Implement permission registry and validation invariants.
+- [x] Add paginated/bounded Devices/States API and initial Admin UI.
+- [x] Test with anonymized fixtures; do not copy production objects.
 - [ ] Update documentation and changelog; commit and push.
 
 ## Phase 3 — observation
@@ -64,17 +64,17 @@ Last updated: 2026-08-20
 - [ ] Subscribe only to explicitly observed states.
 - [ ] Normalize state changes into `Observation` records.
 - [ ] Define `ContextProvider`, `ContextRequest`, `ContextSnapshot`, provenance, quality,
-  timeout, and partial-failure contracts.
+      timeout, and partial-failure contracts.
 - [ ] Implement `TimeContextProvider`.
 - [ ] Evaluate a lightweight maintained local solar library for license, size, accuracy,
-  Node versions, ARM/x64, and maintenance.
+      Node versions, ARM/x64, and maintenance.
 - [ ] Implement `SunContextProvider` with manual coordinate override, ioBroker system
-  coordinate fallback, sunrise/sunset, elevation, azimuth, phases, and relative time.
+      coordinate fallback, sunrise/sunset, elevation, azimuth, phases, and relative time.
 - [ ] Implement `EnvironmentContextProvider`, `WeatherContextProvider`,
-  `PresenceContextProvider`, and bounded `DeviceContextProvider` ports.
+      `PresenceContextProvider`, and bounded `DeviceContextProvider` ports.
 - [ ] Compose a context snapshot at the timestamp of each relevant observation.
 - [ ] Add previous value, provider context, enum context, role, source, and bounded
-  related context.
+      related context.
 - [ ] Add deduplication, queue limits, cache limits, and debug-only raw event logging.
 - [ ] Keep production behavior read-only.
 - [ ] Test event ordering, deletion/null events, overload, and shutdown.
@@ -88,7 +88,7 @@ Last updated: 2026-08-20
 - [ ] Prioritize `influxdb.0`; keep SQL and History adapters pluggable.
 - [ ] Add timeouts, cancellation, ordering, deduplication, and hard result limits.
 - [ ] Run read-only provider tests against a safe, selected production state only after
-  local mocked tests pass.
+      local mocked tests pass.
 - [ ] Update documentation and changelog; commit and push.
 
 ## Phase 5 — explainable light-pattern learning
@@ -96,11 +96,11 @@ Last updated: 2026-08-20
 - [ ] Define bounded candidate key and pattern lifecycle.
 - [ ] Correlate boolean triggers with boolean light actions in a time window.
 - [ ] Expose provider-agnostic candidate features for time, weekday/weekend, room,
-  brightness, presence, solar elevation, and time relative to sunrise/sunset.
+      brightness, presence, solar elevation, and time relative to sunrise/sunset.
 - [ ] Add deterministic feature selection based on held-out predictive improvement,
-  minimum branch support, redundancy pruning, and a documented complexity penalty.
+      minimum branch support, redundancy pruning, and a documented complexity penalty.
 - [ ] Prefer the smallest explainable condition set within a defined quality tolerance;
-  never attach every available context field to a pattern.
+      never attach every available context field to a pattern.
 - [ ] Compare fixed clock windows with seasonal sunrise/sunset-relative windows.
 - [ ] Implement pure deterministic confidence components and explanations.
 - [ ] Require minimum opportunities, matches, repeatability, and recency.
@@ -122,7 +122,7 @@ Last updated: 2026-08-20
 
 - [ ] Implement typed Safety Engine decisions and reason codes.
 - [ ] Validate existence, writability, permissions, autonomy, pattern status,
-  confidence, cooldown, blocks, value type/range, expiry, and context freshness.
+      confidence, cooldown, blocks, value type/range, expiry, and context freshness.
 - [ ] Implement Action Executor as the only foreign-state write boundary.
 - [ ] Add correlation IDs, complete audit records, and last-moment revalidation.
 - [ ] Test writes only through mocks or SmartBrain-owned test states.
