@@ -106,6 +106,17 @@ export class PatternEngine {
         };
     }
 
+    public setFeedbackCounts(patternId: string, positive: number, negative: number): boolean {
+        for (const [key, record] of this.records) {
+            if (createHash('sha256').update(key).digest('hex').slice(0, 16) === patternId) {
+                record.positiveFeedback = Math.max(0, Math.min(positive, 1_000));
+                record.negativeFeedback = Math.max(0, Math.min(negative, 1_000));
+                return true;
+            }
+        }
+        return false;
+    }
+
     private createOpportunities(trigger: LearnableState, observation: Observation): void {
         for (const action of this.states.values()) {
             if (action.semanticType !== 'light' || action.valueType !== 'boolean' || action.id === trigger.id) {

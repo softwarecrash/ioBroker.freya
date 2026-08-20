@@ -111,6 +111,11 @@ describe('PatternEngine', () => {
         const [pattern] = engine.patterns(start + 12 * DAY_MS);
         expect(pattern.status).to.equal('candidate');
         expect(pattern.conditions).to.deep.equal([]);
+        expect(engine.setFeedbackCounts(pattern.id, 0, 10)).to.equal(true);
+        const [adjusted] = engine.patterns(start + 12 * DAY_MS);
+        expect(adjusted.negativeFeedback).to.equal(10);
+        expect(adjusted.confidenceComponents.feedbackAdjustment).to.equal(-0.15);
+        expect(adjusted.confidence).to.be.lessThan(pattern.confidence);
     });
 
     it('ages stale patterns out of bounded memory', () => {

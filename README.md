@@ -5,7 +5,7 @@ selected states, discovers repeatable home-automation patterns, and turns them i
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
 
-The project is currently in **Phase 8 (optional advisory LLM providers)**. The TypeScript daemon
+The project is currently in **Phase 9 (persistent feedback learning)**. The TypeScript daemon
 scans ioBroker object metadata, classifies supported state semantics, ranks environment
 sources, synchronizes explicit state policies, and subscribes only to states with an
 explicit `observe` permission. Each relevant change becomes a bounded, in-memory
@@ -131,8 +131,9 @@ instance. It does not accept a target, value, permission, confidence, or approva
 from the caller: these values are resolved from trusted runtime state. The executor
 revalidates all mutable inputs immediately before writing and fails closed when context
 or object lookup is unavailable. `getActionAudit` exposes the bounded newest-first audit;
-summary states are available below `smartbrain.0.actions`. Cooldowns and audit records
-are intentionally volatile until the persistence and feedback phase.
+summary states are available below `smartbrain.0.actions`. Cooldowns remain volatile;
+complete action and feedback records are persisted locally while the operational audit
+view stays bounded in memory.
 
 ## Optional LLM advisory
 
@@ -152,6 +153,25 @@ protected and encrypted native configuration. Responses are size/time bounded an
 must contain exactly a short summary, risk level, and bounded concerns. Extra fields,
 including targets, values, approval, or execution instructions, invalidate the entire
 response. The LLM layer has no dependency on or route into the Action Executor.
+
+## Persistent action feedback
+
+Before the single foreign-state write boundary may run, SmartBrain atomically persists
+a schema-versioned `requested` action record in its ioBroker instance data directory.
+If this fails, execution fails closed. Completion, correlation ID, pattern, target,
+expected value, safety reasons, error code, and feedback are retained in a bounded
+1,000-record file with a flushed temporary file, atomic rename, previous-file backup,
+schema-0 migration, and strict validation on load. `getActionRecords` is paginated and
+Admin-only; `getFeedbackSummary` exposes aggregate counters.
+
+`submitFeedback` accepts explicit positive, negative, or neutral feedback only from an
+ioBroker Admin instance. Explicit feedback supersedes an earlier implicit result.
+Implicit attribution considers only the newest executed SmartBrain action for the same
+target inside the configured window. An opposite Admin change is conservatively
+negative, an opposite change from another source remains `unknown`, unrelated or equal
+changes are ignored, and expiry without an opposite change becomes neutral. Only
+positive and negative outcomes affect confidence, using the existing deterministic
+±0.15 cap; neutral and unknown outcomes have zero confidence effect.
 
 ## Development
 
@@ -186,10 +206,10 @@ visible in the local Admin UI.
 
 ## Changelog
 
-### 0.8.0 (2026-08-20)
+### 0.9.0 (2026-08-20)
 
-- Added local Rules Only, loopback Ollama, OpenAI Responses, and HTTPS
-  OpenAI-compatible advisory providers with strict schemas and disclosure previews.
+- Added fail-closed persistent action records, conservative explicit/implicit feedback
+  attribution, bounded confidence adjustment, migration, and backup recovery.
 
 Older details are available in [CHANGELOG.md](CHANGELOG.md).
 

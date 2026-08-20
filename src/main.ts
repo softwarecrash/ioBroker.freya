@@ -1,7 +1,8 @@
 import * as utils from '@iobroker/adapter-core';
 import { randomUUID } from 'node:crypto';
+import { join } from 'node:path';
 import { ActionAuditStore } from './actions/actionAuditStore';
-import { ActionExecutor, IoBrokerActionWriter } from './actions/actionExecutor';
+import { ActionExecutor, IoBrokerActionWriter, type ActionRecordPort } from './actions/actionExecutor';
 import { IoBrokerActionEnvironment } from './actions/ioBrokerActionEnvironment';
 import { SafetyEngine } from './actions/safetyEngine';
 import type { RuntimeConfig } from './config/runtimeConfig';
@@ -22,6 +23,8 @@ import type { DiscoveryResult, DiscoveredStateView } from './discovery/types';
 import { HistoryService } from './history/historyService';
 import { IoBrokerHistoryProvider, IoBrokerHistoryTransport } from './history/ioBrokerHistoryProvider';
 import { NoneHistoryProvider } from './history/noneHistoryProvider';
+import { ActionRepository } from './feedback/actionRepository';
+import { FeedbackService } from './feedback/feedbackService';
 import { LlmService } from './llm/llmService';
 import { createLlmProvider } from './llm/providerFactory';
 import {
@@ -51,15 +54,22 @@ class SmartBrainAdapter extends utils.Adapter {
     private suggestionService?: SuggestionService;
     private actionExecutor?: ActionExecutor;
     private readonly actionAudit = new ActionAuditStore();
+    private actionRecords: ActionRecordPort = {
+        requested: () => Promise.reject(new Error('action_repository_unavailable')),
+        completed: () => Promise.reject(new Error('action_repository_unavailable')),
+    };
+    private feedbackService?: FeedbackService;
     private llmService?: LlmService;
     private historyService?: HistoryService;
     private historyProviderOptions: HistoryProviderSelectOption[] = historyProviderSelectOptions([]);
     private readonly historyControllers = new Set<AbortController>();
     private readonly llmControllers = new Set<AbortController>();
+    private readonly feedbackTasks = new Set<Promise<void>>();
     private observationMetadata = new Map<string, ObservationMetadata>();
     private observedStateIds: string[] = [];
     private policyStateIds = new Set<string>();
     private policySyncTimer?: ioBroker.Timeout;
+    private feedbackTimer?: ioBroker.Interval;
     private unloading = false;
 
     public constructor(options: Partial<utils.AdapterOptions> = {}) {
@@ -79,6 +89,20 @@ class SmartBrainAdapter extends utils.Adapter {
 
     private async onReady(): Promise<void> {
         const config = createRuntimeConfig(this.config);
+        try {
+            const repository = new ActionRepository(join(utils.getAbsoluteInstanceDataDir(this), 'actions.v1.json'));
+            await repository.load();
+            this.actionRecords = repository;
+            this.feedbackService = new FeedbackService(
+                repository,
+                `system.adapter.${this.namespace}`,
+                config.feedbackWindowSeconds * 1_000,
+            );
+        } catch (error) {
+            this.log.warn(
+                `[Feedback] Persistent action repository unavailable: ${(error as Error).message.slice(0, 80)}`,
+            );
+        }
         try {
             const provider = createLlmProvider(config);
             const endpointOrigin =
@@ -121,6 +145,17 @@ class SmartBrainAdapter extends utils.Adapter {
 
         await this.runtime.start();
         await this.publishLlmStatus();
+        await this.publishFeedbackSummary();
+        this.feedbackTimer = this.setInterval(() => {
+            const task = this.feedbackService?.expire().then(async () => {
+                this.applyPersistedFeedback();
+                this.refreshSuggestions();
+                await this.publishFeedbackSummary();
+            });
+            if (task) {
+                this.trackFeedback(task, 'Expiry');
+            }
+        }, 60_000);
         if (this.unloading) {
             return;
         }
@@ -250,6 +285,7 @@ class SmartBrainAdapter extends utils.Adapter {
             new IoBrokerActionEnvironment(this, config, this.suggestionService, this.contextEngine, permissions),
             new IoBrokerActionWriter(this),
             this.actionAudit,
+            this.actionRecords,
         );
         this.observationEngine = new ObservationEngine(
             this.contextEngine,
@@ -259,6 +295,7 @@ class SmartBrainAdapter extends utils.Adapter {
                         return;
                     }
                     this.patternEngine?.observe(observation);
+                    this.applyPersistedFeedback();
                     const summary = this.observationEngine?.summary();
                     const patterns = this.patternEngine?.patterns(observation.timestamp) ?? [];
                     this.suggestionService?.synchronize(patterns, observation.timestamp);
@@ -314,6 +351,14 @@ class SmartBrainAdapter extends utils.Adapter {
         const metadata = this.observationMetadata.get(id);
         if (metadata) {
             this.observationEngine?.ingest(id, state ?? null, metadata);
+        }
+        if (state && this.feedbackService) {
+            const task = this.feedbackService.observe(id, state, state.ts).then(async () => {
+                this.applyPersistedFeedback();
+                this.refreshSuggestions(state.ts);
+                await this.publishFeedbackSummary();
+            });
+            this.trackFeedback(task, 'Attribution');
         }
     }
 
@@ -484,6 +529,71 @@ class SmartBrainAdapter extends utils.Adapter {
             this.sendTo(message.from, message.command, this.actionAudit.page(page, pageSize), message.callback);
             return;
         }
+        if (message.command === 'getFeedbackSummary') {
+            this.sendTo(message.from, message.command, this.feedbackService?.summary() ?? null, message.callback);
+            return;
+        }
+        if (message.command === 'getActionRecords') {
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(message.from, message.command, { error: 'action_records_source_denied' }, message.callback);
+                return;
+            }
+            const input = this.messageInput(message.message);
+            const page = typeof input.page === 'number' ? input.page : 0;
+            const pageSize = typeof input.pageSize === 'number' ? input.pageSize : 50;
+            this.sendTo(
+                message.from,
+                message.command,
+                this.feedbackService?.actions(page, pageSize) ?? null,
+                message.callback,
+            );
+            return;
+        }
+        if (message.command === 'submitFeedback') {
+            const input = this.messageInput(message.message);
+            const correlationId = typeof input.correlationId === 'string' ? input.correlationId : '';
+            const outcome = typeof input.outcome === 'string' ? input.outcome : '';
+            const reason = typeof input.reason === 'string' ? input.reason : undefined;
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { accepted: false, reason: 'feedback_source_denied' },
+                    message.callback,
+                );
+                return;
+            }
+            if (
+                !/^[a-z0-9-]{1,80}$/i.test(correlationId) ||
+                !new Set(['positive', 'negative', 'neutral']).has(outcome)
+            ) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { accepted: false, reason: 'feedback_input_invalid' },
+                    message.callback,
+                );
+                return;
+            }
+            const result = await this.feedbackService?.explicit(
+                correlationId,
+                outcome as 'positive' | 'negative' | 'neutral',
+                message.from,
+                Date.now(),
+                reason,
+            );
+            this.applyPersistedFeedback();
+            this.refreshSuggestions();
+            await this.publishFeedbackSummary();
+            await this.publishSuggestionSummary();
+            this.sendTo(
+                message.from,
+                message.command,
+                result ?? { accepted: false, reason: 'feedback_unavailable' },
+                message.callback,
+            );
+            return;
+        }
         if (message.command === 'executePattern') {
             const input = this.messageInput(message.message);
             const patternId = typeof input.patternId === 'string' ? input.patternId : '';
@@ -526,6 +636,7 @@ class SmartBrainAdapter extends utils.Adapter {
                 contextTimestamp: timestamp,
             });
             await this.publishActionResult(result);
+            await this.publishFeedbackSummary();
             this.sendTo(message.from, message.command, result, message.callback);
             return;
         }
@@ -679,6 +790,38 @@ class SmartBrainAdapter extends utils.Adapter {
         await this.setOwnState('llm.lastResult', 'none');
     }
 
+    private applyPersistedFeedback(): void {
+        if (this.patternEngine && this.feedbackService) {
+            this.feedbackService.applyPersisted(this.patternEngine);
+        }
+    }
+
+    private refreshSuggestions(timestamp = Date.now()): void {
+        if (this.patternEngine && this.suggestionService) {
+            this.suggestionService.synchronize(this.patternEngine.patterns(timestamp), timestamp);
+        }
+    }
+
+    private async publishFeedbackSummary(): Promise<void> {
+        const summary = this.feedbackService?.summary();
+        await this.setOwnState('feedback.pendingCount', summary?.pendingCount ?? 0);
+        await this.setOwnState('feedback.positiveCount', summary?.positiveCount ?? 0);
+        await this.setOwnState('feedback.negativeCount', summary?.negativeCount ?? 0);
+        await this.setOwnState('feedback.unknownCount', summary?.unknownCount ?? 0);
+        await this.setOwnState('feedback.lastTimestamp', summary?.lastFeedbackTimestamp ?? 0);
+    }
+
+    private trackFeedback(task: Promise<void>, operation: string): void {
+        this.feedbackTasks.add(task);
+        void task
+            .catch(error => {
+                if (!this.unloading) {
+                    this.log.warn(`[Feedback] ${operation} failed: ${(error as Error).message.slice(0, 80)}`);
+                }
+            })
+            .finally(() => this.feedbackTasks.delete(task));
+    }
+
     private async setOwnState(id: string, value: ioBroker.StateValue): Promise<void> {
         if (!this.unloading) {
             await this.setStateAsync(id, value, true);
@@ -690,6 +833,9 @@ class SmartBrainAdapter extends utils.Adapter {
             if (this.policySyncTimer) {
                 this.clearTimeout(this.policySyncTimer);
             }
+            if (this.feedbackTimer) {
+                this.clearInterval(this.feedbackTimer);
+            }
             for (const controller of this.historyControllers) {
                 controller.abort();
             }
@@ -698,6 +844,8 @@ class SmartBrainAdapter extends utils.Adapter {
                 controller.abort();
             }
             this.llmControllers.clear();
+            await Promise.allSettled([...this.feedbackTasks]);
+            this.feedbackTasks.clear();
             if (this.observedStateIds.length) {
                 await this.unsubscribeForeignStatesAsync(this.observedStateIds);
             }

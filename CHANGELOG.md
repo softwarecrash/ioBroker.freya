@@ -7,6 +7,27 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-08-20
+
+### Added
+
+- Bounded schema-versioned local action repository containing request/completion data,
+  correlation IDs, results, safety reasons, and feedback, with serialized writes,
+  flushed temporary files, atomic replacement, backup recovery, and schema-0 migration.
+- Admin-only explicit positive/negative/neutral feedback, paginated Admin-only action
+  records, aggregate feedback APIs/states, and a configurable attribution window.
+- Conservative implicit attribution for same-target opposing changes, including
+  explicit `unknown` outcomes for ambiguous sources and neutral expiry.
+- Persisted positive/negative totals feed the existing deterministic confidence
+  component with its ±0.15 bound; neutral and unknown feedback have no effect.
+
+### Security
+
+- Action execution now fails closed before inspection or writing when the durable
+  request record cannot be stored. Invalid persisted schemas are never trusted.
+- Explicit feedback is accepted only from ioBroker Admin. Implicit feedback never calls
+  an ambiguous source a user and never correlates unrelated target changes.
+
 ## [0.8.0] - 2026-08-20
 
 ### Added

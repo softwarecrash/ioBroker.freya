@@ -364,16 +364,15 @@ MVP persistence uses the ioBroker instance data directory returned by
 `getAbsoluteInstanceDataDir(adapter)`. `io-package.json` will declare
 `common.dataFolder: "smartbrain.%INSTANCE%"` so normal ioBroker backups include it.
 
-The first implementation uses schema-versioned JSON snapshots plus a bounded JSONL
-activity journal:
+The action/feedback implementation uses a bounded schema-versioned JSON snapshot:
 
-- write a temporary file, flush, then atomically rename;
-- validate every loaded document and keep a previous known-good snapshot;
-- cap and compact journals;
+- serialize every mutation, write a mode-0600 temporary file, flush, then atomically rename;
+- validate every loaded document, migrate schema 0, and recover the previous known-good backup;
+- cap retained complete action records at 1,000;
 - serialize writes through one persistence queue;
 - expose migrations by schema version.
 
-This avoids native SQLite installation and cross-platform/ARM risks in the MVP. A later
+This avoids native SQLite installation and cross-platform/ARM risks. A later
 storage implementation may replace it behind the same repository interfaces if data
 volume demonstrates the need.
 

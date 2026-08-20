@@ -32,6 +32,7 @@ export interface RuntimeConfig {
     llmBaseUrl: string;
     llmApiKey: string;
     llmTimeoutSeconds: number;
+    feedbackWindowSeconds: number;
     /** Indicates that potentially unsafe persisted settings were ignored. */
     unsafeConfigurationIgnored: boolean;
 }
@@ -78,6 +79,7 @@ export function createRuntimeConfig(config: Partial<ioBroker.AdapterConfig>): Ru
     const requestedLlmModel = typeof config.llmModel === 'string' ? config.llmModel.trim() : '';
     const llmModel = /^[a-z0-9._:/-]{0,120}$/i.test(requestedLlmModel) ? requestedLlmModel : '';
     const requestedLlmTimeout = Number(config.llmTimeoutSeconds ?? 20);
+    const requestedFeedbackWindow = Number(config.feedbackWindowSeconds ?? 120);
     return {
         autonomyLevel,
         learningEnabled: config.learningEnabled === true,
@@ -105,6 +107,9 @@ export function createRuntimeConfig(config: Partial<ioBroker.AdapterConfig>): Ru
         llmTimeoutSeconds: Number.isFinite(requestedLlmTimeout)
             ? Math.max(1, Math.min(60, Math.floor(requestedLlmTimeout)))
             : 20,
+        feedbackWindowSeconds: Number.isFinite(requestedFeedbackWindow)
+            ? Math.max(5, Math.min(1_800, Math.floor(requestedFeedbackWindow)))
+            : 120,
         unsafeConfigurationIgnored:
             autonomyLevel !== requestedAutonomy ||
             !validHistory ||

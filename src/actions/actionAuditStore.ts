@@ -1,6 +1,6 @@
 import type { ActionAuditRecord } from './types';
 
-/** Bounded in-memory action audit; persistence is added in the feedback phase. */
+/** Bounded in-memory operational view; complete action records are persisted separately. */
 export class ActionAuditStore {
     private readonly records: ActionAuditRecord[] = [];
     private sequence = 0;

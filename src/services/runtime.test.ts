@@ -28,6 +28,7 @@ describe('SmartBrainRuntime', () => {
             llmBaseUrl: 'http://127.0.0.1:11434',
             llmApiKey: '',
             llmTimeoutSeconds: 20,
+            feedbackWindowSeconds: 120,
             unsafeConfigurationIgnored: false,
         });
 
@@ -75,6 +76,7 @@ describe('SmartBrainRuntime', () => {
                 llmBaseUrl: 'http://127.0.0.1:11434',
                 llmApiKey: '',
                 llmTimeoutSeconds: 20,
+                feedbackWindowSeconds: 120,
                 unsafeConfigurationIgnored: false,
             },
         );
@@ -84,6 +86,6 @@ describe('SmartBrainRuntime', () => {
         await runtime.stop();
         await runtime.stop();
 
-        expect(writes).to.have.length(19);
+        expect(writes).to.have.length(24);
     });
 });

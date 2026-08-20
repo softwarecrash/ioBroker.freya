@@ -141,12 +141,12 @@ Last updated: 2026-08-20
 
 ## Phase 9 — feedback learning
 
-- [ ] Persist complete SmartBrain action records and correlation IDs.
-- [ ] Implement explicit feedback.
-- [ ] Implement conservative implicit feedback with `unknown` attribution.
-- [ ] Apply bounded feedback adjustment to deterministic confidence.
-- [ ] Test overrides, ambiguous sources, unrelated changes, and timing windows.
-- [ ] Update documentation and changelog; commit and push.
+- [x] Persist complete SmartBrain action records and correlation IDs.
+- [x] Implement explicit feedback.
+- [x] Implement conservative implicit feedback with `unknown` attribution.
+- [x] Apply bounded feedback adjustment to deterministic confidence.
+- [x] Test overrides, ambiguous sources, unrelated changes, and timing windows.
+- [x] Update documentation and changelog; commit and push.
 
 ## Before public release
 

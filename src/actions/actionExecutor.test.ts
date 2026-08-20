@@ -112,4 +112,29 @@ describe('ActionExecutor', () => {
         expect(writes).to.be.empty;
         expect(audit.page().items.map(item => item.stage)).to.deep.equal(['failed', 'requested']);
     });
+
+    it('fails closed before inspection and writing when durable request persistence fails', async () => {
+        let inspected = false;
+        const writes: string[] = [];
+        const provider: ActionEnvironmentProvider = {
+            inspect: () => {
+                inspected = true;
+                return Promise.resolve(validEnvironment());
+            },
+            markExecuted: () => undefined,
+        };
+        const result = await new ActionExecutor(
+            new SafetyEngine(),
+            provider,
+            { write: id => Promise.resolve(void writes.push(id)) },
+            new ActionAuditStore(),
+            {
+                requested: () => Promise.reject(new Error('disk_unavailable')),
+                completed: () => Promise.resolve(),
+            },
+        ).execute(request());
+        expect(result).to.include({ executed: false, errorCode: 'action_persistence_unavailable' });
+        expect(inspected).to.equal(false);
+        expect(writes).to.be.empty;
+    });
 });

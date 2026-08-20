@@ -20,6 +20,7 @@ declare global {
             llmBaseUrl: string;
             llmApiKey: string;
             llmTimeoutSeconds: number;
+            feedbackWindowSeconds: number;
         }
     }
 }

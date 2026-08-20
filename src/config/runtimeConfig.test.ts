@@ -21,6 +21,7 @@ describe('runtime configuration', () => {
             llmBaseUrl: 'http://127.0.0.1:11434',
             llmApiKey: '',
             llmTimeoutSeconds: 20,
+            feedbackWindowSeconds: 120,
             unsafeConfigurationIgnored: false,
         });
     });
@@ -70,6 +71,11 @@ describe('runtime configuration', () => {
             llmTimeoutSeconds: 60,
         });
         expect(createRuntimeConfig({ llmProvider: 'unknown' }).llmProvider).to.equal('disabled');
+    });
+
+    it('bounds the feedback attribution window', () => {
+        expect(createRuntimeConfig({ feedbackWindowSeconds: 1 }).feedbackWindowSeconds).to.equal(5);
+        expect(createRuntimeConfig({ feedbackWindowSeconds: 99_999 }).feedbackWindowSeconds).to.equal(1_800);
     });
 
     it('accepts the complete safe configuration without a warning flag', () => {

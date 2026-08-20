@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "smartbrain",
-        "version": "0.8.0",
+        "version": "0.9.0",
         "news": {
+            "0.9.0": {
+                "en": "Add persistent action correlation and conservative feedback learning",
+                "de": "Persistente Aktionskorrelation und konservatives Feedback-Lernen hinzugefügt"
+            },
             "0.8.0": {
                 "en": "Add isolated optional LLM advisory providers and disclosure previews",
                 "de": "Isolierte optionale LLM-Berater und Übertragungsvorschau hinzugefügt"
@@ -85,6 +89,7 @@
         "llmBaseUrl": "http://127.0.0.1:11434",
         "llmApiKey": "",
         "llmTimeoutSeconds": 20,
+        "feedbackWindowSeconds": 120,
         "learningEnabled": false,
         "historyInstance": "none",
         "discoveryEnabled": true,
@@ -666,6 +671,82 @@
                 "read": true,
                 "write": false,
                 "def": "none"
+            },
+            "native": {}
+        },
+        {
+            "_id": "feedback",
+            "type": "channel",
+            "common": { "name": { "en": "Feedback", "de": "Feedback" } },
+            "native": {}
+        },
+        {
+            "_id": "feedback.pendingCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Pending action feedback", "de": "Ausstehendes Aktions-Feedback" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "feedback.positiveCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Positive feedback", "de": "Positives Feedback" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "feedback.negativeCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Negative feedback", "de": "Negatives Feedback" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "feedback.unknownCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Unknown feedback attribution", "de": "Unbekannte Feedback-Zuordnung" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "feedback.lastTimestamp",
+            "type": "state",
+            "common": {
+                "name": { "en": "Last feedback timestamp", "de": "Zeitpunkt des letzten Feedbacks" },
+                "type": "number",
+                "role": "value.time",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
             },
             "native": {}
         }

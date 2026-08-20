@@ -561,6 +561,88 @@
                 }
             }
         },
+        "feedback": {
+            "type": "panel",
+            "label": { "en": "Feedback", "de": "Feedback" },
+            "items": {
+                "feedbackNotice": {
+                    "type": "staticText",
+                    "text": {
+                        "en": "Complete action records are stored locally with correlation IDs. Explicit feedback is accepted only through submitFeedback from ioBroker Admin. An opposing Admin change inside the window is conservatively negative; ambiguous sources remain Unknown, unrelated changes are ignored, and no change becomes Neutral.",
+                        "de": "Vollständige Aktionsdatensätze werden lokal mit Korrelations-IDs gespeichert. Explizites Feedback wird nur über submitFeedback vom ioBroker-Admin angenommen. Eine entgegengesetzte Admin-Änderung im Zeitfenster gilt konservativ als negativ; mehrdeutige Quellen bleiben Unbekannt, fremde Änderungen werden ignoriert und keine Änderung wird Neutral."
+                    },
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "feedbackWindowSeconds": {
+                    "type": "number",
+                    "label": { "en": "Attribution window (seconds)", "de": "Zuordnungsfenster (Sekunden)" },
+                    "min": 5,
+                    "max": 1800,
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "pendingFeedback": {
+                    "type": "state",
+                    "label": { "en": "Pending", "de": "Ausstehend" },
+                    "oid": "feedback.pendingCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 2,
+                    "lg": 2,
+                    "xl": 2
+                },
+                "positiveFeedback": {
+                    "type": "state",
+                    "label": { "en": "Positive", "de": "Positiv" },
+                    "oid": "feedback.positiveCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 2,
+                    "lg": 2,
+                    "xl": 2
+                },
+                "negativeFeedback": {
+                    "type": "state",
+                    "label": { "en": "Negative", "de": "Negativ" },
+                    "oid": "feedback.negativeCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 2,
+                    "lg": 2,
+                    "xl": 2
+                },
+                "unknownFeedback": {
+                    "type": "state",
+                    "label": { "en": "Unknown", "de": "Unbekannt" },
+                    "oid": "feedback.unknownCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 2,
+                    "lg": 2,
+                    "xl": 2
+                },
+                "lastFeedback": {
+                    "type": "state",
+                    "label": { "en": "Last feedback timestamp", "de": "Letztes Feedback" },
+                    "oid": "feedback.lastTimestamp",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                }
+            }
+        },
         "activity": {
             "type": "panel",
             "label": { "en": "Activity", "de": "Aktivität" },
