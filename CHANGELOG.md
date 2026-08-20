@@ -7,6 +7,25 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-20
+
+### Added
+
+- Permission-gated foreign-state subscriptions and normalized, ordered observations.
+- Event-time snapshots from time, sun, environment, weather, presence, and bounded
+  related-device context providers.
+- Observation paging/summary message APIs and adapter-owned subscription, retention,
+  drop, and last-timestamp status states.
+- Tests for event ordering and previous values, null versus deletion, queue overload,
+  retention, shutdown, allow-listed reads, and bounded string values.
+
+### Security
+
+- Observation and context reads are restricted to states with an explicit `observe`
+  permission; the default empty policy set creates no foreign-state subscriptions.
+- Queues, caches, related states, metadata, source strings, and string values are
+  bounded, while foreign writes, history access, learning, and actions remain disabled.
+
 ## [0.2.0] - 2026-08-20
 
 ### Added

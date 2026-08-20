@@ -5,11 +5,12 @@ selected states, discovers repeatable home-automation patterns, and turns them i
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
 
-The project is currently in **Phase 3 (read-only context foundation)**. The TypeScript
-daemon scans ioBroker object metadata, classifies supported state semantics, ranks
-environment sources, synchronizes explicit state policies, and can compose bounded
-time/solar context snapshots. It does not subscribe to foreign state values, access
-history, learn patterns, or execute actions.
+The project is currently in **Phase 3 (read-only observation)**. The TypeScript daemon
+scans ioBroker object metadata, classifies supported state semantics, ranks environment
+sources, synchronizes explicit state policies, and subscribes only to states with an
+explicit `observe` permission. Each relevant change becomes a bounded, in-memory
+observation with its event-time context snapshot. It does not access history, learn
+patterns, or execute actions.
 
 ## Design goals
 
@@ -58,6 +59,15 @@ ranked candidates and manual pinning without hard-coded adapter state IDs.
 The adapter message API provides `getDiscoverySummary` and `getDiscoveredStates`.
 State pages are capped at 100 entries and support a text query.
 
+## Read-only observations
+
+Only states enabled through the central policy table or the synchronized custom object
+settings are subscribed. Unchanged events are deduplicated and normalized in order;
+the queue and retained observation cache are both bounded. Context reads are restricted
+to the same allow-list. Observation status is available under `smartbrain.0.observation`,
+and bounded pages are available through `getObservationSummary` and `getObservations`.
+The cache is intentionally volatile in this phase.
+
 ## Development
 
 ```bash
@@ -91,12 +101,11 @@ visible in the local Admin UI.
 
 ## Changelog
 
-### 0.2.0 (2026-08-20)
+### 0.3.0 (2026-08-20)
 
-- Added bounded context-provider foundations and local solar calculations.
-- Added synchronized central and per-object custom state policy configuration.
-- Added a local ioBroker repository-checker release gate and bounded Dependabot
-  auto-merge policy.
+- Added permission-gated, ordered observations with event-time context snapshots.
+- Added bounded queues, retention, context reads, paging, and runtime counters.
+- Kept production behavior read-only: no history access, learning, or foreign writes.
 
 Older details are available in [CHANGELOG.md](CHANGELOG.md).
 

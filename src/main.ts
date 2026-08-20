@@ -2,11 +2,21 @@ import * as utils from '@iobroker/adapter-core';
 import { createRuntimeConfig } from './config/runtimeConfig';
 import { ContextEngine } from './context/contextEngine';
 import { IoBrokerCoordinateSource } from './context/providers/ioBrokerCoordinateSource';
+import {
+    DeviceContextProvider,
+    EnvironmentContextProvider,
+    PresenceContextProvider,
+    WeatherContextProvider,
+} from './context/providers/stateContextProviders';
 import { SunContextProvider } from './context/providers/sunContextProvider';
 import { TimeContextProvider } from './context/providers/timeContextProvider';
 import { DiscoveryService } from './discovery/discoveryService';
 import { IoBrokerDiscoverySource } from './discovery/ioBrokerDiscoverySource';
+import type { DiscoveryResult, DiscoveredStateView } from './discovery/types';
+import { ObservationEngine } from './observation/observationEngine';
+import type { ObservationMetadata } from './observation/types';
 import { DiscoveryCoordinator } from './services/discoveryCoordinator';
+import { IoBrokerContextStateReader } from './services/ioBrokerContextStateReader';
 import { IoBrokerPolicySynchronizer } from './services/ioBrokerPolicySynchronizer';
 import { SmartBrainRuntime } from './services/runtime';
 
@@ -15,6 +25,9 @@ class SmartBrainAdapter extends utils.Adapter {
     private discovery?: DiscoveryService;
     private policySynchronizer?: IoBrokerPolicySynchronizer;
     private contextEngine?: ContextEngine;
+    private observationEngine?: ObservationEngine;
+    private observationMetadata = new Map<string, ObservationMetadata>();
+    private observedStateIds: string[] = [];
     private policyStateIds = new Set<string>();
     private policySyncTimer?: ioBroker.Timeout;
 
@@ -23,6 +36,7 @@ class SmartBrainAdapter extends utils.Adapter {
         this.on('ready', this.onReady.bind(this));
         this.on('message', this.onMessage.bind(this));
         this.on('objectChange', this.onObjectChange.bind(this));
+        this.on('stateChange', this.onStateChange.bind(this));
         this.on('unload', this.onUnload.bind(this));
     }
 
@@ -49,6 +63,7 @@ class SmartBrainAdapter extends utils.Adapter {
         );
 
         await this.runtime.start();
+        await this.initializeObservationStatus();
         if (config.discoveryEnabled) {
             this.discovery = new DiscoveryService(new IoBrokerDiscoverySource(this), {
                 maxStates: config.discoveryMaxStates,
@@ -62,11 +77,98 @@ class SmartBrainAdapter extends utils.Adapter {
                 info: message => this.log.info(message),
                 warn: message => this.log.warn(message),
             });
-            await coordinator.run().catch(() => undefined);
+            const discoveryResult = await coordinator.run().catch(() => undefined);
+            if (discoveryResult) {
+                await this.setupObservation(discoveryResult, timeProvider, sunProvider);
+            }
         } else {
             await this.setStateAsync('discovery.status', 'disabled', true);
         }
-        this.log.info('[Observation] SmartBrain started in read-only Phase 3 context mode');
+        this.log.info('[Observation] SmartBrain started in read-only Phase 3 observation mode');
+    }
+
+    private async initializeObservationStatus(): Promise<void> {
+        await this.setStateAsync('observation.subscribedStateCount', 0, true);
+        await this.setStateAsync('observation.retainedCount', 0, true);
+        await this.setStateAsync('observation.droppedCount', 0, true);
+        await this.setStateAsync('observation.lastTimestamp', 0, true);
+    }
+
+    private async setupObservation(
+        discoveryResult: DiscoveryResult,
+        timeProvider: TimeContextProvider,
+        sunProvider: SunContextProvider,
+    ): Promise<void> {
+        const observedStates = discoveryResult.states.filter(state => state.permissions.observe);
+        this.observedStateIds = observedStates.map(state => state.id);
+        const reader = new IoBrokerContextStateReader(this, this.observedStateIds);
+        const observedIdSet = new Set(this.observedStateIds);
+        const environmentCandidates = Object.values(discoveryResult.environment)
+            .flat()
+            .filter(candidate => observedIdSet.has(candidate.stateId));
+        const presenceStateIds = observedStates
+            .filter(state => state.semanticType === 'presence')
+            .map(state => state.id);
+        this.contextEngine = new ContextEngine(
+            timeProvider,
+            [
+                sunProvider,
+                new EnvironmentContextProvider(reader, environmentCandidates),
+                new WeatherContextProvider(reader, environmentCandidates),
+                new PresenceContextProvider(reader, presenceStateIds),
+                new DeviceContextProvider(reader, this.observedStateIds, 25),
+            ],
+            { providerTimeoutMs: 1_000 },
+        );
+        this.observationMetadata = new Map(
+            observedStates.map(state => [state.id, this.observationMetadataFor(state, observedStates)]),
+        );
+        this.observationEngine = new ObservationEngine(
+            this.contextEngine,
+            {
+                onObservation: async observation => {
+                    const summary = this.observationEngine?.summary();
+                    await this.setStateAsync('observation.retainedCount', summary?.retainedObservations ?? 0, true);
+                    await this.setStateAsync('observation.droppedCount', summary?.droppedEvents ?? 0, true);
+                    await this.setStateAsync('observation.lastTimestamp', observation.timestamp, true);
+                },
+                onError: message => this.log.warn(message),
+                debug: message => this.log.debug(message),
+            },
+            this.observedStateIds.length,
+            { maxQueue: 500, maxRetained: 500 },
+        );
+        await this.setStateAsync('learning.observedStateCount', this.observedStateIds.length, true);
+        await this.setStateAsync('observation.subscribedStateCount', this.observedStateIds.length, true);
+        if (this.observedStateIds.length) {
+            const initialStates = await this.getForeignStatesAsync(this.observedStateIds);
+            this.observationEngine.prime(initialStates);
+            await this.subscribeForeignStatesAsync(this.observedStateIds);
+        }
+    }
+
+    private observationMetadataFor(
+        state: DiscoveredStateView,
+        observedStates: DiscoveredStateView[],
+    ): ObservationMetadata {
+        const relatedStateIds = observedStates
+            .filter(candidate => candidate.id !== state.id && candidate.rooms.some(room => state.rooms.includes(room)))
+            .map(candidate => candidate.id)
+            .slice(0, 25);
+        return {
+            semanticType: state.semanticType,
+            role: state.role,
+            rooms: state.rooms.slice(0, 20).map(room => room.slice(0, 120)),
+            functions: state.functions.slice(0, 20).map(item => item.slice(0, 120)),
+            relatedStateIds,
+        };
+    }
+
+    private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
+        const metadata = this.observationMetadata.get(id);
+        if (metadata) {
+            this.observationEngine?.ingest(id, state ?? null, metadata);
+        }
     }
 
     private onObjectChange(id: string, object: ioBroker.Object | null | undefined): void {
@@ -131,6 +233,25 @@ class SmartBrainAdapter extends utils.Adapter {
             }
             return;
         }
+        if (message.command === 'getObservationSummary') {
+            this.sendTo(message.from, message.command, this.observationEngine?.summary() ?? null, message.callback);
+            return;
+        }
+        if (message.command === 'getObservations') {
+            const input =
+                typeof message.message === 'object' && message.message
+                    ? (message.message as Record<string, unknown>)
+                    : {};
+            const page = typeof input.page === 'number' ? input.page : 0;
+            const pageSize = typeof input.pageSize === 'number' ? input.pageSize : 50;
+            this.sendTo(
+                message.from,
+                message.command,
+                this.observationEngine?.page(page, pageSize) ?? null,
+                message.callback,
+            );
+            return;
+        }
         this.sendTo(message.from, message.command, { error: 'unsupported_command' }, message.callback);
     }
 
@@ -143,6 +264,10 @@ class SmartBrainAdapter extends utils.Adapter {
             if (this.policySyncTimer) {
                 this.clearTimeout(this.policySyncTimer);
             }
+            if (this.observedStateIds.length) {
+                await this.unsubscribeForeignStatesAsync(this.observedStateIds);
+            }
+            await this.observationEngine?.stop();
             await this.runtime?.stop();
         } catch (error) {
             this.log.error(`[Lifecycle] Shutdown failed: ${(error as Error).message}`);

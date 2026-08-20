@@ -61,8 +61,8 @@ Last updated: 2026-08-20
 
 ## Phase 3 — observation
 
-- [ ] Subscribe only to explicitly observed states.
-- [ ] Normalize state changes into `Observation` records.
+- [x] Subscribe only to explicitly observed states.
+- [x] Normalize state changes into `Observation` records.
 - [x] Define `ContextProvider`, `ContextRequest`, `ContextSnapshot`, provenance, quality,
       timeout, and partial-failure contracts.
 - [x] Implement `TimeContextProvider`.
@@ -72,13 +72,13 @@ Last updated: 2026-08-20
       coordinate fallback, sunrise/sunset, elevation, azimuth, phases, and relative time.
 - [x] Implement `EnvironmentContextProvider`, `WeatherContextProvider`,
       `PresenceContextProvider`, and bounded `DeviceContextProvider` ports.
-- [ ] Compose a context snapshot at the timestamp of each relevant observation.
-- [ ] Add previous value, provider context, enum context, role, source, and bounded
+- [x] Compose a context snapshot at the timestamp of each relevant observation.
+- [x] Add previous value, provider context, enum context, role, source, and bounded
       related context.
-- [ ] Add deduplication, queue limits, cache limits, and debug-only raw event logging.
-- [ ] Keep production behavior read-only.
-- [ ] Test event ordering, deletion/null events, overload, and shutdown.
-- [ ] Update documentation and changelog; commit and push.
+- [x] Add deduplication, queue limits, cache limits, and metadata-only debug logging.
+- [x] Keep production behavior read-only.
+- [x] Test event ordering, deletion/null events, overload, and shutdown.
+- [x] Update documentation and changelog; commit and push.
 
 ## Phase 4 — history
 

@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "smartbrain",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "news": {
+            "0.3.0": {
+                "en": "Add permission-gated observations with bounded context snapshots and status counters",
+                "de": "Berechtigungsgesteuerte Beobachtungen mit begrenzten Kontext-Snapshots und Statuszählern hinzugefügt"
+            },
             "0.2.0": {
                 "en": "Add synchronized object custom policies and provider-based time and solar context",
                 "de": "Synchronisierte Objekt-Einstellungen und Provider-basierten Zeit- und Sonnenkontext hinzugefügt"
@@ -324,6 +328,67 @@
                 "read": true,
                 "write": false,
                 "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "observation",
+            "type": "channel",
+            "common": { "name": { "en": "Observation", "de": "Beobachtung" } },
+            "native": {}
+        },
+        {
+            "_id": "observation.subscribedStateCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Subscribed states", "de": "Abonnierte States" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "observation.retainedCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Retained observations", "de": "Gepufferte Beobachtungen" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "observation.droppedCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Dropped observation events", "de": "Verworfene Beobachtungsereignisse" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "observation.lastTimestamp",
+            "type": "state",
+            "common": {
+                "name": { "en": "Last observation", "de": "Letzte Beobachtung" },
+                "type": "number",
+                "role": "value.time",
+                "read": true,
+                "write": false,
                 "def": 0
             },
             "native": {}
