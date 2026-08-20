@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "smartbrain",
-        "version": "0.5.1",
+        "version": "0.6.0",
         "news": {
+            "0.6.0": {
+                "en": "Add rules-only suggestions, approval lifecycle, and bounded activity auditing",
+                "de": "Regelbasierte Vorschläge, Freigabe-Lebenszyklus und begrenztes Aktivitäts-Audit hinzugefügt"
+            },
             "0.5.1": {
                 "en": "Fix repeated policy-normalization restarts and shutdown races",
                 "de": "Wiederholte Policy-Normalisierungs-Neustarts und Shutdown-Rennen behoben"
@@ -26,14 +30,6 @@
             "0.2.0": {
                 "en": "Add synchronized object custom policies and provider-based time and solar context",
                 "de": "Synchronisierte Objekt-Einstellungen und Provider-basierten Zeit- und Sonnenkontext hinzugefügt"
-            },
-            "0.1.0": {
-                "en": "Add safe metadata discovery, semantic classification and deny-by-default permissions",
-                "de": "Sichere Metadaten-Erkennung, semantische Klassifizierung und standardmäßig verweigerte Berechtigungen hinzugefügt"
-            },
-            "0.0.1": {
-                "en": "Initial read-only adapter skeleton",
-                "de": "Initiales schreibgeschütztes Adaptergerüst"
             }
         },
         "titleLang": {
@@ -191,6 +187,87 @@
                 "name": { "en": "Approved patterns", "de": "Freigegebene Muster" },
                 "type": "number",
                 "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "patterns.disabledCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Disabled patterns", "de": "Deaktivierte Muster" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "suggestions",
+            "type": "channel",
+            "common": { "name": { "en": "Suggestions", "de": "Vorschläge" } },
+            "native": {}
+        },
+        {
+            "_id": "suggestions.candidateCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Suggestion candidates", "de": "Vorschlagskandidaten" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "suggestions.latest",
+            "type": "state",
+            "common": {
+                "name": { "en": "Latest suggestion", "de": "Letzter Vorschlag" },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": "none"
+            },
+            "native": {}
+        },
+        {
+            "_id": "activity",
+            "type": "channel",
+            "common": { "name": { "en": "Activity", "de": "Aktivität" } },
+            "native": {}
+        },
+        {
+            "_id": "activity.count",
+            "type": "state",
+            "common": {
+                "name": { "en": "Activity records", "de": "Aktivitätseinträge" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "activity.lastTimestamp",
+            "type": "state",
+            "common": {
+                "name": { "en": "Last activity timestamp", "de": "Zeitpunkt der letzten Aktivität" },
+                "type": "number",
+                "role": "value.time",
                 "read": true,
                 "write": false,
                 "min": 0,

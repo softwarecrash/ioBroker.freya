@@ -5,13 +5,14 @@ selected states, discovers repeatable home-automation patterns, and turns them i
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
 
-The project is currently in **Phase 5 (read-only pattern learning)**. The TypeScript daemon
+The project is currently in **Phase 6 (read-only suggestions and approval)**. The TypeScript daemon
 scans ioBroker object metadata, classifies supported state semantics, ranks environment
 sources, synchronizes explicit state policies, and subscribes only to states with an
 explicit `observe` permission. Each relevant change becomes a bounded, in-memory
 observation with its event-time context snapshot. An optional bounded history provider
 can read only those same states. Learning is disabled by default and, when enabled,
-uses only states with an explicit `learn` permission. It never executes actions.
+uses only states with an explicit `learn` permission. Rules-only suggestions additionally
+require `suggest` permission on both participating states. It never executes actions.
 
 ## Design goals
 
@@ -43,7 +44,7 @@ implementation plan.
 
 ## Safety status
 
-No foreign production state value is changed by this project. Phase 5 enforces autonomy
+No foreign production state value is changed by this project. Phase 6 enforces autonomy
 level 0, keeps learning and history disabled by default, and uses
 deny-by-default state permissions even if unsupported persisted settings request
 otherwise. Lock and alarm states cannot receive control permission. Until the
@@ -106,6 +107,20 @@ exposes smoothed match rate, sample maturity, repeatability, feedback adjustment
 recency. `getPatternSummary` and bounded `getPatterns` provide read-only inspection.
 Pattern memory is intentionally volatile until the schema-versioned persistence phase.
 
+## Suggestions, approval, and activity
+
+Eligible candidates become deterministic suggestions containing the trigger, target,
+conditions, two-minute action window, match/opportunity counts, confidence, and every
+confidence component. Candidate creation, withdrawal, accepted status changes, and
+rejected commands enter a newest-first audit store capped at 500 records.
+
+`getSuggestionSummary`, paginated `getSuggestions`, and paginated `getActivity` expose
+read-only views. `setPatternStatus` supports `candidate`, `approved`, and `disabled`
+transitions, but accepts mutations only from an ioBroker Admin adapter instance. An
+approval changes no state permission, does not raise autonomy, and cannot execute a
+device action. Approved or disabled entries whose evidence disappears remain visible
+but are marked ineligible. Suggestion and activity storage is currently volatile.
+
 ## Development
 
 ```bash
@@ -139,10 +154,11 @@ visible in the local Admin UI.
 
 ## Changelog
 
-### 0.5.1 (2026-08-20)
+### 0.6.0 (2026-08-20)
 
-- Fixed repeated restarts when duplicate central policies had to be normalized.
-- Made asynchronous startup terminate cleanly without closed-database errors.
+- Added rules-only suggestions, explicit lifecycle transitions, and bounded activity
+  auditing.
+- Added read-only Patterns and Activity views without enabling device actions.
 
 Older details are available in [CHANGELOG.md](CHANGELOG.md).
 

@@ -217,6 +217,8 @@ export class PatternEngine {
             triggerStateId: record.trigger.id,
             actionStateId: record.action.id,
             expectedAction: true,
+            actionWindowMs: this.actionWindowMs,
+            suggestionEligible: record.trigger.canSuggest === true && record.action.canSuggest === true,
             rooms: [...record.rooms],
             conditions: selection.conditions,
             opportunities: selectedExamples.length,

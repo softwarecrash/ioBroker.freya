@@ -46,7 +46,7 @@ describe('PatternEngine', () => {
         const engine = new PatternEngine(
             [
                 { id: 'sensor.motion', semanticType: 'motion', valueType: 'boolean', rooms: ['living'] },
-                { id: 'lamp.on', semanticType: 'light', valueType: 'boolean', rooms: ['living'] },
+                { id: 'lamp.on', semanticType: 'light', valueType: 'boolean', rooms: ['living'], canSuggest: true },
             ],
             { enabled: true, actionWindowMs: 60_000 },
         );
@@ -69,6 +69,7 @@ describe('PatternEngine', () => {
         expect(pattern.opportunities).to.equal(12);
         expect(pattern.matches).to.equal(12);
         expect(pattern.explanation).to.contain('environment.illuminanceBand = dark');
+        expect(pattern.suggestionEligible).to.equal(false);
     });
 
     it('remains inert when disabled and never correlates rooms that do not overlap', () => {

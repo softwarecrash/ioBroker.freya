@@ -1,6 +1,6 @@
 import type { RuntimeConfig } from '../config/runtimeConfig';
 
-/** Minimal adapter boundary used by the Phase 5 runtime. */
+/** Minimal adapter boundary used by the Phase 6 runtime. */
 export interface RuntimePort {
     /** Write an adapter-owned status state. */
     setState(id: string, value: ioBroker.StateValue): Promise<void>;
@@ -8,7 +8,7 @@ export interface RuntimePort {
     warn(message: string): void;
 }
 
-/** Publishes the bounded, read-only lifecycle status for Phase 5. */
+/** Publishes the bounded, read-only lifecycle status for Phase 6. */
 export class SmartBrainRuntime {
     private started = false;
 
@@ -38,6 +38,11 @@ export class SmartBrainRuntime {
         await this.port.setState('learning.observedStateCount', 0);
         await this.port.setState('patterns.candidateCount', 0);
         await this.port.setState('patterns.approvedCount', 0);
+        await this.port.setState('patterns.disabledCount', 0);
+        await this.port.setState('suggestions.candidateCount', 0);
+        await this.port.setState('suggestions.latest', 'none');
+        await this.port.setState('activity.count', 0);
+        await this.port.setState('activity.lastTimestamp', 0);
         await this.port.setState('actions.lastResult', 'none');
         await this.port.setState('info.status', this.config.learningEnabled ? 'learning-read-only' : 'observe-only');
         await this.port.setState('info.connection', true);

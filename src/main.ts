@@ -29,6 +29,9 @@ import { DiscoveryCoordinator } from './services/discoveryCoordinator';
 import { IoBrokerContextStateReader } from './services/ioBrokerContextStateReader';
 import { IoBrokerPolicySynchronizer } from './services/ioBrokerPolicySynchronizer';
 import { SmartBrainRuntime } from './services/runtime';
+import { isTrustedApprovalSource } from './suggestions/approvalPolicy';
+import { SuggestionService } from './suggestions/suggestionService';
+import type { SuggestionStatus } from './suggestions/types';
 
 class SmartBrainAdapter extends utils.Adapter {
     private runtime?: SmartBrainRuntime;
@@ -37,6 +40,7 @@ class SmartBrainAdapter extends utils.Adapter {
     private contextEngine?: ContextEngine;
     private observationEngine?: ObservationEngine;
     private patternEngine?: PatternEngine;
+    private suggestionService?: SuggestionService;
     private historyService?: HistoryService;
     private historyProviderOptions: HistoryProviderSelectOption[] = historyProviderSelectOptions([]);
     private readonly historyControllers = new Set<AbortController>();
@@ -210,8 +214,10 @@ class SmartBrainAdapter extends utils.Adapter {
                 semanticType: state.semanticType,
                 valueType: state.valueType,
                 rooms: state.rooms.slice(0, 20),
+                canSuggest: state.permissions.suggest,
             }));
         this.patternEngine = new PatternEngine(learnableStates, { enabled: learningEnabled });
+        this.suggestionService = new SuggestionService();
         this.observationEngine = new ObservationEngine(
             this.contextEngine,
             {
@@ -221,11 +227,16 @@ class SmartBrainAdapter extends utils.Adapter {
                     }
                     this.patternEngine?.observe(observation);
                     const summary = this.observationEngine?.summary();
-                    const patternSummary = this.patternEngine?.summary(observation.timestamp);
+                    const patterns = this.patternEngine?.patterns(observation.timestamp) ?? [];
+                    this.suggestionService?.synchronize(patterns, observation.timestamp);
                     await this.setOwnState('observation.retainedCount', summary?.retainedObservations ?? 0);
                     await this.setOwnState('observation.droppedCount', summary?.droppedEvents ?? 0);
                     await this.setOwnState('observation.lastTimestamp', observation.timestamp);
-                    await this.setOwnState('patterns.candidateCount', patternSummary?.candidates ?? 0);
+                    await this.setOwnState(
+                        'patterns.candidateCount',
+                        patterns.filter(pattern => pattern.status === 'candidate').length,
+                    );
+                    await this.publishSuggestionSummary();
                 },
                 onError: message => this.log.warn(message),
                 debug: message => this.log.debug(message),
@@ -235,6 +246,7 @@ class SmartBrainAdapter extends utils.Adapter {
         );
         await this.setOwnState('learning.observedStateCount', this.observedStateIds.length);
         await this.setOwnState('observation.subscribedStateCount', this.observedStateIds.length);
+        await this.publishSuggestionSummary();
         if (this.observedStateIds.length) {
             const initialStates = await this.getForeignStatesAsync(this.observedStateIds);
             if (this.unloading) {
@@ -289,7 +301,11 @@ class SmartBrainAdapter extends utils.Adapter {
                 .then(result => {
                     this.policyStateIds = new Set(result.policies.map(policy => policy.stateId));
                 })
-                .catch(error => this.log.warn(`[Permissions] Synchronization failed: ${(error as Error).message}`));
+                .catch(error => {
+                    if (!this.unloading) {
+                        this.log.warn(`[Permissions] Synchronization failed: ${(error as Error).message}`);
+                    }
+                });
         }, 250);
     }
 
@@ -343,6 +359,79 @@ class SmartBrainAdapter extends utils.Adapter {
         }
         if (message.command === 'getPatternSummary') {
             this.sendTo(message.from, message.command, this.patternEngine?.summary() ?? null, message.callback);
+            return;
+        }
+        if (message.command === 'getSuggestionSummary') {
+            this.sendTo(message.from, message.command, this.suggestionService?.summary() ?? null, message.callback);
+            return;
+        }
+        if (message.command === 'getSuggestions') {
+            const input = this.messageInput(message.message);
+            const requestedStatus = typeof input.status === 'string' ? input.status : undefined;
+            const validStatuses = new Set<SuggestionStatus>(['candidate', 'approved', 'disabled']);
+            if (requestedStatus !== undefined && !validStatuses.has(requestedStatus as SuggestionStatus)) {
+                this.sendTo(message.from, message.command, { error: 'invalid_status' }, message.callback);
+                return;
+            }
+            const page = typeof input.page === 'number' ? input.page : 0;
+            const pageSize = typeof input.pageSize === 'number' ? input.pageSize : 50;
+            this.sendTo(
+                message.from,
+                message.command,
+                this.suggestionService?.list(requestedStatus as SuggestionStatus | undefined, page, pageSize) ?? null,
+                message.callback,
+            );
+            return;
+        }
+        if (message.command === 'getActivity') {
+            const input = this.messageInput(message.message);
+            const page = typeof input.page === 'number' ? input.page : 0;
+            const pageSize = typeof input.pageSize === 'number' ? input.pageSize : 50;
+            this.sendTo(
+                message.from,
+                message.command,
+                this.suggestionService?.activityPage(page, pageSize) ?? null,
+                message.callback,
+            );
+            return;
+        }
+        if (message.command === 'setPatternStatus') {
+            const input = this.messageInput(message.message);
+            const patternId = typeof input.patternId === 'string' ? input.patternId : '';
+            const status = typeof input.status === 'string' ? input.status : '';
+            const timestamp = Date.now();
+            let result;
+            if (!isTrustedApprovalSource(message.from)) {
+                result = this.suggestionService?.rejectCommand(
+                    patternId,
+                    message.from,
+                    'approval_source_denied',
+                    timestamp,
+                );
+            } else if (!/^[a-f0-9]{16}$/.test(patternId)) {
+                result = this.suggestionService?.rejectCommand(
+                    patternId,
+                    message.from,
+                    'invalid_pattern_id',
+                    timestamp,
+                );
+            } else if (!new Set(['candidate', 'approved', 'disabled']).has(status)) {
+                result = this.suggestionService?.rejectCommand(patternId, message.from, 'invalid_status', timestamp);
+            } else {
+                result = this.suggestionService?.transition(
+                    patternId,
+                    status as SuggestionStatus,
+                    message.from,
+                    timestamp,
+                );
+            }
+            await this.publishSuggestionSummary();
+            this.sendTo(
+                message.from,
+                message.command,
+                result ?? { accepted: false, reason: 'unavailable' },
+                message.callback,
+            );
             return;
         }
         if (message.command === 'getPatterns') {
@@ -417,6 +506,23 @@ class SmartBrainAdapter extends utils.Adapter {
     private onUnload(callback: () => void): void {
         this.unloading = true;
         void this.shutdown(callback);
+    }
+
+    private messageInput(message: ioBroker.Message['message']): Record<string, unknown> {
+        return typeof message === 'object' && message ? (message as Record<string, unknown>) : {};
+    }
+
+    private async publishSuggestionSummary(): Promise<void> {
+        const summary = this.suggestionService?.summary();
+        await this.setOwnState('patterns.approvedCount', summary?.approved ?? 0);
+        await this.setOwnState('patterns.disabledCount', summary?.disabled ?? 0);
+        await this.setOwnState('suggestions.candidateCount', summary?.candidates ?? 0);
+        await this.setOwnState(
+            'suggestions.latest',
+            this.suggestionService?.latestExplanation().slice(0, 2_000) ?? 'none',
+        );
+        await this.setOwnState('activity.count', summary?.activityCount ?? 0);
+        await this.setOwnState('activity.lastTimestamp', summary?.lastActivityTimestamp ?? 0);
     }
 
     private async setOwnState(id: string, value: ioBroker.StateValue): Promise<void> {

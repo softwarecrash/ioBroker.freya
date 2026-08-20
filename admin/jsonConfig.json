@@ -9,8 +9,8 @@
                 "phaseNotice": {
                     "type": "staticText",
                     "text": {
-                        "en": "Phase 4 observes only explicitly permitted states. Optional history access is read-only, bounded, and restricted to the same states. Learning and automatic actions remain disabled.",
-                        "de": "Phase 4 beobachtet nur ausdrücklich freigegebene States. Optionaler History-Zugriff ist schreibgeschützt, begrenzt und auf dieselben States beschränkt. Lernen und automatische Aktionen bleiben deaktiviert."
+                        "en": "Phase 6 can learn and create rules-only suggestions for explicitly permitted states. Approval changes only an internal status; autonomy remains fixed at 0 and no device action is executed.",
+                        "de": "Phase 6 kann für ausdrücklich freigegebene States lernen und regelbasierte Vorschläge erzeugen. Eine Freigabe ändert nur einen internen Status; die Autonomie bleibt auf 0 und es wird keine Geräteaktion ausgeführt."
                     },
                     "newLine": true,
                     "xs": 12,
@@ -336,6 +336,107 @@
                     "md": 4,
                     "lg": 4,
                     "xl": 4
+                }
+            }
+        },
+        "patterns": {
+            "type": "panel",
+            "label": { "en": "Patterns", "de": "Muster" },
+            "items": {
+                "patternNotice": {
+                    "type": "staticText",
+                    "text": {
+                        "en": "Suggestions require explicit Suggest permission on both trigger and light. Approve/disable transitions are accepted only from ioBroker Admin and never grant Control permission.",
+                        "de": "Vorschläge benötigen die explizite Vorschlagsberechtigung für Auslöser und Licht. Freigabe-/Deaktivierungswechsel werden nur vom ioBroker-Admin angenommen und vergeben niemals eine Steuerungsberechtigung."
+                    },
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "candidatePatterns": {
+                    "type": "state",
+                    "label": { "en": "Candidate patterns", "de": "Musterkandidaten" },
+                    "oid": "suggestions.candidateCount",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "approvedPatterns": {
+                    "type": "state",
+                    "label": { "en": "Approved patterns", "de": "Freigegebene Muster" },
+                    "oid": "patterns.approvedCount",
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "disabledPatterns": {
+                    "type": "state",
+                    "label": { "en": "Disabled patterns", "de": "Deaktivierte Muster" },
+                    "oid": "patterns.disabledCount",
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "latestSuggestion": {
+                    "type": "state",
+                    "label": { "en": "Latest explanation", "de": "Letzte Erklärung" },
+                    "oid": "suggestions.latest",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                }
+            }
+        },
+        "activity": {
+            "type": "panel",
+            "label": { "en": "Activity", "de": "Aktivität" },
+            "items": {
+                "activityNotice": {
+                    "type": "staticText",
+                    "text": {
+                        "en": "Candidate creation, withdrawal, accepted status changes, and rejected commands are retained in a bounded in-memory audit log. Detailed pages are available through getActivity.",
+                        "de": "Kandidatenerstellung, Rücknahme, akzeptierte Statuswechsel und abgewiesene Befehle werden in einem begrenzten Audit-Protokoll im Arbeitsspeicher gehalten. Detailseiten sind über getActivity verfügbar."
+                    },
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "activityCount": {
+                    "type": "state",
+                    "label": { "en": "Activity records", "de": "Aktivitätseinträge" },
+                    "oid": "activity.count",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "lastActivity": {
+                    "type": "state",
+                    "label": { "en": "Last activity timestamp", "de": "Letzte Aktivität" },
+                    "oid": "activity.lastTimestamp",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
                 }
             }
         }

@@ -110,13 +110,13 @@ Last updated: 2026-08-20
 
 ## Phase 6 — suggestions and approval
 
-- [ ] Generate rules-only human-readable suggestions.
-- [ ] Add candidate/approved/disabled lifecycle actions.
-- [ ] Build Patterns and Activity views.
-- [ ] Ensure approval cannot grant state control or raise autonomy.
-- [ ] Add bounded activity storage and audit records.
-- [ ] Test all transitions and invalid commands.
-- [ ] Update documentation and changelog; commit and push.
+- [x] Generate rules-only human-readable suggestions.
+- [x] Add candidate/approved/disabled lifecycle actions.
+- [x] Build Patterns and Activity views.
+- [x] Ensure approval cannot grant state control or raise autonomy.
+- [x] Add bounded activity storage and audit records.
+- [x] Test all transitions and invalid commands.
+- [x] Update documentation and changelog; commit and push.
 
 ## Phase 7 — controlled actions
 

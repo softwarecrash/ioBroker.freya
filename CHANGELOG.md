@@ -7,6 +7,23 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-20
+
+### Added
+
+- Rules-only suggestions containing trigger/action references, conditions, evidence,
+  action window, aggregate confidence, and individual confidence components.
+- Candidate, approved, and disabled lifecycle transitions with deterministic validation.
+- Bounded suggestion paging, newest-first activity auditing, summary states, and
+  Patterns/Activity configuration views.
+- Read-only message APIs for suggestion summaries, suggestion pages, and activity pages.
+
+### Security
+
+- Suggestions require explicit `suggest` permission on both participating states.
+- Lifecycle mutations are accepted only from an ioBroker Admin instance; approval
+  cannot alter state permissions, raise autonomy above 0, or execute an action.
+
 ## [0.5.1] - 2026-08-20
 
 ### Fixed
