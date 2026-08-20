@@ -13,6 +13,10 @@ import { TimeContextProvider } from './context/providers/timeContextProvider';
 import { DiscoveryService } from './discovery/discoveryService';
 import { IoBrokerDiscoverySource } from './discovery/ioBrokerDiscoverySource';
 import type { DiscoveryResult, DiscoveredStateView } from './discovery/types';
+import { HistoryService } from './history/historyService';
+import { IoBrokerHistoryProvider, IoBrokerHistoryTransport } from './history/ioBrokerHistoryProvider';
+import { NoneHistoryProvider } from './history/noneHistoryProvider';
+import { HistoryProviderDiscovery, IoBrokerHistoryInstanceSource } from './history/providerDiscovery';
 import { ObservationEngine } from './observation/observationEngine';
 import type { ObservationMetadata } from './observation/types';
 import { DiscoveryCoordinator } from './services/discoveryCoordinator';
@@ -26,6 +30,8 @@ class SmartBrainAdapter extends utils.Adapter {
     private policySynchronizer?: IoBrokerPolicySynchronizer;
     private contextEngine?: ContextEngine;
     private observationEngine?: ObservationEngine;
+    private historyService?: HistoryService;
+    private readonly historyControllers = new Set<AbortController>();
     private observationMetadata = new Map<string, ObservationMetadata>();
     private observedStateIds: string[] = [];
     private policyStateIds = new Set<string>();
@@ -84,7 +90,8 @@ class SmartBrainAdapter extends utils.Adapter {
         } else {
             await this.setStateAsync('discovery.status', 'disabled', true);
         }
-        this.log.info('[Observation] SmartBrain started in read-only Phase 3 observation mode');
+        await this.setupHistory(config.historyInstance);
+        this.log.info('[History] SmartBrain started in read-only Phase 4 history mode');
     }
 
     private async initializeObservationStatus(): Promise<void> {
@@ -92,6 +99,38 @@ class SmartBrainAdapter extends utils.Adapter {
         await this.setStateAsync('observation.retainedCount', 0, true);
         await this.setStateAsync('observation.droppedCount', 0, true);
         await this.setStateAsync('observation.lastTimestamp', 0, true);
+    }
+
+    private async setupHistory(configuredProvider: string): Promise<void> {
+        let available = [] as Awaited<ReturnType<HistoryProviderDiscovery['available']>>;
+        try {
+            available = await new HistoryProviderDiscovery(new IoBrokerHistoryInstanceSource(this)).available();
+        } catch (error) {
+            this.log.warn(`[History] Provider discovery failed: ${(error as Error).message.slice(0, 160)}`);
+        }
+        const selectedDescriptor =
+            configuredProvider === 'auto'
+                ? available[0]
+                : available.find(descriptor => descriptor.id === configuredProvider);
+        const provider = selectedDescriptor
+            ? new IoBrokerHistoryProvider(selectedDescriptor, new IoBrokerHistoryTransport(this), 5_000, 2_000)
+            : new NoneHistoryProvider();
+        this.historyService = new HistoryService(configuredProvider, provider, available, this.observedStateIds, {
+            maxRangeMs: 7 * 24 * 60 * 60 * 1_000,
+            maxResults: 1_000,
+            maxConcurrent: 2,
+        });
+        await this.publishHistorySummary();
+    }
+
+    private async publishHistorySummary(): Promise<void> {
+        const summary = await this.historyService?.summary();
+        await this.setStateAsync('history.activeProvider', summary?.activeProvider ?? 'none', true);
+        await this.setStateAsync('history.availableProviderCount', summary?.availableProviders ?? 0, true);
+        await this.setStateAsync('history.available', summary?.available ?? false, true);
+        await this.setStateAsync('history.queryCount', summary?.queryCount ?? 0, true);
+        await this.setStateAsync('history.failedQueryCount', summary?.failedQueries ?? 0, true);
+        await this.setStateAsync('history.lastQueryTimestamp', summary?.lastQueryTimestamp ?? 0, true);
     }
 
     private async setupObservation(
@@ -252,6 +291,38 @@ class SmartBrainAdapter extends utils.Adapter {
             );
             return;
         }
+        if (message.command === 'getHistoryStatus') {
+            this.sendTo(
+                message.from,
+                message.command,
+                (await this.historyService?.summary()) ?? null,
+                message.callback,
+            );
+            return;
+        }
+        if (message.command === 'getStateHistory') {
+            const input =
+                typeof message.message === 'object' && message.message
+                    ? (message.message as Record<string, unknown>)
+                    : {};
+            const stateId = typeof input.stateId === 'string' ? input.stateId : '';
+            const start = typeof input.start === 'number' ? input.start : Number.NaN;
+            const end = typeof input.end === 'number' ? input.end : Number.NaN;
+            const limit = typeof input.limit === 'number' ? input.limit : undefined;
+            const controller = new AbortController();
+            this.historyControllers.add(controller);
+            try {
+                const entries = await this.historyService?.query(stateId, start, end, limit, controller.signal);
+                this.sendTo(message.from, message.command, { entries: entries ?? [] }, message.callback);
+            } catch (error) {
+                const errorCode = (error as Error).message.split(':', 1)[0].slice(0, 80);
+                this.sendTo(message.from, message.command, { error: errorCode }, message.callback);
+            } finally {
+                this.historyControllers.delete(controller);
+                await this.publishHistorySummary();
+            }
+            return;
+        }
         this.sendTo(message.from, message.command, { error: 'unsupported_command' }, message.callback);
     }
 
@@ -264,6 +335,10 @@ class SmartBrainAdapter extends utils.Adapter {
             if (this.policySyncTimer) {
                 this.clearTimeout(this.policySyncTimer);
             }
+            for (const controller of this.historyControllers) {
+                controller.abort();
+            }
+            this.historyControllers.clear();
             if (this.observedStateIds.length) {
                 await this.unsubscribeForeignStatesAsync(this.observedStateIds);
             }

@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "smartbrain",
-        "version": "0.3.0",
+        "version": "0.4.0",
         "news": {
+            "0.4.0": {
+                "en": "Add bounded read-only history providers with live capability detection",
+                "de": "Begrenzte schreibgeschützte History-Provider mit Live-Capability-Erkennung hinzugefügt"
+            },
             "0.3.0": {
                 "en": "Add permission-gated observations with bounded context snapshots and status counters",
                 "de": "Berechtigungsgesteuerte Beobachtungen mit begrenzten Kontext-Snapshots und Statuszählern hinzugefügt"
@@ -328,6 +332,93 @@
                 "read": true,
                 "write": false,
                 "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "history",
+            "type": "channel",
+            "common": { "name": { "en": "History", "de": "Verlauf" } },
+            "native": {}
+        },
+        {
+            "_id": "history.activeProvider",
+            "type": "state",
+            "common": {
+                "name": { "en": "Active history provider", "de": "Aktiver History-Provider" },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": "none"
+            },
+            "native": {}
+        },
+        {
+            "_id": "history.availableProviderCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Available history providers", "de": "Verfügbare History-Provider" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "history.available",
+            "type": "state",
+            "common": {
+                "name": { "en": "Selected history provider available", "de": "Gewählter History-Provider verfügbar" },
+                "type": "boolean",
+                "role": "indicator.connected",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "history.queryCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "History queries", "de": "History-Abfragen" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "history.failedQueryCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Failed history queries", "de": "Fehlgeschlagene History-Abfragen" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "history.lastQueryTimestamp",
+            "type": "state",
+            "common": {
+                "name": { "en": "Last history query", "de": "Letzte History-Abfrage" },
+                "type": "number",
+                "role": "value.time",
+                "read": true,
+                "write": false,
                 "def": 0
             },
             "native": {}

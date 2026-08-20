@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { createRuntimeConfig } from './runtimeConfig';
 
-describe('Phase 3 runtime configuration', () => {
+describe('Phase 4 runtime configuration', () => {
     it('uses read-only defaults', () => {
         expect(createRuntimeConfig({})).to.deep.equal({
             autonomyLevel: 0,
@@ -17,7 +17,7 @@ describe('Phase 3 runtime configuration', () => {
         });
     });
 
-    it('ignores settings that could enable unfinished behavior', () => {
+    it('ignores settings that could enable unfinished actions', () => {
         const result = createRuntimeConfig({
             autonomyLevel: 3,
             learningEnabled: true,
@@ -26,7 +26,7 @@ describe('Phase 3 runtime configuration', () => {
 
         expect(result.autonomyLevel).to.equal(0);
         expect(result.learningEnabled).to.equal(false);
-        expect(result.historyInstance).to.equal('none');
+        expect(result.historyInstance).to.equal('influxdb.0');
         expect(result.unsafeConfigurationIgnored).to.equal(true);
     });
 
@@ -40,5 +40,12 @@ describe('Phase 3 runtime configuration', () => {
     it('bounds the discovery size', () => {
         expect(createRuntimeConfig({ discoveryMaxStates: 1 }).discoveryMaxStates).to.equal(100);
         expect(createRuntimeConfig({ discoveryMaxStates: 100_000 }).discoveryMaxStates).to.equal(50_000);
+    });
+
+    it('accepts auto history and rejects malformed instance IDs', () => {
+        expect(createRuntimeConfig({ historyInstance: 'auto' }).historyInstance).to.equal('auto');
+        const malformed = createRuntimeConfig({ historyInstance: 'system.adapter.influxdb.0' });
+        expect(malformed.historyInstance).to.equal('none');
+        expect(malformed.unsafeConfigurationIgnored).to.equal(true);
     });
 });

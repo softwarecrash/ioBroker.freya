@@ -82,11 +82,11 @@ Last updated: 2026-08-20
 
 ## Phase 4 — history
 
-- [ ] Implement `HistoryProvider` and `NoneHistoryProvider`.
-- [ ] Implement generic ioBroker `getHistory` request/response normalization.
-- [ ] Detect alive providers using instance capabilities.
-- [ ] Prioritize `influxdb.0`; keep SQL and History adapters pluggable.
-- [ ] Add timeouts, cancellation, ordering, deduplication, and hard result limits.
+- [x] Implement `HistoryProvider` and `NoneHistoryProvider`.
+- [x] Implement generic ioBroker `getHistory` request/response normalization.
+- [x] Detect alive providers using instance capabilities.
+- [x] Prioritize `influxdb.0`; keep SQL and History adapters pluggable.
+- [x] Add timeouts, cancellation, ordering, deduplication, and hard result limits.
 - [ ] Run read-only provider tests against a safe, selected production state only after
       local mocked tests pass.
 - [ ] Update documentation and changelog; commit and push.

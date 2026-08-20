@@ -1,13 +1,13 @@
 import type { EnvironmentMappingInput, StatePolicyInput } from '../discovery/types';
 
-/** Effective runtime settings available in the read-only context phase. */
+/** Effective runtime settings available in the read-only history phase. */
 export interface RuntimeConfig {
-    /** Effective autonomy level; Phase 3 is always observe-only. */
+    /** Effective autonomy level; Phase 4 is always observe-only. */
     autonomyLevel: 0;
     /** Learning remains disabled until its engine and tests exist. */
     learningEnabled: false;
-    /** History remains disconnected until the provider abstraction exists. */
-    historyInstance: 'none';
+    /** Explicit read-only history provider selection. */
+    historyInstance: string;
     /** Enables metadata-only semantic discovery. */
     discoveryEnabled: boolean;
     /** Hard limit for one discovery pass. */
@@ -24,16 +24,19 @@ export interface RuntimeConfig {
 }
 
 /**
- * Convert persisted settings to the only configuration supported in Phase 3.
+ * Convert persisted settings to the safe configuration supported in Phase 4.
  *
  * @param config Persisted adapter configuration.
  */
 export function createRuntimeConfig(config: Partial<ioBroker.AdapterConfig>): RuntimeConfig {
     const requestedMax = Number(config.discoveryMaxStates ?? 20_000);
+    const requestedHistory = typeof config.historyInstance === 'string' ? config.historyInstance.trim() : 'none';
+    const validHistory =
+        requestedHistory === 'none' || requestedHistory === 'auto' || /^[a-z0-9_-]+\.\d+$/i.test(requestedHistory);
     return {
         autonomyLevel: 0,
         learningEnabled: false,
-        historyInstance: 'none',
+        historyInstance: validHistory ? requestedHistory : 'none',
         discoveryEnabled: config.discoveryEnabled !== false,
         discoveryMaxStates: Number.isFinite(requestedMax)
             ? Math.max(100, Math.min(50_000, Math.floor(requestedMax)))
@@ -45,6 +48,6 @@ export function createRuntimeConfig(config: Partial<ioBroker.AdapterConfig>): Ru
         unsafeConfigurationIgnored:
             (config.autonomyLevel !== undefined && config.autonomyLevel !== 0) ||
             config.learningEnabled === true ||
-            (config.historyInstance !== undefined && config.historyInstance !== 'none'),
+            !validHistory,
     };
 }

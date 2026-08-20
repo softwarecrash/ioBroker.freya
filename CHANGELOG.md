@@ -7,6 +7,25 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-20
+
+### Added
+
+- Provider-neutral `HistoryProvider` contract and safe `NoneHistoryProvider` default.
+- Generic ioBroker `getHistory` transport with live enabled/capability/alive detection.
+- Automatic provider selection prioritizing InfluxDB, SQL, then History while keeping
+  explicit instance IDs pluggable.
+- Bounded history status/query APIs and adapter-owned provider/query status states.
+- Response validation, deterministic ordering, deduplication, cancellation, timeouts,
+  concurrency limits, range limits, and hard result limits.
+
+### Security
+
+- History remains disabled by default and can read only states carrying an explicit
+  `observe` permission.
+- History access is message-based and read-only; SmartBrain does not connect directly
+  to provider databases or write foreign states.
+
 ## [0.3.0] - 2026-08-20
 
 ### Added

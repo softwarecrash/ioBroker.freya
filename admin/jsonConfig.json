@@ -9,8 +9,8 @@
                 "phaseNotice": {
                     "type": "staticText",
                     "text": {
-                        "en": "Phase 2 performs metadata-only discovery. Learning, history access, subscriptions, and automatic actions remain disabled.",
-                        "de": "Phase 2 führt ausschließlich eine Metadaten-Erkennung durch. Lernen, History-Zugriff, Subscriptions und automatische Aktionen bleiben deaktiviert."
+                        "en": "Phase 4 observes only explicitly permitted states. Optional history access is read-only, bounded, and restricted to the same states. Learning and automatic actions remain disabled.",
+                        "de": "Phase 4 beobachtet nur ausdrücklich freigegebene States. Optionaler History-Zugriff ist schreibgeschützt, begrenzt und auf dieselben States beschränkt. Lernen und automatische Aktionen bleiben deaktiviert."
                     },
                     "newLine": true,
                     "xs": 12,
@@ -81,6 +81,26 @@
                     "lg": 3,
                     "xl": 3
                 },
+                "historyProvider": {
+                    "type": "state",
+                    "label": { "en": "History provider", "de": "History-Provider" },
+                    "oid": "history.activeProvider",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "historyQueries": {
+                    "type": "state",
+                    "label": { "en": "History queries", "de": "History-Abfragen" },
+                    "oid": "history.queryCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
                 "autonomyLevel": {
                     "type": "number",
                     "label": { "en": "Autonomy level", "de": "Autonomie-Level" },
@@ -88,8 +108,8 @@
                     "max": 0,
                     "disabled": "true",
                     "help": {
-                        "en": "Fixed at observe-only in Phase 2",
-                        "de": "In Phase 2 fest auf nur beobachten gesetzt"
+                        "en": "Fixed at observe-only in Phase 4",
+                        "de": "In Phase 4 fest auf nur beobachten gesetzt"
                     },
                     "newLine": true,
                     "xs": 12,
@@ -111,8 +131,13 @@
                 "historyInstance": {
                     "type": "select",
                     "label": { "en": "History provider", "de": "History-Provider" },
-                    "options": [{ "label": { "en": "Disabled", "de": "Deaktiviert" }, "value": "none" }],
-                    "disabled": "true",
+                    "options": [
+                        { "label": { "en": "Disabled", "de": "Deaktiviert" }, "value": "none" },
+                        {
+                            "label": { "en": "Automatic (InfluxDB preferred)", "de": "Automatisch (InfluxDB bevorzugt)" },
+                            "value": "auto"
+                        }
+                    ],
                     "xs": 12,
                     "sm": 4,
                     "md": 4,
