@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "smartbrain",
-        "version": "0.4.0",
+        "version": "0.4.1",
         "news": {
+            "0.4.1": {
+                "en": "List installed getHistory-capable adapter instances in the provider selection",
+                "de": "Installierte getHistory-fähige Adapterinstanzen in der Provider-Auswahl auflisten"
+            },
             "0.4.0": {
                 "en": "Add bounded read-only history providers with live capability detection",
                 "de": "Begrenzte schreibgeschützte History-Provider mit Live-Capability-Erkennung hinzugefügt"

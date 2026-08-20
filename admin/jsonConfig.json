@@ -129,15 +129,10 @@
                     "xl": 4
                 },
                 "historyInstance": {
-                    "type": "select",
+                    "type": "selectSendTo",
                     "label": { "en": "History provider", "de": "History-Provider" },
-                    "options": [
-                        { "label": { "en": "Disabled", "de": "Deaktiviert" }, "value": "none" },
-                        {
-                            "label": { "en": "Automatic (InfluxDB preferred)", "de": "Automatisch (InfluxDB bevorzugt)" },
-                            "value": "auto"
-                        }
-                    ],
+                    "command": "getHistoryProviderOptions",
+                    "manual": false,
                     "xs": 12,
                     "sm": 4,
                     "md": 4,

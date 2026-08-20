@@ -6,6 +6,7 @@ import { normalizeHistoryResponse } from './normalizer';
 import {
     HistoryProviderDiscovery,
     IoBrokerHistoryInstanceSource,
+    historyProviderSelectOptions,
     type HistoryInstanceSource,
 } from './providerDiscovery';
 import type { HistoryProvider, HistoryProviderDescriptor } from './types';
@@ -108,6 +109,20 @@ describe('HistoryProviderDiscovery', () => {
 
         expect(aliveIds).to.deep.equal(['system.adapter.influxdb.0.alive']);
         expect(descriptors).to.deep.equal([influx]);
+    });
+
+    it('lists installed capable instances and marks unavailable choices', () => {
+        const options = historyProviderSelectOptions([
+            influx,
+            { id: 'sql.0', adapterName: 'sql', enabled: false, alive: false, supportsGetHistory: true },
+        ]);
+
+        expect(options).to.deep.equal([
+            { label: 'Deaktiviert / Disabled', value: 'none' },
+            { label: 'Automatisch / Automatic (influxdb.0)', value: 'auto' },
+            { label: 'influxdb.0', value: 'influxdb.0' },
+            { label: 'sql.0 (offline)', value: 'sql.0' },
+        ]);
     });
 });
 

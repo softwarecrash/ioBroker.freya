@@ -76,6 +76,10 @@ detects enabled and alive ioBroker instances that advertise the standard `getHis
 message and prefers InfluxDB, then SQL, then History. Per-state custom history metadata
 alone is not considered proof that a provider is available.
 
+The configuration retrieves its choices dynamically from the running SmartBrain
+instance. Alongside `Disabled` and `Automatic`, every installed adapter instance with
+the capability is listed directly; unavailable instances carry an `offline` marker.
+
 Queries are restricted to explicitly observed states, seven days, 1,000 results, two
 concurrent requests, and a five-second provider timeout. Provider responses are treated
 as untrusted input: values are validated and bounded, duplicates removed, and results
@@ -114,13 +118,10 @@ visible in the local Admin UI.
 
 ## Changelog
 
-### 0.4.0 (2026-08-20)
+### 0.4.1 (2026-08-20)
 
-- Added provider-neutral, bounded read-only history access through ioBroker's standard
-  `getHistory` message.
-- Added live capability detection with InfluxDB, SQL, and History prioritization.
-- Added permission, range, result, concurrency, timeout, cancellation, and response
-  normalization boundaries.
+- Added dynamic provider choices for installed `getHistory`-capable adapter instances.
+- Kept unavailable installed providers visible with an `offline` marker.
 
 Older details are available in [CHANGELOG.md](CHANGELOG.md).
 

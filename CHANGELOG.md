@@ -7,6 +7,14 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-08-20
+
+### Added
+
+- Dynamic History provider selection listing installed `getHistory`-capable instances.
+- Online providers are directly selectable; installed disabled or offline instances
+  remain visible with an `offline` marker.
+
 ## [0.4.0] - 2026-08-20
 
 ### Added

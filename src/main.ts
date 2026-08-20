@@ -16,7 +16,12 @@ import type { DiscoveryResult, DiscoveredStateView } from './discovery/types';
 import { HistoryService } from './history/historyService';
 import { IoBrokerHistoryProvider, IoBrokerHistoryTransport } from './history/ioBrokerHistoryProvider';
 import { NoneHistoryProvider } from './history/noneHistoryProvider';
-import { HistoryProviderDiscovery, IoBrokerHistoryInstanceSource } from './history/providerDiscovery';
+import {
+    HistoryProviderDiscovery,
+    IoBrokerHistoryInstanceSource,
+    historyProviderSelectOptions,
+    type HistoryProviderSelectOption,
+} from './history/providerDiscovery';
 import { ObservationEngine } from './observation/observationEngine';
 import type { ObservationMetadata } from './observation/types';
 import { DiscoveryCoordinator } from './services/discoveryCoordinator';
@@ -31,6 +36,7 @@ class SmartBrainAdapter extends utils.Adapter {
     private contextEngine?: ContextEngine;
     private observationEngine?: ObservationEngine;
     private historyService?: HistoryService;
+    private historyProviderOptions: HistoryProviderSelectOption[] = historyProviderSelectOptions([]);
     private readonly historyControllers = new Set<AbortController>();
     private observationMetadata = new Map<string, ObservationMetadata>();
     private observedStateIds: string[] = [];
@@ -102,12 +108,14 @@ class SmartBrainAdapter extends utils.Adapter {
     }
 
     private async setupHistory(configuredProvider: string): Promise<void> {
-        let available = [] as Awaited<ReturnType<HistoryProviderDiscovery['available']>>;
+        let candidates = [] as Awaited<ReturnType<HistoryProviderDiscovery['candidates']>>;
         try {
-            available = await new HistoryProviderDiscovery(new IoBrokerHistoryInstanceSource(this)).available();
+            candidates = await new HistoryProviderDiscovery(new IoBrokerHistoryInstanceSource(this)).candidates();
         } catch (error) {
             this.log.warn(`[History] Provider discovery failed: ${(error as Error).message.slice(0, 160)}`);
         }
+        const available = candidates.filter(descriptor => descriptor.enabled && descriptor.alive);
+        this.historyProviderOptions = historyProviderSelectOptions(candidates);
         const selectedDescriptor =
             configuredProvider === 'auto'
                 ? available[0]
@@ -298,6 +306,10 @@ class SmartBrainAdapter extends utils.Adapter {
                 (await this.historyService?.summary()) ?? null,
                 message.callback,
             );
+            return;
+        }
+        if (message.command === 'getHistoryProviderOptions') {
+            this.sendTo(message.from, message.command, this.historyProviderOptions, message.callback);
             return;
         }
         if (message.command === 'getStateHistory') {

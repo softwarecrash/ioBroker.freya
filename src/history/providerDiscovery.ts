@@ -4,6 +4,11 @@ export interface HistoryInstanceSource {
     list(): Promise<HistoryProviderDescriptor[]>;
 }
 
+export interface HistoryProviderSelectOption {
+    label: string;
+    value: string;
+}
+
 function priority(descriptor: HistoryProviderDescriptor): number {
     if (descriptor.adapterName === 'influxdb') {
         return 0;
@@ -21,11 +26,31 @@ function priority(descriptor: HistoryProviderDescriptor): number {
 export class HistoryProviderDiscovery {
     public constructor(private readonly source: HistoryInstanceSource) {}
 
-    public async available(): Promise<HistoryProviderDescriptor[]> {
+    public async candidates(): Promise<HistoryProviderDescriptor[]> {
         return (await this.source.list())
-            .filter(item => item.enabled && item.alive && item.supportsGetHistory)
+            .filter(item => item.supportsGetHistory)
             .sort((left, right) => priority(left) - priority(right) || left.id.localeCompare(right.id));
     }
+
+    public async available(): Promise<HistoryProviderDescriptor[]> {
+        return (await this.candidates()).filter(item => item.enabled && item.alive);
+    }
+}
+
+/** Build JSON Config options without exposing provider configuration or state metadata. */
+export function historyProviderSelectOptions(candidates: HistoryProviderDescriptor[]): HistoryProviderSelectOption[] {
+    const automatic = candidates.find(item => item.enabled && item.alive);
+    return [
+        { label: 'Deaktiviert / Disabled', value: 'none' },
+        {
+            label: automatic ? `Automatisch / Automatic (${automatic.id})` : 'Automatisch / Automatic',
+            value: 'auto',
+        },
+        ...candidates.map(candidate => ({
+            label: `${candidate.id}${candidate.enabled && candidate.alive ? '' : ' (offline)'}`,
+            value: candidate.id,
+        })),
+    ];
 }
 
 export class IoBrokerHistoryInstanceSource implements HistoryInstanceSource {
