@@ -13,7 +13,7 @@ function explanation(pattern: LearnedPattern): string {
     const seconds = Math.round(pattern.actionWindowMs / 1_000);
     const percent = Math.round(pattern.confidence * 100);
     const components = pattern.confidenceComponents;
-    return `When the trigger becomes true, the light usually becomes true within ${seconds} seconds ${conditionText(pattern)} (${pattern.matches}/${pattern.opportunities}, confidence ${percent}%; match ${Math.round(components.smoothedMatchRate * 100)}%, maturity ${Math.round(components.sampleMaturity * 100)}%, repeatability ${Math.round(components.repeatability * 100)}%, recency ${Math.round(components.recency * 100)}%).`;
+    return `When the trigger becomes ${String(pattern.expectedAction)}, the light usually becomes ${String(pattern.expectedAction)} within ${seconds} seconds ${conditionText(pattern)} (${pattern.matches}/${pattern.opportunities}, confidence ${percent}%; match ${Math.round(components.smoothedMatchRate * 100)}%, maturity ${Math.round(components.sampleMaturity * 100)}%, repeatability ${Math.round(components.repeatability * 100)}%, recency ${Math.round(components.recency * 100)}%).`;
 }
 
 function copySuggestion(suggestion: PatternSuggestion): PatternSuggestion {
@@ -177,7 +177,7 @@ export class SuggestionService {
             eligible: true,
             triggerStateId: pattern.triggerStateId,
             actionStateId: pattern.actionStateId,
-            expectedAction: true,
+            expectedAction: pattern.expectedAction,
             rooms: [...pattern.rooms],
             conditions: pattern.conditions.map(condition => ({ ...condition })),
             opportunities: pattern.opportunities,

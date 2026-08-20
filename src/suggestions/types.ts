@@ -9,7 +9,7 @@ export interface PatternSuggestion {
     eligible: boolean;
     triggerStateId: string;
     actionStateId: string;
-    expectedAction: true;
+    expectedAction: boolean;
     rooms: string[];
     conditions: PatternCondition[];
     opportunities: number;

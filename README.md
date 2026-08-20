@@ -116,12 +116,14 @@ sorted before use. `getHistoryStatus` and `getStateHistory` expose the bounded A
 
 When learning is explicitly enabled, SmartBrain correlates rising boolean motion,
 presence, contact, or switch events with a boolean light turning on in the same room
-within two minutes. Only states carrying both `observe` and `learn` permission enter
-the learner. Candidate examples, pending windows, and pattern count are hard-bounded
-and stale records are removed.
+within two minutes. For presence states it also learns absence-to-light-off independently.
+An arrival without a light change remains negative evidence, never an inferred off action.
+Only states carrying both `observe` and `learn` permission enter the learner. Candidate
+examples, pending windows, and pattern count are hard-bounded and stale records are removed.
 
-Context is not copied wholesale into a rule. Time, weekend, room, illuminance,
-temperature, presence, solar elevation, and sunrise/sunset-relative buckets compete in
+Context is not copied wholesale into a rule. Time, weekend, room, semantic same-room
+illuminance, outside illuminance, temperature, presence, solar elevation, and
+sunrise/sunset-relative buckets compete in
 a deterministic held-out test. A condition needs minimum support and predictive
 improvement; redundant clock and solar conditions cannot be combined. Each additional
 condition costs 0.01 quality points, favoring the smallest useful explanation.
@@ -231,10 +233,11 @@ visible in the local Admin UI.
 
 ## Changelog
 
-### 0.9.1 (2026-08-20)
+### 0.10.0 (2026-08-21)
 
-- Added release hardening, eleven-language JSON Config translations, security/privacy
-  documentation, safer dependency automation, and release-package smoke testing.
+- Added independent presence-on/light-on and presence-off/light-off learning.
+- Added semantic same-room illuminance as an explainable feature selected only when it
+  improves held-out predictive quality.
 
 Older release history is available in [CHANGELOG_OLD.md](CHANGELOG_OLD.md).
 

@@ -7,6 +7,20 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-08-21
+
+### Added
+
+- Independent presence-on/light-on and presence-off/light-off learning, including safe
+  propagation of boolean off actions into suggestions.
+- Semantic same-room illuminance bands as explainable candidate features without
+  hardcoded state IDs.
+
+### Changed
+
+- Arrival events without a light transition remain negative evidence and cannot be
+  misinterpreted as an instruction to switch a light off.
+
 ## [0.9.1] - 2026-08-20
 
 ### Added

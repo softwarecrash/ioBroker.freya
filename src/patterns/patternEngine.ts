@@ -17,6 +17,7 @@ interface CandidateRecord {
     lastSeen: number;
     positiveFeedback: number;
     negativeFeedback: number;
+    expectedAction: boolean;
 }
 
 export interface PatternEngineOptions {
@@ -60,14 +61,17 @@ export class PatternEngine {
         }
         this.flush(observation.timestamp);
         const state = this.states.get(observation.stateId);
-        if (!state || state.valueType !== 'boolean' || observation.deleted || observation.value !== true) {
+        if (!state || state.valueType !== 'boolean' || observation.deleted || typeof observation.value !== 'boolean') {
             return;
         }
-        if (TRIGGER_TYPES.has(state.semanticType) && observation.previousValue !== true) {
-            this.createOpportunities(state, observation);
+        if (observation.previousValue === observation.value) {
+            return;
         }
-        if (state.semanticType === 'light' && observation.previousValue !== true) {
-            this.matchAction(state, observation.timestamp);
+        if (TRIGGER_TYPES.has(state.semanticType) && (observation.value || state.semanticType === 'presence')) {
+            this.createOpportunities(state, observation, observation.value);
+        }
+        if (state.semanticType === 'light') {
+            this.matchAction(state, observation.timestamp, observation.value);
         }
     }
 
@@ -117,7 +121,7 @@ export class PatternEngine {
         return false;
     }
 
-    private createOpportunities(trigger: LearnableState, observation: Observation): void {
+    private createOpportunities(trigger: LearnableState, observation: Observation, expectedAction: boolean): void {
         for (const action of this.states.values()) {
             if (action.semanticType !== 'light' || action.valueType !== 'boolean' || action.id === trigger.id) {
                 continue;
@@ -126,7 +130,7 @@ export class PatternEngine {
             if (!rooms.length) {
                 continue;
             }
-            const key = `${trigger.id}\u0000${action.id}`;
+            const key = `${trigger.id}\u0000${action.id}\u0000${String(expectedAction)}`;
             const previous = this.pending.get(key);
             if (previous) {
                 this.retainExample(previous, false);
@@ -141,6 +145,7 @@ export class PatternEngine {
                 key,
                 triggerStateId: trigger.id,
                 actionStateId: action.id,
+                expectedAction,
                 timestamp: observation.timestamp,
                 expiresAt: observation.timestamp + this.actionWindowMs,
                 rooms,
@@ -149,9 +154,13 @@ export class PatternEngine {
         }
     }
 
-    private matchAction(action: LearnableState, timestamp: number): void {
+    private matchAction(action: LearnableState, timestamp: number, observedValue: boolean): void {
         for (const [key, opportunity] of this.pending) {
-            if (opportunity.actionStateId === action.id && opportunity.timestamp <= timestamp) {
+            if (
+                opportunity.actionStateId === action.id &&
+                opportunity.expectedAction === observedValue &&
+                opportunity.timestamp <= timestamp
+            ) {
                 this.retainExample(opportunity, true);
                 this.pending.delete(key);
             }
@@ -183,13 +192,18 @@ export class PatternEngine {
                 lastSeen: opportunity.timestamp,
                 positiveFeedback: 0,
                 negativeFeedback: 0,
+                expectedAction: opportunity.expectedAction,
             };
             this.records.set(opportunity.key, record);
         }
         record.examples.push({
             timestamp: opportunity.timestamp,
             matched,
-            features: extractPatternFeatures(opportunity.context, opportunity.rooms),
+            features: extractPatternFeatures(
+                opportunity.context,
+                opportunity.rooms,
+                this.localIlluminance(opportunity),
+            ),
         });
         if (record.examples.length > this.maxExamples) {
             record.examples.splice(0, record.examples.length - this.maxExamples);
@@ -227,7 +241,7 @@ export class PatternEngine {
             id: createHash('sha256').update(key).digest('hex').slice(0, 16),
             triggerStateId: record.trigger.id,
             actionStateId: record.action.id,
-            expectedAction: true,
+            expectedAction: record.expectedAction,
             actionWindowMs: this.actionWindowMs,
             suggestionEligible: record.trigger.canSuggest === true && record.action.canSuggest === true,
             rooms: [...record.rooms],
@@ -244,10 +258,27 @@ export class PatternEngine {
             lastSeen: record.lastSeen,
             status,
             explanation: conditions.length
-                ? `After ${record.trigger.semanticType}, ${record.action.semanticType} became true when ${conditions.join(' and ')}.`
+                ? `After ${record.trigger.semanticType} became ${String(record.expectedAction)}, ${record.action.semanticType} became ${String(record.expectedAction)} when ${conditions.join(' and ')}.`
                 : status === 'candidate'
-                  ? `After ${record.trigger.semanticType}, ${record.action.semanticType} reliably became true without an additional context condition.`
-                  : `Still learning whether ${record.trigger.semanticType} predicts ${record.action.semanticType}.`,
+                  ? `After ${record.trigger.semanticType} became ${String(record.expectedAction)}, ${record.action.semanticType} reliably became ${String(record.expectedAction)} without an additional context condition.`
+                  : `Still learning whether ${record.trigger.semanticType} becoming ${String(record.expectedAction)} predicts ${record.action.semanticType} becoming ${String(record.expectedAction)}.`,
         };
+    }
+
+    private localIlluminance(opportunity: PendingOpportunity): number | undefined {
+        const contextStates = opportunity.context?.states;
+        if (!contextStates) {
+            return undefined;
+        }
+        return [...this.states.values()]
+            .filter(
+                state =>
+                    state.semanticType === 'illuminance' &&
+                    state.rooms.some(room => opportunity.rooms.includes(room)) &&
+                    typeof contextStates[state.id] === 'number' &&
+                    Number.isFinite(contextStates[state.id]),
+            )
+            .sort((left, right) => left.id.localeCompare(right.id))
+            .map(state => contextStates[state.id] as number)[0];
     }
 }

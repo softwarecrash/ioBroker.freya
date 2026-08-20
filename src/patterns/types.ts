@@ -8,6 +8,7 @@ export type PatternFeatureKey =
     | 'sun.elevationBand'
     | 'sun.sunriseOffset'
     | 'sun.sunsetOffset'
+    | 'room.illuminanceBand'
     | 'environment.illuminanceBand'
     | 'environment.temperatureBand'
     | 'presence.home';
@@ -57,7 +58,7 @@ export interface LearnedPattern {
     id: string;
     triggerStateId: string;
     actionStateId: string;
-    expectedAction: true;
+    expectedAction: boolean;
     actionWindowMs: number;
     suggestionEligible: boolean;
     rooms: string[];
@@ -80,6 +81,7 @@ export interface PendingOpportunity {
     key: string;
     triggerStateId: string;
     actionStateId: string;
+    expectedAction: boolean;
     timestamp: number;
     expiresAt: number;
     rooms: string[];

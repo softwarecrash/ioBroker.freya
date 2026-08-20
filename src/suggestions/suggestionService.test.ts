@@ -49,6 +49,15 @@ describe('SuggestionService', () => {
         expect(suggestion).not.to.have.property('control');
     });
 
+    it('preserves a learned presence-off to light-off action', () => {
+        const service = new SuggestionService();
+        service.synchronize([pattern({ expectedAction: false })], 10);
+        const [suggestion] = service.list(undefined).items;
+        expect(suggestion.expectedAction).to.equal(false);
+        expect(suggestion.explanation).to.contain('trigger becomes false');
+        expect(suggestion.explanation).to.contain('light usually becomes false');
+    });
+
     it('allows only candidate-approved-disabled-candidate transitions', () => {
         const service = new SuggestionService();
         service.synchronize([pattern()], 10);

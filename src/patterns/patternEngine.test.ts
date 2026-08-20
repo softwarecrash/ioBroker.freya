@@ -23,19 +23,21 @@ function observation(
     semanticType: Observation['semanticType'],
     timestamp: number,
     snapshot?: ContextSnapshot,
+    value = true,
+    rooms = ['living'],
 ): Observation {
     return {
         sequence: timestamp,
         stateId,
-        value: true,
-        previousValue: false,
+        value,
+        previousValue: !value,
         timestamp,
         receivedAt: timestamp,
         ack: true,
         quality: 0,
         deleted: false,
         semanticType,
-        rooms: ['living'],
+        rooms,
         functions: [],
         context: snapshot,
     };
@@ -70,6 +72,91 @@ describe('PatternEngine', () => {
         expect(pattern.matches).to.equal(12);
         expect(pattern.explanation).to.contain('environment.illuminanceBand = dark');
         expect(pattern.suggestionEligible).to.equal(false);
+    });
+
+    it('uses a same-room illuminance state as context without exposing its state id', () => {
+        const engine = new PatternEngine(
+            [
+                { id: 'kitchen.presence', semanticType: 'presence', valueType: 'boolean', rooms: ['kitchen'] },
+                { id: 'kitchen.light', semanticType: 'light', valueType: 'boolean', rooms: ['kitchen'] },
+                { id: 'kitchen.lux', semanticType: 'illuminance', valueType: 'number', rooms: ['kitchen'] },
+            ],
+            { enabled: true, actionWindowMs: 60_000 },
+        );
+        const start = Date.UTC(2026, 0, 1);
+        for (let index = 0; index < 24; index++) {
+            const timestamp = start + index * DAY_MS;
+            const dark = index % 2 === 0;
+            const snapshot = context(timestamp, true);
+            snapshot.environment = { outsideIlluminance: 5_000 };
+            snapshot.states = { 'kitchen.lux': dark ? 5 : 500 };
+            engine.observe(observation('kitchen.presence', 'presence', timestamp, snapshot, true, ['kitchen']));
+            if (dark) {
+                engine.observe(observation('kitchen.light', 'light', timestamp + 5_000, undefined, true, ['kitchen']));
+            } else {
+                engine.flush(timestamp + 61_000);
+            }
+        }
+
+        const [pattern] = engine.patterns(start + 24 * DAY_MS);
+        expect(pattern.status).to.equal('candidate');
+        expect(pattern.conditions).to.include.deep.members([{ feature: 'room.illuminanceBand', value: 'dark' }]);
+        expect(pattern.conditions.some(item => item.feature === 'environment.illuminanceBand')).to.equal(false);
+        expect(JSON.stringify(pattern.conditions)).not.to.contain('kitchen.lux');
+    });
+
+    it('learns presence-off to light-off separately from presence-on to light-on', () => {
+        const engine = new PatternEngine(
+            [
+                {
+                    id: 'kitchen.presence',
+                    semanticType: 'presence',
+                    valueType: 'boolean',
+                    rooms: ['kitchen'],
+                    canSuggest: true,
+                },
+                {
+                    id: 'kitchen.light',
+                    semanticType: 'light',
+                    valueType: 'boolean',
+                    rooms: ['kitchen'],
+                    canSuggest: true,
+                },
+            ],
+            { enabled: true, actionWindowMs: 60_000 },
+        );
+        const start = Date.UTC(2026, 0, 1);
+        for (let index = 0; index < 12; index++) {
+            const timestamp = start + index * DAY_MS;
+            engine.observe(
+                observation('kitchen.presence', 'presence', timestamp, context(timestamp, true), true, ['kitchen']),
+            );
+            engine.observe(observation('kitchen.light', 'light', timestamp + 1_000, undefined, true, ['kitchen']));
+            engine.observe(
+                observation('kitchen.presence', 'presence', timestamp + 120_000, context(timestamp, true), false, [
+                    'kitchen',
+                ]),
+            );
+            engine.observe(observation('kitchen.light', 'light', timestamp + 121_000, undefined, false, ['kitchen']));
+        }
+
+        const patterns = engine.patterns(start + 12 * DAY_MS);
+        expect(patterns).to.have.length(2);
+        expect(patterns.map(pattern => pattern.expectedAction).sort()).to.deep.equal([false, true]);
+        expect(patterns.every(pattern => pattern.status === 'candidate' && pattern.suggestionEligible)).to.equal(true);
+        expect(patterns.find(pattern => !pattern.expectedAction)?.explanation).to.contain('became false');
+    });
+
+    it('does not interpret a motion-off transition as an action opportunity', () => {
+        const engine = new PatternEngine(
+            [
+                { id: 'motion', semanticType: 'motion', valueType: 'boolean', rooms: ['hall'] },
+                { id: 'light', semanticType: 'light', valueType: 'boolean', rooms: ['hall'] },
+            ],
+            { enabled: true },
+        );
+        engine.observe(observation('motion', 'motion', 1, context(1, true), false, ['hall']));
+        expect(engine.summary(2).pendingOpportunities).to.equal(0);
     });
 
     it('remains inert when disabled and never correlates rooms that do not overlap', () => {
