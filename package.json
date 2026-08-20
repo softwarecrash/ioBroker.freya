@@ -1,6 +1,6 @@
 {
     "name": "iobroker.smartbrain",
-    "version": "0.9.0",
+    "version": "0.9.1",
     "description": "Learns explainable smart-home patterns and proposes safety-controlled automations",
     "author": {
         "name": "softwarecrash",
@@ -18,7 +18,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "git@github.com:softwarecrash/ioBroker.smartbrain.git"
+        "url": "https://github.com/softwarecrash/ioBroker.smartbrain.git"
     },
     "engines": {
         "node": ">=22"
@@ -49,7 +49,11 @@
         "admin/**/*.{json,json5,html,css,png,svg,jpg,js}",
         "build/",
         "io-package.json",
-        "LICENSE"
+        "LICENSE",
+        "README.md",
+        "CHANGELOG.md",
+        "SECURITY.md",
+        "PRIVACY.md"
     ],
     "scripts": {
         "prebuild": "rimraf build",
@@ -57,11 +61,12 @@
         "watch": "build-adapter ts --watch",
         "test:ts": "mocha --config test/mocharc.custom.json \"src/**/*.test.ts\"",
         "test:package": "mocha test/package.js --exit",
+        "test:pack": "npm run build && node test/packageContents.js",
         "test:checker": "npx --yes @iobroker/repochecker@5.20.13 https://github.com/softwarecrash/ioBroker.smartbrain --local",
         "test:integration": "mocha test/integration.js --exit",
         "test": "npm run test:ts && npm run test:package",
         "check": "tsc --noEmit",
-        "check:release": "npm run check && npm test && npm run lint && npm run build && npm run test:checker",
+        "check:release": "npm run check && npm test && npm run lint && npm run test:pack && npm run test:checker",
         "coverage": "nyc npm run test:ts",
         "lint": "eslint -c eslint.config.mjs .",
         "translate": "translate-adapter",

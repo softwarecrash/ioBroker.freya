@@ -5,7 +5,8 @@ selected states, discovers repeatable home-automation patterns, and turns them i
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
 
-The project is currently in **Phase 9 (persistent feedback learning)**. The TypeScript daemon
+The project has completed the planned implementation phases and is undergoing
+**pre-release hardening**. The TypeScript daemon
 scans ioBroker object metadata, classifies supported state semantics, ranks environment
 sources, synchronizes explicit state policies, and subscribes only to states with an
 explicit `observe` permission. Each relevant change becomes a bounded, in-memory
@@ -42,6 +43,27 @@ boolean trigger (presence/motion/event)
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and [TODO.md](TODO.md) for the
 implementation plan.
+
+## Installation and initial configuration
+
+SmartBrain requires Node.js 22 or newer and a current ioBroker controller/Admin. A new
+instance starts disabled for automation: autonomy level 0, learning off, history off,
+Rules Only LLM, and no state permissions.
+
+1. Open **Devices / States** in the instance configuration, add a state, and grant only
+   the permissions needed. The same policy is available from the object's gear menu
+   under custom settings; both views synchronize through the instance configuration.
+2. Correct the semantic type or room assignment only when discovery is ambiguous.
+3. Optionally choose an installed History, SQL, or InfluxDB instance and configure
+   semantic environment source priorities.
+4. Enable learning after reviewing the observed-state list. Suggestions still require
+   explicit Suggest permission and approval.
+5. Keep autonomy at 0 while validating learned patterns. Controlled execution is an
+   advanced, explicit level-3 opt-in and additionally requires Control permission.
+
+Latitude and longitude come from the ioBroker system configuration unless both manual
+overrides are provided. Sunrise, sunset, solar elevation, and solar azimuth are computed
+locally; no weather or cloud service is required for solar context.
 
 ## Safety status
 
@@ -186,6 +208,9 @@ npm run build
 The integration test requires an isolated host without another running js-controller.
 It is intended for CI and must not be run by stopping a production ioBroker instance.
 
+Security reports and the data-handling details are documented in
+[SECURITY.md](SECURITY.md) and [PRIVACY.md](PRIVACY.md).
+
 ## Development references
 
 The project follows the current official ioBroker guidance:
@@ -206,10 +231,10 @@ visible in the local Admin UI.
 
 ## Changelog
 
-### 0.9.0 (2026-08-20)
+### 0.9.1 (2026-08-20)
 
-- Added fail-closed persistent action records, conservative explicit/implicit feedback
-  attribution, bounded confidence adjustment, migration, and backup recovery.
+- Added release hardening, eleven-language JSON Config translations, security/privacy
+  documentation, safer dependency automation, and release-package smoke testing.
 
 Older details are available in [CHANGELOG.md](CHANGELOG.md).
 

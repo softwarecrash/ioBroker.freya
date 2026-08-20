@@ -3,17 +3,23 @@ updates:
     - package-ecosystem: npm
       directory: '/'
       schedule:
-          interval: monthly
+          interval: weekly
+          day: wednesday
+          time: '04:17'
+          timezone: Europe/Berlin
       cooldown:
           default-days: 7
-      open-pull-requests-limit: 5
+      open-pull-requests-limit: 15
       ignore:
           - dependency-name: '@types/node'
             update-types: ['version-update:semver-major']
     - package-ecosystem: github-actions
       directory: '/'
       schedule:
-          interval: monthly
+          interval: weekly
+          day: wednesday
+          time: '04:43'
+          timezone: Europe/Berlin
       cooldown:
           default-days: 7
-      open-pull-requests-limit: 5
+      open-pull-requests-limit: 15

@@ -14,7 +14,7 @@ jobs:
     check-and-lint:
         runs-on: ubuntu-latest
         steps:
-            - uses: ioBroker/testing-action-check@v1
+            - uses: ioBroker/testing-action-check@v2
               with:
                   node-version: '22.x'
                   type-checking: true
@@ -33,3 +33,15 @@ jobs:
                   node-version: ${{ matrix.node-version }}
                   os: ${{ matrix.os }}
                   build: true
+
+    package-smoke:
+        needs: check-and-lint
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '22.x'
+                  cache: npm
+            - run: npm ci
+            - run: npm run test:pack

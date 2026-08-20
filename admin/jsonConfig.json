@@ -1,17 +1,14 @@
 {
-    "i18n": false,
+    "i18n": true,
     "type": "tabs",
     "items": {
         "overview": {
             "type": "panel",
-            "label": { "en": "Overview", "de": "Übersicht" },
+            "label": "Overview",
             "items": {
                 "phaseNotice": {
                     "type": "staticText",
-                    "text": {
-                        "en": "Controlled actions are deny-by-default. Level 3 still requires an eligible approved pattern, explicit Control permission, current conditions, confidence, writable metadata, and all safety checks. Level 0 is the installation default.",
-                        "de": "Kontrollierte Aktionen sind standardmäßig gesperrt. Stufe 3 benötigt weiterhin ein geeignetes freigegebenes Muster, explizite Control-Berechtigung, aktuelle Bedingungen, Confidence, schreibbare Metadaten und alle Sicherheitsprüfungen. Installationsstandard ist Stufe 0."
-                    },
+                    "text": "Controlled actions are deny-by-default. Level 3 still requires an eligible approved pattern, explicit Control permission, current conditions, confidence, writable metadata, and all safety checks. Level 0 is the installation default.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -21,7 +18,7 @@
                 },
                 "discoveryStatus": {
                     "type": "state",
-                    "label": { "en": "Discovery status", "de": "Erkennungsstatus" },
+                    "label": "Discovery status",
                     "oid": "discovery.status",
                     "newLine": true,
                     "xs": 12,
@@ -32,7 +29,7 @@
                 },
                 "scannedStates": {
                     "type": "state",
-                    "label": { "en": "Scanned states", "de": "Gescannte States" },
+                    "label": "Scanned states",
                     "oid": "discovery.scannedStateCount",
                     "xs": 12,
                     "sm": 6,
@@ -42,7 +39,7 @@
                 },
                 "classifiedStates": {
                     "type": "state",
-                    "label": { "en": "Classified states", "de": "Klassifizierte States" },
+                    "label": "Classified states",
                     "oid": "discovery.classifiedStateCount",
                     "xs": 12,
                     "sm": 6,
@@ -52,7 +49,7 @@
                 },
                 "unknownStates": {
                     "type": "state",
-                    "label": { "en": "Unknown states", "de": "Unbekannte States" },
+                    "label": "Unknown states",
                     "oid": "discovery.unknownStateCount",
                     "xs": 12,
                     "sm": 6,
@@ -62,7 +59,7 @@
                 },
                 "subscribedStates": {
                     "type": "state",
-                    "label": { "en": "Observed states", "de": "Beobachtete States" },
+                    "label": "Observed states",
                     "oid": "observation.subscribedStateCount",
                     "newLine": true,
                     "xs": 12,
@@ -73,7 +70,7 @@
                 },
                 "retainedObservations": {
                     "type": "state",
-                    "label": { "en": "Buffered observations", "de": "Gepufferte Beobachtungen" },
+                    "label": "Buffered observations",
                     "oid": "observation.retainedCount",
                     "xs": 12,
                     "sm": 6,
@@ -83,7 +80,7 @@
                 },
                 "historyProvider": {
                     "type": "state",
-                    "label": { "en": "History provider", "de": "History-Provider" },
+                    "label": "History provider",
                     "oid": "history.activeProvider",
                     "xs": 12,
                     "sm": 6,
@@ -93,7 +90,7 @@
                 },
                 "historyQueries": {
                     "type": "state",
-                    "label": { "en": "History queries", "de": "History-Abfragen" },
+                    "label": "History queries",
                     "oid": "history.queryCount",
                     "xs": 12,
                     "sm": 6,
@@ -103,13 +100,10 @@
                 },
                 "autonomyLevel": {
                     "type": "number",
-                    "label": { "en": "Autonomy level", "de": "Autonomie-Level" },
+                    "label": "Autonomy level",
                     "min": 0,
                     "max": 3,
-                    "help": {
-                        "en": "0 observe, 1 learn/suggest, 2 reserved for per-action approval, 3 controlled execution of approved patterns",
-                        "de": "0 beobachten, 1 lernen/vorschlagen, 2 für Einzel-Freigaben reserviert, 3 kontrollierte Ausführung freigegebener Muster"
-                    },
+                    "help": "0 observe, 1 learn/suggest, 2 reserved for per-action approval, 3 controlled execution of approved patterns",
                     "newLine": true,
                     "xs": 12,
                     "sm": 4,
@@ -119,11 +113,8 @@
                 },
                 "learningEnabled": {
                     "type": "checkbox",
-                    "label": { "en": "Enable learning", "de": "Lernen aktivieren" },
-                    "help": {
-                        "en": "Read-only learning for states with explicit Learn permission",
-                        "de": "Schreibgeschütztes Lernen nur für States mit expliziter Lernberechtigung"
-                    },
+                    "label": "Enable learning",
+                    "help": "Read-only learning for states with explicit Learn permission",
                     "xs": 12,
                     "sm": 4,
                     "md": 4,
@@ -132,7 +123,7 @@
                 },
                 "historyInstance": {
                     "type": "selectSendTo",
-                    "label": { "en": "History provider", "de": "History-Provider" },
+                    "label": "History provider",
                     "command": "getHistoryProviderOptions",
                     "manual": false,
                     "xs": 12,
@@ -143,7 +134,7 @@
                 },
                 "minimumActionConfidence": {
                     "type": "number",
-                    "label": { "en": "Minimum action confidence", "de": "Minimale Aktions-Confidence" },
+                    "label": "Minimum action confidence",
                     "min": 0.58,
                     "max": 1,
                     "step": 0.01,
@@ -156,7 +147,7 @@
                 },
                 "actionCooldownSeconds": {
                     "type": "number",
-                    "label": { "en": "Target cooldown (seconds)", "de": "Ziel-Cooldown (Sekunden)" },
+                    "label": "Target cooldown (seconds)",
                     "min": 5,
                     "max": 86400,
                     "xs": 12,
@@ -167,7 +158,7 @@
                 },
                 "blockedStateIds": {
                     "type": "table",
-                    "label": { "en": "Always blocked targets", "de": "Immer gesperrte Ziele" },
+                    "label": "Always blocked targets",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -178,7 +169,7 @@
                         {
                             "type": "objectId",
                             "attr": "stateId",
-                            "title": { "en": "State", "de": "State" },
+                            "title": "State",
                             "types": ["state"],
                             "filter": false,
                             "sort": false
@@ -189,11 +180,11 @@
         },
         "states": {
             "type": "panel",
-            "label": { "en": "Devices / States", "de": "Geräte / States" },
+            "label": "Devices / States",
             "items": {
                 "discoveryEnabled": {
                     "type": "checkbox",
-                    "label": { "en": "Enable metadata discovery", "de": "Metadaten-Erkennung aktivieren" },
+                    "label": "Enable metadata discovery",
                     "newLine": true,
                     "xs": 12,
                     "sm": 6,
@@ -203,7 +194,7 @@
                 },
                 "discoveryMaxStates": {
                     "type": "number",
-                    "label": { "en": "Maximum states per scan", "de": "Maximale States pro Scan" },
+                    "label": "Maximum states per scan",
                     "min": 100,
                     "max": 50000,
                     "newLine": true,
@@ -215,10 +206,7 @@
                 },
                 "policyNotice": {
                     "type": "staticText",
-                    "text": {
-                        "en": "All permissions default to off. Control requires Observe, Learn, and Suggest and is used only by the controlled Action Executor. Locks and security states remain denied.",
-                        "de": "Alle Berechtigungen sind standardmäßig aus. Control benötigt Observe, Learn und Suggest und wird nur vom kontrollierten Action Executor verwendet. Schlösser und Sicherheits-States bleiben gesperrt."
-                    },
+                    "text": "All permissions default to off. Control requires Observe, Learn, and Suggest and is used only by the controlled Action Executor. Locks and security states remain denied.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -228,10 +216,7 @@
                 },
                 "statePolicies": {
                     "type": "table",
-                    "label": {
-                        "en": "State permissions and semantic corrections",
-                        "de": "State-Berechtigungen und semantische Korrekturen"
-                    },
+                    "label": "State permissions and semantic corrections",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -242,7 +227,7 @@
                         {
                             "type": "objectId",
                             "attr": "stateId",
-                            "title": { "en": "State", "de": "State" },
+                            "title": "State",
                             "types": ["state"],
                             "width": "32%",
                             "filter": false,
@@ -251,46 +236,115 @@
                         {
                             "type": "select",
                             "attr": "semanticType",
-                            "title": { "en": "Semantic type", "de": "Semantischer Typ" },
+                            "title": "Semantic type",
                             "width": "18%",
                             "default": "auto",
                             "options": [
-                                { "label": "Auto", "value": "auto" },
-                                { "label": "Light", "value": "light" },
-                                { "label": "Dimmer", "value": "dimmer" },
-                                { "label": "Motion", "value": "motion" },
-                                { "label": "Presence", "value": "presence" },
-                                { "label": "Illuminance", "value": "illuminance" },
-                                { "label": "Temperature", "value": "temperature" },
-                                { "label": "Humidity", "value": "humidity" },
-                                { "label": "Cloud cover", "value": "cloudCover" },
-                                { "label": "Precipitation", "value": "precipitation" },
-                                { "label": "Wind speed", "value": "windSpeed" },
-                                { "label": "Contact", "value": "contact" },
-                                { "label": "Lock", "value": "lock" },
-                                { "label": "Alarm", "value": "alarm" },
-                                { "label": "Switch", "value": "switch" },
-                                { "label": "Unknown", "value": "unknown" }
+                                {
+                                    "label": "Auto",
+                                    "value": "auto"
+                                },
+                                {
+                                    "label": "Light",
+                                    "value": "light"
+                                },
+                                {
+                                    "label": "Dimmer",
+                                    "value": "dimmer"
+                                },
+                                {
+                                    "label": "Motion",
+                                    "value": "motion"
+                                },
+                                {
+                                    "label": "Presence",
+                                    "value": "presence"
+                                },
+                                {
+                                    "label": "Illuminance",
+                                    "value": "illuminance"
+                                },
+                                {
+                                    "label": "Temperature",
+                                    "value": "temperature"
+                                },
+                                {
+                                    "label": "Humidity",
+                                    "value": "humidity"
+                                },
+                                {
+                                    "label": "Cloud cover",
+                                    "value": "cloudCover"
+                                },
+                                {
+                                    "label": "Precipitation",
+                                    "value": "precipitation"
+                                },
+                                {
+                                    "label": "Wind speed",
+                                    "value": "windSpeed"
+                                },
+                                {
+                                    "label": "Contact",
+                                    "value": "contact"
+                                },
+                                {
+                                    "label": "Lock",
+                                    "value": "lock"
+                                },
+                                {
+                                    "label": "Alarm",
+                                    "value": "alarm"
+                                },
+                                {
+                                    "label": "Switch",
+                                    "value": "switch"
+                                },
+                                {
+                                    "label": "Unknown",
+                                    "value": "unknown"
+                                }
                             ]
                         },
-                        { "type": "checkbox", "attr": "observe", "title": "Observe", "width": "8%", "default": false },
-                        { "type": "checkbox", "attr": "learn", "title": "Learn", "width": "8%", "default": false },
-                        { "type": "checkbox", "attr": "suggest", "title": "Suggest", "width": "8%", "default": false },
-                        { "type": "checkbox", "attr": "control", "title": "Control", "width": "8%", "default": false }
+                        {
+                            "type": "checkbox",
+                            "attr": "observe",
+                            "title": "Observe",
+                            "width": "8%",
+                            "default": false
+                        },
+                        {
+                            "type": "checkbox",
+                            "attr": "learn",
+                            "title": "Learn",
+                            "width": "8%",
+                            "default": false
+                        },
+                        {
+                            "type": "checkbox",
+                            "attr": "suggest",
+                            "title": "Suggest",
+                            "width": "8%",
+                            "default": false
+                        },
+                        {
+                            "type": "checkbox",
+                            "attr": "control",
+                            "title": "Control",
+                            "width": "8%",
+                            "default": false
+                        }
                     ]
                 }
             }
         },
         "environment": {
             "type": "panel",
-            "label": { "en": "Environment mappings", "de": "Umgebungs-Zuordnungen" },
+            "label": "Environment mappings",
             "items": {
                 "environmentNotice": {
                     "type": "staticText",
-                    "text": {
-                        "en": "Mappings use semantic keys and may contain several prioritized sources. No adapter-specific state IDs are hard-coded.",
-                        "de": "Zuordnungen verwenden semantische Schlüssel und können mehrere priorisierte Quellen enthalten. Es sind keine adapterspezifischen State-IDs fest codiert."
-                    },
+                    "text": "Mappings use semantic keys and may contain several prioritized sources. No adapter-specific state IDs are hard-coded.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -300,7 +354,7 @@
                 },
                 "environmentMappings": {
                     "type": "table",
-                    "label": { "en": "Manual source priorities", "de": "Manuelle Quellenprioritäten" },
+                    "label": "Manual source priorities",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -311,21 +365,39 @@
                         {
                             "type": "select",
                             "attr": "key",
-                            "title": { "en": "Semantic key", "de": "Semantischer Schlüssel" },
+                            "title": "Semantic key",
                             "width": "28%",
                             "options": [
-                                { "label": "Outside temperature", "value": "outsideTemperature" },
-                                { "label": "Outside illuminance", "value": "outsideIlluminance" },
-                                { "label": "Humidity", "value": "humidity" },
-                                { "label": "Cloud cover", "value": "cloudCover" },
-                                { "label": "Precipitation", "value": "precipitation" },
-                                { "label": "Wind speed", "value": "windSpeed" }
+                                {
+                                    "label": "Outside temperature",
+                                    "value": "outsideTemperature"
+                                },
+                                {
+                                    "label": "Outside illuminance",
+                                    "value": "outsideIlluminance"
+                                },
+                                {
+                                    "label": "Humidity",
+                                    "value": "humidity"
+                                },
+                                {
+                                    "label": "Cloud cover",
+                                    "value": "cloudCover"
+                                },
+                                {
+                                    "label": "Precipitation",
+                                    "value": "precipitation"
+                                },
+                                {
+                                    "label": "Wind speed",
+                                    "value": "windSpeed"
+                                }
                             ]
                         },
                         {
                             "type": "objectId",
                             "attr": "stateId",
-                            "title": { "en": "Source state", "de": "Quell-State" },
+                            "title": "Source state",
                             "types": ["state"],
                             "width": "45%",
                             "filter": false,
@@ -334,7 +406,7 @@
                         {
                             "type": "number",
                             "attr": "priority",
-                            "title": { "en": "Priority", "de": "Priorität" },
+                            "title": "Priority",
                             "width": "14%",
                             "default": 0,
                             "min": -100,
@@ -343,7 +415,7 @@
                         {
                             "type": "checkbox",
                             "attr": "pinned",
-                            "title": { "en": "Pinned", "de": "Fixiert" },
+                            "title": "Pinned",
                             "width": "10%",
                             "default": false
                         }
@@ -351,11 +423,8 @@
                 },
                 "manualLatitude": {
                     "type": "number",
-                    "label": { "en": "Manual latitude override", "de": "Manueller Breitengrad" },
-                    "help": {
-                        "en": "Leave empty to use ioBroker system coordinates",
-                        "de": "Leer lassen, um die ioBroker-Systemkoordinaten zu verwenden"
-                    },
+                    "label": "Manual latitude override",
+                    "help": "Leave empty to use ioBroker system coordinates",
                     "min": -90,
                     "max": 90,
                     "newLine": true,
@@ -367,11 +436,8 @@
                 },
                 "manualLongitude": {
                     "type": "number",
-                    "label": { "en": "Manual longitude override", "de": "Manueller Längengrad" },
-                    "help": {
-                        "en": "Both manual values are required for an override",
-                        "de": "Für eine manuelle Übersteuerung sind beide Werte erforderlich"
-                    },
+                    "label": "Manual longitude override",
+                    "help": "Both manual values are required for an override",
                     "min": -180,
                     "max": 180,
                     "xs": 12,
@@ -384,14 +450,11 @@
         },
         "patterns": {
             "type": "panel",
-            "label": { "en": "Patterns", "de": "Muster" },
+            "label": "Patterns",
             "items": {
                 "patternNotice": {
                     "type": "staticText",
-                    "text": {
-                        "en": "Suggestions require explicit Suggest permission on both trigger and light. Approve/disable transitions are accepted only from ioBroker Admin and never grant Control permission. Execution additionally requires level 3 and every current safety check.",
-                        "de": "Vorschläge benötigen die explizite Vorschlagsberechtigung für Auslöser und Licht. Freigabe-/Deaktivierungswechsel werden nur vom ioBroker-Admin angenommen und vergeben niemals eine Steuerungsberechtigung. Ausführung benötigt zusätzlich Stufe 3 und alle aktuellen Sicherheitsprüfungen."
-                    },
+                    "text": "Suggestions require explicit Suggest permission on both trigger and light. Approve/disable transitions are accepted only from ioBroker Admin and never grant Control permission. Execution additionally requires level 3 and every current safety check.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -401,7 +464,7 @@
                 },
                 "candidatePatterns": {
                     "type": "state",
-                    "label": { "en": "Candidate patterns", "de": "Musterkandidaten" },
+                    "label": "Candidate patterns",
                     "oid": "suggestions.candidateCount",
                     "newLine": true,
                     "xs": 12,
@@ -412,7 +475,7 @@
                 },
                 "approvedPatterns": {
                     "type": "state",
-                    "label": { "en": "Approved patterns", "de": "Freigegebene Muster" },
+                    "label": "Approved patterns",
                     "oid": "patterns.approvedCount",
                     "xs": 12,
                     "sm": 4,
@@ -422,7 +485,7 @@
                 },
                 "disabledPatterns": {
                     "type": "state",
-                    "label": { "en": "Disabled patterns", "de": "Deaktivierte Muster" },
+                    "label": "Disabled patterns",
                     "oid": "patterns.disabledCount",
                     "xs": 12,
                     "sm": 4,
@@ -432,7 +495,7 @@
                 },
                 "latestSuggestion": {
                     "type": "state",
-                    "label": { "en": "Latest explanation", "de": "Letzte Erklärung" },
+                    "label": "Latest explanation",
                     "oid": "suggestions.latest",
                     "newLine": true,
                     "xs": 12,
@@ -445,14 +508,11 @@
         },
         "llm": {
             "type": "panel",
-            "label": { "en": "Optional LLM", "de": "Optionales LLM" },
+            "label": "Optional LLM",
             "items": {
                 "llmNotice": {
                     "type": "staticText",
-                    "text": {
-                        "en": "LLMs are advisory only and cannot authorize or execute actions. Rules Only is local and is the default. External analysis is sent only by an explicit Admin request and contains allow-listed aggregates without state IDs, room names, raw values, or persons. Use previewLlmDisclosure to inspect the exact payload first.",
-                        "de": "LLMs beraten nur und können Aktionen weder autorisieren noch ausführen. Rules Only ist lokal und Standard. Externe Analyse wird nur durch eine explizite Admin-Anfrage gesendet und enthält ausschließlich freigegebene Aggregate ohne State-IDs, Raumnamen, Rohwerte oder Personen. Mit previewLlmDisclosure kann die exakte Nutzlast vorher geprüft werden."
-                    },
+                    "text": "LLMs are advisory only and cannot authorize or execute actions. Rules Only is local and is the default. External analysis is sent only by an explicit Admin request and contains allow-listed aggregates without state IDs, room names, raw values, or persons. Use previewLlmDisclosure to inspect the exact payload first.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -462,13 +522,28 @@
                 },
                 "llmProvider": {
                     "type": "select",
-                    "label": { "en": "Provider", "de": "Provider" },
+                    "label": "Provider",
                     "options": [
-                        { "label": { "en": "Disabled", "de": "Deaktiviert" }, "value": "disabled" },
-                        { "label": { "en": "Rules Only (local)", "de": "Nur Regeln (lokal)" }, "value": "rules" },
-                        { "label": "Ollama", "value": "ollama" },
-                        { "label": "OpenAI", "value": "openai" },
-                        { "label": "OpenAI-compatible", "value": "openai-compatible" }
+                        {
+                            "label": "Disabled",
+                            "value": "disabled"
+                        },
+                        {
+                            "label": "Rules Only (local)",
+                            "value": "rules"
+                        },
+                        {
+                            "label": "Ollama",
+                            "value": "ollama"
+                        },
+                        {
+                            "label": "OpenAI",
+                            "value": "openai"
+                        },
+                        {
+                            "label": "OpenAI-compatible",
+                            "value": "openai-compatible"
+                        }
                     ],
                     "newLine": true,
                     "xs": 12,
@@ -479,11 +554,8 @@
                 },
                 "llmModel": {
                     "type": "text",
-                    "label": { "en": "Model", "de": "Modell" },
-                    "help": {
-                        "en": "Required for Ollama, OpenAI, and compatible providers; no model is silently substituted",
-                        "de": "Für Ollama, OpenAI und kompatible Provider erforderlich; es wird kein Modell stillschweigend ersetzt"
-                    },
+                    "label": "Model",
+                    "help": "Required for Ollama, OpenAI, and compatible providers; no model is silently substituted",
                     "xs": 12,
                     "sm": 6,
                     "md": 4,
@@ -492,7 +564,7 @@
                 },
                 "llmTimeoutSeconds": {
                     "type": "number",
-                    "label": { "en": "Timeout (seconds)", "de": "Timeout (Sekunden)" },
+                    "label": "Timeout (seconds)",
                     "min": 1,
                     "max": 60,
                     "xs": 12,
@@ -503,11 +575,8 @@
                 },
                 "llmBaseUrl": {
                     "type": "text",
-                    "label": { "en": "Base URL", "de": "Basis-URL" },
-                    "help": {
-                        "en": "Ollama accepts loopback HTTP only; compatible remote providers require HTTPS",
-                        "de": "Ollama akzeptiert nur Loopback-HTTP; kompatible entfernte Provider benötigen HTTPS"
-                    },
+                    "label": "Base URL",
+                    "help": "Ollama accepts loopback HTTP only; compatible remote providers require HTTPS",
                     "newLine": true,
                     "xs": 12,
                     "sm": 8,
@@ -517,11 +586,8 @@
                 },
                 "llmApiKey": {
                     "type": "password",
-                    "label": { "en": "API key", "de": "API-Schlüssel" },
-                    "help": {
-                        "en": "Stored in protected and encrypted native configuration; never logged or included in previews",
-                        "de": "Wird geschützt und verschlüsselt in der nativen Konfiguration gespeichert; erscheint nie in Logs oder Vorschauen"
-                    },
+                    "label": "API key",
+                    "help": "Stored in protected and encrypted native configuration; never logged or included in previews",
                     "xs": 12,
                     "sm": 4,
                     "md": 4,
@@ -530,7 +596,7 @@
                 },
                 "llmEffectiveProvider": {
                     "type": "state",
-                    "label": { "en": "Effective provider", "de": "Effektiver Provider" },
+                    "label": "Effective provider",
                     "oid": "llm.provider",
                     "newLine": true,
                     "xs": 12,
@@ -541,7 +607,7 @@
                 },
                 "llmExternal": {
                     "type": "state",
-                    "label": { "en": "External disclosure enabled", "de": "Externe Übertragung aktiv" },
+                    "label": "External disclosure enabled",
                     "oid": "llm.external",
                     "xs": 12,
                     "sm": 6,
@@ -551,7 +617,7 @@
                 },
                 "llmLastResult": {
                     "type": "state",
-                    "label": { "en": "Last advisory result", "de": "Letztes Beratungsergebnis" },
+                    "label": "Last advisory result",
                     "oid": "llm.lastResult",
                     "xs": 12,
                     "sm": 12,
@@ -563,14 +629,11 @@
         },
         "feedback": {
             "type": "panel",
-            "label": { "en": "Feedback", "de": "Feedback" },
+            "label": "Feedback",
             "items": {
                 "feedbackNotice": {
                     "type": "staticText",
-                    "text": {
-                        "en": "Complete action records are stored locally with correlation IDs. Explicit feedback is accepted only through submitFeedback from ioBroker Admin. An opposing Admin change inside the window is conservatively negative; ambiguous sources remain Unknown, unrelated changes are ignored, and no change becomes Neutral.",
-                        "de": "Vollständige Aktionsdatensätze werden lokal mit Korrelations-IDs gespeichert. Explizites Feedback wird nur über submitFeedback vom ioBroker-Admin angenommen. Eine entgegengesetzte Admin-Änderung im Zeitfenster gilt konservativ als negativ; mehrdeutige Quellen bleiben Unbekannt, fremde Änderungen werden ignoriert und keine Änderung wird Neutral."
-                    },
+                    "text": "Complete action records are stored locally with correlation IDs. Explicit feedback is accepted only through submitFeedback from ioBroker Admin. An opposing Admin change inside the window is conservatively negative; ambiguous sources remain Unknown, unrelated changes are ignored, and no change becomes Neutral.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -580,7 +643,7 @@
                 },
                 "feedbackWindowSeconds": {
                     "type": "number",
-                    "label": { "en": "Attribution window (seconds)", "de": "Zuordnungsfenster (Sekunden)" },
+                    "label": "Attribution window (seconds)",
                     "min": 5,
                     "max": 1800,
                     "newLine": true,
@@ -592,7 +655,7 @@
                 },
                 "pendingFeedback": {
                     "type": "state",
-                    "label": { "en": "Pending", "de": "Ausstehend" },
+                    "label": "Pending",
                     "oid": "feedback.pendingCount",
                     "xs": 12,
                     "sm": 6,
@@ -602,7 +665,7 @@
                 },
                 "positiveFeedback": {
                     "type": "state",
-                    "label": { "en": "Positive", "de": "Positiv" },
+                    "label": "Positive",
                     "oid": "feedback.positiveCount",
                     "xs": 12,
                     "sm": 6,
@@ -612,7 +675,7 @@
                 },
                 "negativeFeedback": {
                     "type": "state",
-                    "label": { "en": "Negative", "de": "Negativ" },
+                    "label": "Negative",
                     "oid": "feedback.negativeCount",
                     "xs": 12,
                     "sm": 6,
@@ -622,7 +685,7 @@
                 },
                 "unknownFeedback": {
                     "type": "state",
-                    "label": { "en": "Unknown", "de": "Unbekannt" },
+                    "label": "Unknown",
                     "oid": "feedback.unknownCount",
                     "xs": 12,
                     "sm": 6,
@@ -632,7 +695,7 @@
                 },
                 "lastFeedback": {
                     "type": "state",
-                    "label": { "en": "Last feedback timestamp", "de": "Letztes Feedback" },
+                    "label": "Last feedback timestamp",
                     "oid": "feedback.lastTimestamp",
                     "newLine": true,
                     "xs": 12,
@@ -645,14 +708,11 @@
         },
         "activity": {
             "type": "panel",
-            "label": { "en": "Activity", "de": "Aktivität" },
+            "label": "Activity",
             "items": {
                 "activityNotice": {
                     "type": "staticText",
-                    "text": {
-                        "en": "Candidate creation, withdrawal, accepted status changes, and rejected commands are retained in a bounded in-memory audit log. Detailed pages are available through getActivity.",
-                        "de": "Kandidatenerstellung, Rücknahme, akzeptierte Statuswechsel und abgewiesene Befehle werden in einem begrenzten Audit-Protokoll im Arbeitsspeicher gehalten. Detailseiten sind über getActivity verfügbar."
-                    },
+                    "text": "Candidate creation, withdrawal, accepted status changes, and rejected commands are retained in a bounded in-memory audit log. Detailed pages are available through getActivity.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -662,7 +722,7 @@
                 },
                 "activityCount": {
                     "type": "state",
-                    "label": { "en": "Activity records", "de": "Aktivitätseinträge" },
+                    "label": "Activity records",
                     "oid": "activity.count",
                     "newLine": true,
                     "xs": 12,
@@ -673,7 +733,7 @@
                 },
                 "lastActivity": {
                     "type": "state",
-                    "label": { "en": "Last activity timestamp", "de": "Letzte Aktivität" },
+                    "label": "Last activity timestamp",
                     "oid": "activity.lastTimestamp",
                     "xs": 12,
                     "sm": 6,
@@ -683,7 +743,7 @@
                 },
                 "actionAuditCount": {
                     "type": "state",
-                    "label": { "en": "Action audit records", "de": "Aktions-Audit-Einträge" },
+                    "label": "Action audit records",
                     "oid": "actions.auditCount",
                     "newLine": true,
                     "xs": 12,
@@ -694,7 +754,7 @@
                 },
                 "lastActionResult": {
                     "type": "state",
-                    "label": { "en": "Last action result", "de": "Letztes Aktionsergebnis" },
+                    "label": "Last action result",
                     "oid": "actions.lastResult",
                     "xs": 12,
                     "sm": 6,

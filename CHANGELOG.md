@@ -7,6 +7,34 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-08-20
+
+### Added
+
+- Weblate-compatible JSON Config translations for all eleven supported ioBroker
+  languages, while retaining reviewed German texts.
+- English installation guidance, a security reporting policy, detailed local/external
+  data-handling documentation, and an npm-package content smoke test.
+- A dedicated CI package-smoke job in addition to the Node 22/24/26 Linux, Windows, and
+  macOS adapter-test matrix.
+
+### Changed
+
+- Dependabot checks now run weekly at staggered times with a larger queue. Verified
+  testing-action-check v2 and fetch-metadata v3 upgrades are integrated.
+- Dependabot auto-merge eligibility now covers npm and GitHub Actions patch/minor
+  updates; major updates remain manual and TypeScript 7 is intentionally rejected after
+  its CI failure.
+- Repository metadata links follow the actual default branch and release news retention
+  is bounded to seven versions.
+
+### Security
+
+- The production dependency audit is clean. Release-package validation rejects source,
+  test, workflow, and common secret-file names.
+- External LLM disclosure, local persistence, deletion, permissions, and the single
+  controlled foreign-state write boundary are documented for end users and reporters.
+
 ## [0.9.0] - 2026-08-20
 
 ### Added

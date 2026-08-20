@@ -1,56 +1,125 @@
 {
     "common": {
         "name": "smartbrain",
-        "version": "0.9.0",
+        "version": "0.9.1",
         "news": {
+            "0.9.1": {
+                "en": "Add pre-release hardening, complete UI translations, privacy documentation, and package smoke tests",
+                "de": "Pre-Release-Härtung, vollständige UI-Übersetzungen, Datenschutzdokumentation und Paket-Smoke-Tests hinzugefügt",
+                "ru": "Добавлены усиление предварительной версии, полные переводы интерфейса, документация по конфиденциальности и дымовые тесты пакета",
+                "pt": "Adicione proteção de pré-lançamento, traduções completas da interface, documentação de privacidade e testes rápidos do pacote",
+                "nl": "Pre-release-hardening, volledige UI-vertalingen, privacydocumentatie en pakket-smoketests toegevoegd",
+                "fr": "Ajout du renforcement de préversion, des traductions complètes de l’interface, de la documentation de confidentialité et des tests rapides du paquet",
+                "it": "Aggiunti rafforzamento pre-release, traduzioni complete dell'interfaccia, documentazione sulla privacy e smoke test del pacchetto",
+                "es": "Se añadieron refuerzo previo al lanzamiento, traducciones completas de la interfaz, documentación de privacidad y pruebas rápidas del paquete",
+                "pl": "Dodano utwardzanie przed wydaniem, pełne tłumaczenia interfejsu, dokumentację prywatności i testy dymne pakietu",
+                "uk": "Додано посилення перед випуском, повні переклади інтерфейсу, документацію про конфіденційність і димові тести пакета",
+                "zh-cn": "添加预发布强化、完整界面翻译、隐私文档和软件包冒烟测试"
+            },
             "0.9.0": {
                 "en": "Add persistent action correlation and conservative feedback learning",
-                "de": "Persistente Aktionskorrelation und konservatives Feedback-Lernen hinzugefügt"
+                "de": "Persistente Aktionskorrelation und konservatives Feedback-Lernen hinzugefügt",
+                "ru": "Добавьте постоянную корреляцию действий и консервативное обучение с обратной связью.",
+                "pt": "Adicione correlação de ação persistente e aprendizado de feedback conservador",
+                "nl": "Voeg aanhoudende actiecorrelatie en conservatief feedbackleren toe",
+                "fr": "Ajoutez une corrélation d’actions persistante et un apprentissage par feedback conservateur",
+                "it": "Aggiungi correlazione di azioni persistente e apprendimento con feedback conservativo",
+                "es": "Agregue correlación de acción persistente y aprendizaje de retroalimentación conservadora",
+                "pl": "Dodaj trwałą korelację działań i uczenie się poprzez konserwatywne informacje zwrotne",
+                "uk": "Додайте постійну кореляцію дій і консервативне навчання зі зворотним зв’язком",
+                "zh-cn": "添加持久动作相关性和保守反馈学习"
             },
             "0.8.0": {
                 "en": "Add isolated optional LLM advisory providers and disclosure previews",
-                "de": "Isolierte optionale LLM-Berater und Übertragungsvorschau hinzugefügt"
+                "de": "Isolierte optionale LLM-Berater und Übertragungsvorschau hinzugefügt",
+                "ru": "Добавьте отдельных дополнительных поставщиков консультаций LLM и предварительный просмотр раскрытия информации.",
+                "pt": "Adicione provedores de consultoria LLM opcionais isolados e visualizações de divulgação",
+                "nl": "Voeg geïsoleerde optionele LLM-adviesaanbieders en openbaarmakingsvoorbeelden toe",
+                "fr": "Ajoutez des fournisseurs de conseils LLM facultatifs isolés et des aperçus de divulgation",
+                "it": "Aggiungi fornitori di consulenza LLM opzionali isolati e anteprime di divulgazione",
+                "es": "Agregue proveedores de asesoramiento de LLM opcionales aislados y vistas previas de divulgación",
+                "pl": "Dodaj izolowanych opcjonalnych dostawców usług doradczych LLM i podglądy ujawnień",
+                "uk": "Додайте окремих факультативних постачальників консультацій LLM і попередній перегляд інформації",
+                "zh-cn": "添加独立的可选 LLM 咨询提供商和披露预览"
             },
             "0.7.0": {
                 "en": "Add deny-by-default controlled actions with last-moment safety validation",
-                "de": "Standardmäßig gesperrte Aktionen mit Sicherheitsprüfung unmittelbar vor Ausführung hinzugefügt"
+                "de": "Standardmäßig gesperrte Aktionen mit Sicherheitsprüfung unmittelbar vor Ausführung hinzugefügt",
+                "ru": "Добавьте контролируемые действия, запрещенные по умолчанию, с проверкой безопасности в последний момент.",
+                "pt": "Adicione ações controladas de negação por padrão com validação de segurança de última hora",
+                "nl": "Voeg standaardgestuurde acties toe met veiligheidsvalidatie op het laatste moment",
+                "fr": "Ajoutez des actions contrôlées de refus par défaut avec une validation de sécurité au dernier moment",
+                "it": "Aggiungi azioni controllate di rifiuto per impostazione predefinita con convalida di sicurezza dell'ultimo momento",
+                "es": "Agregue acciones controladas de denegación por defecto con validación de seguridad de último momento",
+                "pl": "Dodaj domyślnie kontrolowane akcje typu „odmowa” z weryfikacją bezpieczeństwa w ostatniej chwili",
+                "uk": "Додайте контрольовані дії заборони за замовчуванням із перевіркою безпеки в останній момент",
+                "zh-cn": "添加带有最后一刻安全验证的默认拒绝受控操作"
             },
             "0.6.0": {
                 "en": "Add rules-only suggestions, approval lifecycle, and bounded activity auditing",
-                "de": "Regelbasierte Vorschläge, Freigabe-Lebenszyklus und begrenztes Aktivitäts-Audit hinzugefügt"
+                "de": "Regelbasierte Vorschläge, Freigabe-Lebenszyklus und begrenztes Aktivitäts-Audit hinzugefügt",
+                "ru": "Добавьте предложения только по правилам, жизненный цикл утверждения и ограниченный аудит действий.",
+                "pt": "Adicione sugestões somente de regras, ciclo de vida de aprovação e auditoria de atividades limitadas",
+                "nl": "Voeg alleen-regelsuggesties, goedkeuringslevenscyclus en controle van begrensde activiteiten toe",
+                "fr": "Ajoutez des suggestions de règles uniquement, un cycle de vie d'approbation et un audit d'activité limité",
+                "it": "Aggiungi suggerimenti relativi alle sole regole, ciclo di vita dell'approvazione e controllo delle attività limitate",
+                "es": "Agregue sugerencias de solo reglas, ciclo de vida de aprobación y auditoría de actividades limitadas",
+                "pl": "Dodaj sugestie dotyczące samych reguł, cykl życia zatwierdzenia i ograniczoną inspekcję działań",
+                "uk": "Додайте лише пропозиції щодо правил, життєвий цикл затвердження та обмежений аудит активності",
+                "zh-cn": "添加仅规则建议、批准生命周期和有界活动审核"
             },
             "0.5.1": {
                 "en": "Fix repeated policy-normalization restarts and shutdown races",
-                "de": "Wiederholte Policy-Normalisierungs-Neustarts und Shutdown-Rennen behoben"
+                "de": "Wiederholte Policy-Normalisierungs-Neustarts und Shutdown-Rennen behoben",
+                "ru": "Исправление повторяющихся перезапусков нормализации политики и гонок при выключении.",
+                "pt": "Corrigir reinicializações repetidas de normalização de políticas e corridas de desligamento",
+                "nl": "Herstart van herhaalde beleidsnormalisatie-herstarts en shutdown-races",
+                "fr": "Correction des redémarrages répétés de normalisation des politiques et des courses à l'arrêt",
+                "it": "Correggi i ripetuti riavvii di normalizzazione delle politiche e le gare di arresto",
+                "es": "Corregir reinicios repetidos de normalización de políticas y carreras de cierre",
+                "pl": "Napraw powtarzające się ponowne uruchamianie normalizacji zasad i wyścigi zamykania",
+                "uk": "Виправлення повторних перезапусків нормалізації політики та гонок завершення роботи",
+                "zh-cn": "修复重复的政策正常化重启和关闭竞赛"
             },
             "0.5.0": {
                 "en": "Add bounded explainable trigger-to-light pattern learning",
-                "de": "Begrenztes, erklärbares Lernen von Auslöser-zu-Licht-Mustern hinzugefügt"
-            },
-            "0.4.1": {
-                "en": "List installed getHistory-capable adapter instances in the provider selection",
-                "de": "Installierte getHistory-fähige Adapterinstanzen in der Provider-Auswahl auflisten"
-            },
-            "0.4.0": {
-                "en": "Add bounded read-only history providers with live capability detection",
-                "de": "Begrenzte schreibgeschützte History-Provider mit Live-Capability-Erkennung hinzugefügt"
-            },
-            "0.3.0": {
-                "en": "Add permission-gated observations with bounded context snapshots and status counters",
-                "de": "Berechtigungsgesteuerte Beobachtungen mit begrenzten Kontext-Snapshots und Statuszählern hinzugefügt"
-            },
-            "0.2.0": {
-                "en": "Add synchronized object custom policies and provider-based time and solar context",
-                "de": "Synchronisierte Objekt-Einstellungen und Provider-basierten Zeit- und Sonnenkontext hinzugefügt"
+                "de": "Begrenztes, erklärbares Lernen von Auslöser-zu-Licht-Mustern hinzugefügt",
+                "ru": "Добавьте ограниченное объяснимое обучение шаблону «триггер-свет»",
+                "pt": "Adicione aprendizado de padrão de gatilho para luz explicável e limitado",
+                "nl": "Voeg begrensd, verklaarbaar trigger-to-light-patroonleren toe",
+                "fr": "Ajouter un apprentissage de modèles de déclenchement à la lumière explicable et limité",
+                "it": "Aggiungi l'apprendimento limitato e spiegabile del modello trigger-to-light",
+                "es": "Agregue aprendizaje de patrones de disparador a luz explicable y limitado",
+                "pl": "Dodaj ograniczone, możliwe do wyjaśnienia wzorce uczenia się od wyzwalacza do światła",
+                "uk": "Додайте обмежене, пояснюване, навчання шаблону тригера до світла",
+                "zh-cn": "添加有界可解释的触发光模式学习"
             }
         },
         "titleLang": {
             "en": "SmartBrain",
-            "de": "SmartBrain"
+            "de": "SmartBrain",
+            "ru": "SmartBrain",
+            "pt": "SmartBrain",
+            "nl": "SmartBrain",
+            "fr": "SmartBrain",
+            "it": "SmartBrain",
+            "es": "SmartBrain",
+            "pl": "SmartBrain",
+            "uk": "SmartBrain",
+            "zh-cn": "SmartBrain"
         },
         "desc": {
             "en": "Learns explainable smart-home patterns and proposes safety-controlled automations",
-            "de": "Lernt erklärbare Smart-Home-Muster und schlägt sicherheitsgeprüfte Automatisierungen vor"
+            "de": "Lernt erklärbare Smart-Home-Muster und schlägt sicherheitsgeprüfte Automatisierungen vor",
+            "ru": "Изучает объяснимые модели умного дома и предлагает системы автоматизации, контролируемые безопасностью.",
+            "pt": "Aprende padrões explicáveis ​​de casas inteligentes e propõe automações controladas por segurança",
+            "nl": "Leert verklaarbare smart-home-patronen en stelt veiligheidsgestuurde automatiseringen voor",
+            "fr": "Apprend des modèles de maison intelligente explicables et propose des automatisations contrôlées par la sécurité",
+            "it": "Apprende modelli spiegabili di casa intelligente e propone automazioni controllate dalla sicurezza",
+            "es": "Aprende patrones explicables de hogares inteligentes y propone automatizaciones controladas con seguridad.",
+            "pl": "Uczy się możliwych do wytłumaczenia wzorców inteligentnego domu i proponuje automatyzację sterowaną bezpieczeństwem",
+            "uk": "Вивчає зрозумілі шаблони розумного дому та пропонує автоматизацію з безпечним керуванням",
+            "zh-cn": "学习可解释的智能家居模式并提出安全控制的自动化"
         },
         "authors": ["softwarecrash <44615614+softwarecrash@users.noreply.github.com>"],
         "keywords": ["automation", "learning", "patterns", "smart-home", "local-first"],
@@ -61,8 +130,8 @@
         "platform": "Javascript/Node.js",
         "icon": "smartbrain.svg",
         "enabled": false,
-        "extIcon": "https://raw.githubusercontent.com/softwarecrash/ioBroker.smartbrain/main/admin/smartbrain.svg",
-        "readme": "https://github.com/softwarecrash/ioBroker.smartbrain/blob/main/README.md",
+        "extIcon": "https://raw.githubusercontent.com/softwarecrash/ioBroker.smartbrain/codex/phase-0-analysis/admin/smartbrain.svg",
+        "readme": "https://github.com/softwarecrash/ioBroker.smartbrain/blob/codex/phase-0-analysis/README.md",
         "loglevel": "info",
         "tier": 3,
         "mode": "daemon",
@@ -76,8 +145,16 @@
         "adminUI": {
             "config": "json"
         },
-        "dependencies": [{ "js-controller": ">=6.0.11" }],
-        "globalDependencies": [{ "admin": ">=7.6.20" }]
+        "dependencies": [
+            {
+                "js-controller": ">=6.0.11"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": ">=7.6.20"
+            }
+        ]
     },
     "native": {
         "autonomyLevel": 0,
@@ -106,14 +183,22 @@
         {
             "_id": "info",
             "type": "channel",
-            "common": { "name": { "en": "Information", "de": "Information" } },
+            "common": {
+                "name": {
+                    "en": "Information",
+                    "de": "Information"
+                }
+            },
             "native": {}
         },
         {
             "_id": "info.connection",
             "type": "state",
             "common": {
-                "name": { "en": "Adapter ready", "de": "Adapter bereit" },
+                "name": {
+                    "en": "Adapter ready",
+                    "de": "Adapter bereit"
+                },
                 "type": "boolean",
                 "role": "indicator.connected",
                 "read": true,
@@ -126,7 +211,10 @@
             "_id": "info.status",
             "type": "state",
             "common": {
-                "name": { "en": "Runtime status", "de": "Laufzeitstatus" },
+                "name": {
+                    "en": "Runtime status",
+                    "de": "Laufzeitstatus"
+                },
                 "type": "string",
                 "role": "text",
                 "read": true,
@@ -139,7 +227,10 @@
             "_id": "info.autonomyLevel",
             "type": "state",
             "common": {
-                "name": { "en": "Effective autonomy level", "de": "Effektiver Autonomie-Level" },
+                "name": {
+                    "en": "Effective autonomy level",
+                    "de": "Effektiver Autonomie-Level"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -153,14 +244,22 @@
         {
             "_id": "learning",
             "type": "channel",
-            "common": { "name": { "en": "Learning", "de": "Lernen" } },
+            "common": {
+                "name": {
+                    "en": "Learning",
+                    "de": "Lernen"
+                }
+            },
             "native": {}
         },
         {
             "_id": "learning.enabled",
             "type": "state",
             "common": {
-                "name": { "en": "Learning active", "de": "Lernen aktiv" },
+                "name": {
+                    "en": "Learning active",
+                    "de": "Lernen aktiv"
+                },
                 "type": "boolean",
                 "role": "indicator",
                 "read": true,
@@ -173,7 +272,10 @@
             "_id": "learning.observedStateCount",
             "type": "state",
             "common": {
-                "name": { "en": "Observed state count", "de": "Anzahl beobachteter States" },
+                "name": {
+                    "en": "Observed state count",
+                    "de": "Anzahl beobachteter States"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -186,14 +288,22 @@
         {
             "_id": "patterns",
             "type": "channel",
-            "common": { "name": { "en": "Patterns", "de": "Muster" } },
+            "common": {
+                "name": {
+                    "en": "Patterns",
+                    "de": "Muster"
+                }
+            },
             "native": {}
         },
         {
             "_id": "patterns.candidateCount",
             "type": "state",
             "common": {
-                "name": { "en": "Candidate patterns", "de": "Musterkandidaten" },
+                "name": {
+                    "en": "Candidate patterns",
+                    "de": "Musterkandidaten"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -207,7 +317,10 @@
             "_id": "patterns.approvedCount",
             "type": "state",
             "common": {
-                "name": { "en": "Approved patterns", "de": "Freigegebene Muster" },
+                "name": {
+                    "en": "Approved patterns",
+                    "de": "Freigegebene Muster"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -221,7 +334,10 @@
             "_id": "patterns.disabledCount",
             "type": "state",
             "common": {
-                "name": { "en": "Disabled patterns", "de": "Deaktivierte Muster" },
+                "name": {
+                    "en": "Disabled patterns",
+                    "de": "Deaktivierte Muster"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -234,14 +350,22 @@
         {
             "_id": "suggestions",
             "type": "channel",
-            "common": { "name": { "en": "Suggestions", "de": "Vorschläge" } },
+            "common": {
+                "name": {
+                    "en": "Suggestions",
+                    "de": "Vorschläge"
+                }
+            },
             "native": {}
         },
         {
             "_id": "suggestions.candidateCount",
             "type": "state",
             "common": {
-                "name": { "en": "Suggestion candidates", "de": "Vorschlagskandidaten" },
+                "name": {
+                    "en": "Suggestion candidates",
+                    "de": "Vorschlagskandidaten"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -255,7 +379,10 @@
             "_id": "suggestions.latest",
             "type": "state",
             "common": {
-                "name": { "en": "Latest suggestion", "de": "Letzter Vorschlag" },
+                "name": {
+                    "en": "Latest suggestion",
+                    "de": "Letzter Vorschlag"
+                },
                 "type": "string",
                 "role": "text",
                 "read": true,
@@ -267,14 +394,22 @@
         {
             "_id": "activity",
             "type": "channel",
-            "common": { "name": { "en": "Activity", "de": "Aktivität" } },
+            "common": {
+                "name": {
+                    "en": "Activity",
+                    "de": "Aktivität"
+                }
+            },
             "native": {}
         },
         {
             "_id": "activity.count",
             "type": "state",
             "common": {
-                "name": { "en": "Activity records", "de": "Aktivitätseinträge" },
+                "name": {
+                    "en": "Activity records",
+                    "de": "Aktivitätseinträge"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -288,7 +423,10 @@
             "_id": "activity.lastTimestamp",
             "type": "state",
             "common": {
-                "name": { "en": "Last activity timestamp", "de": "Zeitpunkt der letzten Aktivität" },
+                "name": {
+                    "en": "Last activity timestamp",
+                    "de": "Zeitpunkt der letzten Aktivität"
+                },
                 "type": "number",
                 "role": "value.time",
                 "read": true,
@@ -301,14 +439,22 @@
         {
             "_id": "discovery",
             "type": "channel",
-            "common": { "name": { "en": "Discovery", "de": "Erkennung" } },
+            "common": {
+                "name": {
+                    "en": "Discovery",
+                    "de": "Erkennung"
+                }
+            },
             "native": {}
         },
         {
             "_id": "discovery.status",
             "type": "state",
             "common": {
-                "name": { "en": "Discovery status", "de": "Erkennungsstatus" },
+                "name": {
+                    "en": "Discovery status",
+                    "de": "Erkennungsstatus"
+                },
                 "type": "string",
                 "role": "text",
                 "read": true,
@@ -321,7 +467,10 @@
             "_id": "discovery.totalStateCount",
             "type": "state",
             "common": {
-                "name": { "en": "Available states", "de": "Verfügbare States" },
+                "name": {
+                    "en": "Available states",
+                    "de": "Verfügbare States"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -335,7 +484,10 @@
             "_id": "discovery.scannedStateCount",
             "type": "state",
             "common": {
-                "name": { "en": "Scanned states", "de": "Gescannte States" },
+                "name": {
+                    "en": "Scanned states",
+                    "de": "Gescannte States"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -349,7 +501,10 @@
             "_id": "discovery.classifiedStateCount",
             "type": "state",
             "common": {
-                "name": { "en": "Classified states", "de": "Klassifizierte States" },
+                "name": {
+                    "en": "Classified states",
+                    "de": "Klassifizierte States"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -363,7 +518,10 @@
             "_id": "discovery.unknownStateCount",
             "type": "state",
             "common": {
-                "name": { "en": "Unknown states", "de": "Unbekannte States" },
+                "name": {
+                    "en": "Unknown states",
+                    "de": "Unbekannte States"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -377,7 +535,10 @@
             "_id": "discovery.sensitiveStateCount",
             "type": "state",
             "common": {
-                "name": { "en": "Sensitive states", "de": "Sensible States" },
+                "name": {
+                    "en": "Sensitive states",
+                    "de": "Sensible States"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -391,7 +552,10 @@
             "_id": "discovery.environmentCandidateCount",
             "type": "state",
             "common": {
-                "name": { "en": "Environment candidates", "de": "Umgebungskandidaten" },
+                "name": {
+                    "en": "Environment candidates",
+                    "de": "Umgebungskandidaten"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -405,7 +569,10 @@
             "_id": "discovery.lastRun",
             "type": "state",
             "common": {
-                "name": { "en": "Last discovery", "de": "Letzte Erkennung" },
+                "name": {
+                    "en": "Last discovery",
+                    "de": "Letzte Erkennung"
+                },
                 "type": "number",
                 "role": "value.time",
                 "read": true,
@@ -417,14 +584,22 @@
         {
             "_id": "permissions",
             "type": "channel",
-            "common": { "name": { "en": "Permissions", "de": "Berechtigungen" } },
+            "common": {
+                "name": {
+                    "en": "Permissions",
+                    "de": "Berechtigungen"
+                }
+            },
             "native": {}
         },
         {
             "_id": "permissions.configuredCount",
             "type": "state",
             "common": {
-                "name": { "en": "Configured policies", "de": "Konfigurierte Regeln" },
+                "name": {
+                    "en": "Configured policies",
+                    "de": "Konfigurierte Regeln"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -438,7 +613,10 @@
             "_id": "permissions.controllableCount",
             "type": "state",
             "common": {
-                "name": { "en": "Controllable states", "de": "Steuerbare States" },
+                "name": {
+                    "en": "Controllable states",
+                    "de": "Steuerbare States"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -451,14 +629,22 @@
         {
             "_id": "history",
             "type": "channel",
-            "common": { "name": { "en": "History", "de": "Verlauf" } },
+            "common": {
+                "name": {
+                    "en": "History",
+                    "de": "Verlauf"
+                }
+            },
             "native": {}
         },
         {
             "_id": "history.activeProvider",
             "type": "state",
             "common": {
-                "name": { "en": "Active history provider", "de": "Aktiver History-Provider" },
+                "name": {
+                    "en": "Active history provider",
+                    "de": "Aktiver History-Provider"
+                },
                 "type": "string",
                 "role": "text",
                 "read": true,
@@ -471,7 +657,10 @@
             "_id": "history.availableProviderCount",
             "type": "state",
             "common": {
-                "name": { "en": "Available history providers", "de": "Verfügbare History-Provider" },
+                "name": {
+                    "en": "Available history providers",
+                    "de": "Verfügbare History-Provider"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -485,7 +674,10 @@
             "_id": "history.available",
             "type": "state",
             "common": {
-                "name": { "en": "Selected history provider available", "de": "Gewählter History-Provider verfügbar" },
+                "name": {
+                    "en": "Selected history provider available",
+                    "de": "Gewählter History-Provider verfügbar"
+                },
                 "type": "boolean",
                 "role": "indicator.connected",
                 "read": true,
@@ -498,7 +690,10 @@
             "_id": "history.queryCount",
             "type": "state",
             "common": {
-                "name": { "en": "History queries", "de": "History-Abfragen" },
+                "name": {
+                    "en": "History queries",
+                    "de": "History-Abfragen"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -512,7 +707,10 @@
             "_id": "history.failedQueryCount",
             "type": "state",
             "common": {
-                "name": { "en": "Failed history queries", "de": "Fehlgeschlagene History-Abfragen" },
+                "name": {
+                    "en": "Failed history queries",
+                    "de": "Fehlgeschlagene History-Abfragen"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -526,7 +724,10 @@
             "_id": "history.lastQueryTimestamp",
             "type": "state",
             "common": {
-                "name": { "en": "Last history query", "de": "Letzte History-Abfrage" },
+                "name": {
+                    "en": "Last history query",
+                    "de": "Letzte History-Abfrage"
+                },
                 "type": "number",
                 "role": "value.time",
                 "read": true,
@@ -538,14 +739,22 @@
         {
             "_id": "observation",
             "type": "channel",
-            "common": { "name": { "en": "Observation", "de": "Beobachtung" } },
+            "common": {
+                "name": {
+                    "en": "Observation",
+                    "de": "Beobachtung"
+                }
+            },
             "native": {}
         },
         {
             "_id": "observation.subscribedStateCount",
             "type": "state",
             "common": {
-                "name": { "en": "Subscribed states", "de": "Abonnierte States" },
+                "name": {
+                    "en": "Subscribed states",
+                    "de": "Abonnierte States"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -559,7 +768,10 @@
             "_id": "observation.retainedCount",
             "type": "state",
             "common": {
-                "name": { "en": "Retained observations", "de": "Gepufferte Beobachtungen" },
+                "name": {
+                    "en": "Retained observations",
+                    "de": "Gepufferte Beobachtungen"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -573,7 +785,10 @@
             "_id": "observation.droppedCount",
             "type": "state",
             "common": {
-                "name": { "en": "Dropped observation events", "de": "Verworfene Beobachtungsereignisse" },
+                "name": {
+                    "en": "Dropped observation events",
+                    "de": "Verworfene Beobachtungsereignisse"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -587,7 +802,10 @@
             "_id": "observation.lastTimestamp",
             "type": "state",
             "common": {
-                "name": { "en": "Last observation", "de": "Letzte Beobachtung" },
+                "name": {
+                    "en": "Last observation",
+                    "de": "Letzte Beobachtung"
+                },
                 "type": "number",
                 "role": "value.time",
                 "read": true,
@@ -599,14 +817,22 @@
         {
             "_id": "actions",
             "type": "channel",
-            "common": { "name": { "en": "Actions", "de": "Aktionen" } },
+            "common": {
+                "name": {
+                    "en": "Actions",
+                    "de": "Aktionen"
+                }
+            },
             "native": {}
         },
         {
             "_id": "actions.lastResult",
             "type": "state",
             "common": {
-                "name": { "en": "Last action result", "de": "Letztes Aktionsergebnis" },
+                "name": {
+                    "en": "Last action result",
+                    "de": "Letztes Aktionsergebnis"
+                },
                 "type": "string",
                 "role": "text",
                 "read": true,
@@ -619,7 +845,10 @@
             "_id": "actions.auditCount",
             "type": "state",
             "common": {
-                "name": { "en": "Action audit records", "de": "Aktions-Audit-Einträge" },
+                "name": {
+                    "en": "Action audit records",
+                    "de": "Aktions-Audit-Einträge"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -632,14 +861,22 @@
         {
             "_id": "llm",
             "type": "channel",
-            "common": { "name": { "en": "LLM advisory", "de": "LLM-Beratung" } },
+            "common": {
+                "name": {
+                    "en": "LLM advisory",
+                    "de": "LLM-Beratung"
+                }
+            },
             "native": {}
         },
         {
             "_id": "llm.provider",
             "type": "state",
             "common": {
-                "name": { "en": "Effective LLM provider", "de": "Effektiver LLM-Provider" },
+                "name": {
+                    "en": "Effective LLM provider",
+                    "de": "Effektiver LLM-Provider"
+                },
                 "type": "string",
                 "role": "text",
                 "read": true,
@@ -652,7 +889,10 @@
             "_id": "llm.external",
             "type": "state",
             "common": {
-                "name": { "en": "External LLM disclosure", "de": "Externe LLM-Übertragung" },
+                "name": {
+                    "en": "External LLM disclosure",
+                    "de": "Externe LLM-Übertragung"
+                },
                 "type": "boolean",
                 "role": "indicator",
                 "read": true,
@@ -665,7 +905,10 @@
             "_id": "llm.lastResult",
             "type": "state",
             "common": {
-                "name": { "en": "Last LLM result", "de": "Letztes LLM-Ergebnis" },
+                "name": {
+                    "en": "Last LLM result",
+                    "de": "Letztes LLM-Ergebnis"
+                },
                 "type": "string",
                 "role": "text",
                 "read": true,
@@ -677,14 +920,22 @@
         {
             "_id": "feedback",
             "type": "channel",
-            "common": { "name": { "en": "Feedback", "de": "Feedback" } },
+            "common": {
+                "name": {
+                    "en": "Feedback",
+                    "de": "Feedback"
+                }
+            },
             "native": {}
         },
         {
             "_id": "feedback.pendingCount",
             "type": "state",
             "common": {
-                "name": { "en": "Pending action feedback", "de": "Ausstehendes Aktions-Feedback" },
+                "name": {
+                    "en": "Pending action feedback",
+                    "de": "Ausstehendes Aktions-Feedback"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -698,7 +949,10 @@
             "_id": "feedback.positiveCount",
             "type": "state",
             "common": {
-                "name": { "en": "Positive feedback", "de": "Positives Feedback" },
+                "name": {
+                    "en": "Positive feedback",
+                    "de": "Positives Feedback"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -712,7 +966,10 @@
             "_id": "feedback.negativeCount",
             "type": "state",
             "common": {
-                "name": { "en": "Negative feedback", "de": "Negatives Feedback" },
+                "name": {
+                    "en": "Negative feedback",
+                    "de": "Negatives Feedback"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -726,7 +983,10 @@
             "_id": "feedback.unknownCount",
             "type": "state",
             "common": {
-                "name": { "en": "Unknown feedback attribution", "de": "Unbekannte Feedback-Zuordnung" },
+                "name": {
+                    "en": "Unknown feedback attribution",
+                    "de": "Unbekannte Feedback-Zuordnung"
+                },
                 "type": "number",
                 "role": "value",
                 "read": true,
@@ -740,7 +1000,10 @@
             "_id": "feedback.lastTimestamp",
             "type": "state",
             "common": {
-                "name": { "en": "Last feedback timestamp", "de": "Zeitpunkt des letzten Feedbacks" },
+                "name": {
+                    "en": "Last feedback timestamp",
+                    "de": "Zeitpunkt des letzten Feedbacks"
+                },
                 "type": "number",
                 "role": "value.time",
                 "read": true,
