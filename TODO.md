@@ -93,20 +93,20 @@ Last updated: 2026-08-20
 
 ## Phase 5 — explainable light-pattern learning
 
-- [ ] Define bounded candidate key and pattern lifecycle.
-- [ ] Correlate boolean triggers with boolean light actions in a time window.
-- [ ] Expose provider-agnostic candidate features for time, weekday/weekend, room,
+- [x] Define bounded candidate key and pattern lifecycle.
+- [x] Correlate boolean triggers with boolean light actions in a time window.
+- [x] Expose provider-agnostic candidate features for time, weekday/weekend, room,
       brightness, presence, solar elevation, and time relative to sunrise/sunset.
-- [ ] Add deterministic feature selection based on held-out predictive improvement,
+- [x] Add deterministic feature selection based on held-out predictive improvement,
       minimum branch support, redundancy pruning, and a documented complexity penalty.
-- [ ] Prefer the smallest explainable condition set within a defined quality tolerance;
+- [x] Prefer the smallest explainable condition set within a defined quality tolerance;
       never attach every available context field to a pattern.
-- [ ] Compare fixed clock windows with seasonal sunrise/sunset-relative windows.
-- [ ] Implement pure deterministic confidence components and explanations.
-- [ ] Require minimum opportunities, matches, repeatability, and recency.
-- [ ] Add candidate aging, merging, limits, and pruning.
-- [ ] Test positive, negative, sparse, stale, and random datasets.
-- [ ] Update documentation and changelog; commit and push.
+- [x] Compare fixed clock windows with seasonal sunrise/sunset-relative windows.
+- [x] Implement pure deterministic confidence components and explanations.
+- [x] Require minimum opportunities, matches, repeatability, and recency.
+- [x] Add candidate aging, merging, limits, and pruning.
+- [x] Test positive, negative, sparse, stale, and random datasets.
+- [x] Update documentation and changelog; commit and push.
 
 ## Phase 6 — suggestions and approval
 

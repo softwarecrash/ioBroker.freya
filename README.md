@@ -5,12 +5,13 @@ selected states, discovers repeatable home-automation patterns, and turns them i
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
 
-The project is currently in **Phase 4 (read-only history)**. The TypeScript daemon
+The project is currently in **Phase 5 (read-only pattern learning)**. The TypeScript daemon
 scans ioBroker object metadata, classifies supported state semantics, ranks environment
 sources, synchronizes explicit state policies, and subscribes only to states with an
 explicit `observe` permission. Each relevant change becomes a bounded, in-memory
 observation with its event-time context snapshot. An optional bounded history provider
-can read only those same states. It does not learn patterns or execute actions.
+can read only those same states. Learning is disabled by default and, when enabled,
+uses only states with an explicit `learn` permission. It never executes actions.
 
 ## Design goals
 
@@ -42,8 +43,8 @@ implementation plan.
 
 ## Safety status
 
-No foreign production state value is changed by this project. Phase 4 enforces autonomy
-level 0, keeps learning disabled and history disabled by default, and uses
+No foreign production state value is changed by this project. Phase 5 enforces autonomy
+level 0, keeps learning and history disabled by default, and uses
 deny-by-default state permissions even if unsupported persisted settings request
 otherwise. Lock and alarm states cannot receive control permission. Until the
 controlled-actions phase is implemented and tested, SmartBrain remains read-only by
@@ -85,6 +86,26 @@ concurrent requests, and a five-second provider timeout. Provider responses are 
 as untrusted input: values are validated and bounded, duplicates removed, and results
 sorted before use. `getHistoryStatus` and `getStateHistory` expose the bounded API.
 
+## Explainable pattern learning
+
+When learning is explicitly enabled, SmartBrain correlates rising boolean motion,
+presence, contact, or switch events with a boolean light turning on in the same room
+within two minutes. Only states carrying both `observe` and `learn` permission enter
+the learner. Candidate examples, pending windows, and pattern count are hard-bounded
+and stale records are removed.
+
+Context is not copied wholesale into a rule. Time, weekend, room, illuminance,
+temperature, presence, solar elevation, and sunrise/sunset-relative buckets compete in
+a deterministic held-out test. A condition needs minimum support and predictive
+improvement; redundant clock and solar conditions cannot be combined. Each additional
+condition costs 0.01 quality points, favoring the smallest useful explanation.
+Candidates require at least eight selected opportunities, five matches, observations
+on three different days, and confidence of 0.58; any added context condition also
+requires held-out improvement. Confidence
+exposes smoothed match rate, sample maturity, repeatability, feedback adjustment, and
+recency. `getPatternSummary` and bounded `getPatterns` provide read-only inspection.
+Pattern memory is intentionally volatile until the schema-versioned persistence phase.
+
 ## Development
 
 ```bash
@@ -118,10 +139,11 @@ visible in the local Admin UI.
 
 ## Changelog
 
-### 0.4.1 (2026-08-20)
+### 0.5.0 (2026-08-20)
 
-- Added dynamic provider choices for installed `getHistory`-capable adapter instances.
-- Kept unavailable installed providers visible with an `offline` marker.
+- Added permission-gated, bounded trigger-to-light learning without device actions.
+- Added held-out context feature selection, seasonal solar conditions, deterministic
+  confidence explanations, and candidate aging.
 
 Older details are available in [CHANGELOG.md](CHANGELOG.md).
 

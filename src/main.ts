@@ -24,6 +24,7 @@ import {
 } from './history/providerDiscovery';
 import { ObservationEngine } from './observation/observationEngine';
 import type { ObservationMetadata } from './observation/types';
+import { PatternEngine } from './patterns/patternEngine';
 import { DiscoveryCoordinator } from './services/discoveryCoordinator';
 import { IoBrokerContextStateReader } from './services/ioBrokerContextStateReader';
 import { IoBrokerPolicySynchronizer } from './services/ioBrokerPolicySynchronizer';
@@ -35,6 +36,7 @@ class SmartBrainAdapter extends utils.Adapter {
     private policySynchronizer?: IoBrokerPolicySynchronizer;
     private contextEngine?: ContextEngine;
     private observationEngine?: ObservationEngine;
+    private patternEngine?: PatternEngine;
     private historyService?: HistoryService;
     private historyProviderOptions: HistoryProviderSelectOption[] = historyProviderSelectOptions([]);
     private readonly historyControllers = new Set<AbortController>();
@@ -91,13 +93,17 @@ class SmartBrainAdapter extends utils.Adapter {
             });
             const discoveryResult = await coordinator.run().catch(() => undefined);
             if (discoveryResult) {
-                await this.setupObservation(discoveryResult, timeProvider, sunProvider);
+                await this.setupObservation(discoveryResult, timeProvider, sunProvider, config.learningEnabled);
             }
         } else {
             await this.setStateAsync('discovery.status', 'disabled', true);
         }
         await this.setupHistory(config.historyInstance);
-        this.log.info('[History] SmartBrain started in read-only Phase 4 history mode');
+        this.log.info(
+            config.learningEnabled
+                ? '[Patterns] SmartBrain started with read-only pattern learning enabled'
+                : '[Patterns] SmartBrain started in observe-only mode; learning is disabled',
+        );
     }
 
     private async initializeObservationStatus(): Promise<void> {
@@ -145,6 +151,7 @@ class SmartBrainAdapter extends utils.Adapter {
         discoveryResult: DiscoveryResult,
         timeProvider: TimeContextProvider,
         sunProvider: SunContextProvider,
+        learningEnabled: boolean,
     ): Promise<void> {
         const observedStates = discoveryResult.states.filter(state => state.permissions.observe);
         this.observedStateIds = observedStates.map(state => state.id);
@@ -170,14 +177,26 @@ class SmartBrainAdapter extends utils.Adapter {
         this.observationMetadata = new Map(
             observedStates.map(state => [state.id, this.observationMetadataFor(state, observedStates)]),
         );
+        const learnableStates = observedStates
+            .filter(state => state.permissions.learn)
+            .map(state => ({
+                id: state.id,
+                semanticType: state.semanticType,
+                valueType: state.valueType,
+                rooms: state.rooms.slice(0, 20),
+            }));
+        this.patternEngine = new PatternEngine(learnableStates, { enabled: learningEnabled });
         this.observationEngine = new ObservationEngine(
             this.contextEngine,
             {
                 onObservation: async observation => {
+                    this.patternEngine?.observe(observation);
                     const summary = this.observationEngine?.summary();
+                    const patternSummary = this.patternEngine?.summary(observation.timestamp);
                     await this.setStateAsync('observation.retainedCount', summary?.retainedObservations ?? 0, true);
                     await this.setStateAsync('observation.droppedCount', summary?.droppedEvents ?? 0, true);
                     await this.setStateAsync('observation.lastTimestamp', observation.timestamp, true);
+                    await this.setStateAsync('patterns.candidateCount', patternSummary?.candidates ?? 0, true);
                 },
                 onError: message => this.log.warn(message),
                 debug: message => this.log.debug(message),
@@ -282,6 +301,25 @@ class SmartBrainAdapter extends utils.Adapter {
         }
         if (message.command === 'getObservationSummary') {
             this.sendTo(message.from, message.command, this.observationEngine?.summary() ?? null, message.callback);
+            return;
+        }
+        if (message.command === 'getPatternSummary') {
+            this.sendTo(message.from, message.command, this.patternEngine?.summary() ?? null, message.callback);
+            return;
+        }
+        if (message.command === 'getPatterns') {
+            const input =
+                typeof message.message === 'object' && message.message
+                    ? (message.message as Record<string, unknown>)
+                    : {};
+            const requestedLimit = typeof input.limit === 'number' ? Math.floor(input.limit) : 50;
+            const limit = Math.max(1, Math.min(requestedLimit, 100));
+            this.sendTo(
+                message.from,
+                message.command,
+                this.patternEngine?.patterns().slice(0, limit) ?? [],
+                message.callback,
+            );
             return;
         }
         if (message.command === 'getObservations') {

@@ -1,11 +1,11 @@
 import type { EnvironmentMappingInput, StatePolicyInput } from '../discovery/types';
 
-/** Effective runtime settings available in the read-only history phase. */
+/** Effective runtime settings available in the read-only learning phase. */
 export interface RuntimeConfig {
-    /** Effective autonomy level; Phase 4 is always observe-only. */
+    /** Effective autonomy level; learning never authorizes device writes. */
     autonomyLevel: 0;
-    /** Learning remains disabled until its engine and tests exist. */
-    learningEnabled: false;
+    /** Enables in-memory learning for states with explicit learn permission. */
+    learningEnabled: boolean;
     /** Explicit read-only history provider selection. */
     historyInstance: string;
     /** Enables metadata-only semantic discovery. */
@@ -24,7 +24,7 @@ export interface RuntimeConfig {
 }
 
 /**
- * Convert persisted settings to the safe configuration supported in Phase 4.
+ * Convert persisted settings to the safe configuration supported in Phase 5.
  *
  * @param config Persisted adapter configuration.
  */
@@ -35,7 +35,7 @@ export function createRuntimeConfig(config: Partial<ioBroker.AdapterConfig>): Ru
         requestedHistory === 'none' || requestedHistory === 'auto' || /^[a-z0-9_-]+\.\d+$/i.test(requestedHistory);
     return {
         autonomyLevel: 0,
-        learningEnabled: false,
+        learningEnabled: config.learningEnabled === true,
         historyInstance: validHistory ? requestedHistory : 'none',
         discoveryEnabled: config.discoveryEnabled !== false,
         discoveryMaxStates: Number.isFinite(requestedMax)
@@ -45,9 +45,6 @@ export function createRuntimeConfig(config: Partial<ioBroker.AdapterConfig>): Ru
         environmentMappings: Array.isArray(config.environmentMappings) ? config.environmentMappings : [],
         manualLatitude: typeof config.manualLatitude === 'number' ? config.manualLatitude : undefined,
         manualLongitude: typeof config.manualLongitude === 'number' ? config.manualLongitude : undefined,
-        unsafeConfigurationIgnored:
-            (config.autonomyLevel !== undefined && config.autonomyLevel !== 0) ||
-            config.learningEnabled === true ||
-            !validHistory,
+        unsafeConfigurationIgnored: (config.autonomyLevel !== undefined && config.autonomyLevel !== 0) || !validHistory,
     };
 }

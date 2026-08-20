@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { createRuntimeConfig } from './runtimeConfig';
 
-describe('Phase 4 runtime configuration', () => {
+describe('Phase 5 runtime configuration', () => {
     it('uses read-only defaults', () => {
         expect(createRuntimeConfig({})).to.deep.equal({
             autonomyLevel: 0,
@@ -17,7 +17,7 @@ describe('Phase 4 runtime configuration', () => {
         });
     });
 
-    it('ignores settings that could enable unfinished actions', () => {
+    it('allows read-only learning but ignores unfinished autonomy', () => {
         const result = createRuntimeConfig({
             autonomyLevel: 3,
             learningEnabled: true,
@@ -25,7 +25,7 @@ describe('Phase 4 runtime configuration', () => {
         });
 
         expect(result.autonomyLevel).to.equal(0);
-        expect(result.learningEnabled).to.equal(false);
+        expect(result.learningEnabled).to.equal(true);
         expect(result.historyInstance).to.equal('influxdb.0');
         expect(result.unsafeConfigurationIgnored).to.equal(true);
     });

@@ -108,8 +108,8 @@
                     "max": 0,
                     "disabled": "true",
                     "help": {
-                        "en": "Fixed at observe-only in Phase 4",
-                        "de": "In Phase 4 fest auf nur beobachten gesetzt"
+                        "en": "Fixed at level 0; learning never performs device actions",
+                        "de": "Fest auf Stufe 0; Lernen führt niemals Geräteaktionen aus"
                     },
                     "newLine": true,
                     "xs": 12,
@@ -121,7 +121,10 @@
                 "learningEnabled": {
                     "type": "checkbox",
                     "label": { "en": "Enable learning", "de": "Lernen aktivieren" },
-                    "disabled": "true",
+                    "help": {
+                        "en": "Read-only learning for states with explicit Learn permission",
+                        "de": "Schreibgeschütztes Lernen nur für States mit expliziter Lernberechtigung"
+                    },
                     "xs": 12,
                     "sm": 4,
                     "md": 4,

@@ -7,6 +7,26 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-20
+
+### Added
+
+- Bounded boolean trigger-to-light learning for explicitly permitted states sharing a
+  room, with a two-minute action window and no device writes.
+- Provider-neutral context features for time, weekend, room, illuminance, temperature,
+  presence, solar elevation, and sunrise/sunset-relative offsets.
+- Deterministic held-out feature selection with minimum branch support, solar/clock
+  redundancy pruning, and a 0.01 complexity penalty per condition.
+- Traceable confidence components, minimum sample/match/repeatability thresholds,
+  bounded candidate/example storage, stale-record pruning, and read-only pattern APIs.
+- Tests covering predictive, irrelevant, seasonal, sparse, random, disabled,
+  cross-room, and stale learning cases.
+
+### Security
+
+- Learning remains disabled by default, requires explicit `observe` and `learn`
+  permissions, stays in memory, and cannot perform foreign-state writes.
+
 ## [0.4.1] - 2026-08-20
 
 ### Added
