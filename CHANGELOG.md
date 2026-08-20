@@ -22,6 +22,7 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 - Dependabot checks now run weekly at staggered times with a larger queue. Verified
   testing-action-check v2 and fetch-metadata v3 upgrades are integrated.
+- The package smoke job uses the current Node 24-based checkout and setup-node actions.
 - Dependabot auto-merge eligibility now covers npm and GitHub Actions patch/minor
   updates; major updates remain manual and TypeScript 7 is intentionally rejected after
   its CI failure.
