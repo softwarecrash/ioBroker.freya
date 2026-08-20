@@ -1,4 +1,10 @@
 import * as utils from '@iobroker/adapter-core';
+import { randomUUID } from 'node:crypto';
+import { ActionAuditStore } from './actions/actionAuditStore';
+import { ActionExecutor, IoBrokerActionWriter } from './actions/actionExecutor';
+import { IoBrokerActionEnvironment } from './actions/ioBrokerActionEnvironment';
+import { SafetyEngine } from './actions/safetyEngine';
+import type { RuntimeConfig } from './config/runtimeConfig';
 import { createRuntimeConfig } from './config/runtimeConfig';
 import { ContextEngine } from './context/contextEngine';
 import { IoBrokerCoordinateSource } from './context/providers/ioBrokerCoordinateSource';
@@ -41,6 +47,8 @@ class SmartBrainAdapter extends utils.Adapter {
     private observationEngine?: ObservationEngine;
     private patternEngine?: PatternEngine;
     private suggestionService?: SuggestionService;
+    private actionExecutor?: ActionExecutor;
+    private readonly actionAudit = new ActionAuditStore();
     private historyService?: HistoryService;
     private historyProviderOptions: HistoryProviderSelectOption[] = historyProviderSelectOptions([]);
     private readonly historyControllers = new Set<AbortController>();
@@ -117,7 +125,7 @@ class SmartBrainAdapter extends utils.Adapter {
                 return;
             }
             if (discoveryResult) {
-                await this.setupObservation(discoveryResult, timeProvider, sunProvider, config.learningEnabled);
+                await this.setupObservation(discoveryResult, timeProvider, sunProvider, config);
             }
         } else {
             await this.setOwnState('discovery.status', 'disabled');
@@ -181,7 +189,7 @@ class SmartBrainAdapter extends utils.Adapter {
         discoveryResult: DiscoveryResult,
         timeProvider: TimeContextProvider,
         sunProvider: SunContextProvider,
-        learningEnabled: boolean,
+        config: RuntimeConfig,
     ): Promise<void> {
         const observedStates = discoveryResult.states.filter(state => state.permissions.observe);
         this.observedStateIds = observedStates.map(state => state.id);
@@ -216,8 +224,15 @@ class SmartBrainAdapter extends utils.Adapter {
                 rooms: state.rooms.slice(0, 20),
                 canSuggest: state.permissions.suggest,
             }));
-        this.patternEngine = new PatternEngine(learnableStates, { enabled: learningEnabled });
+        this.patternEngine = new PatternEngine(learnableStates, { enabled: config.learningEnabled });
         this.suggestionService = new SuggestionService();
+        const permissions = new Map(discoveryResult.states.map(state => [state.id, state.permissions]));
+        this.actionExecutor = new ActionExecutor(
+            new SafetyEngine(),
+            new IoBrokerActionEnvironment(this, config, this.suggestionService, this.contextEngine, permissions),
+            new IoBrokerActionWriter(this),
+            this.actionAudit,
+        );
         this.observationEngine = new ObservationEngine(
             this.contextEngine,
             {
@@ -395,6 +410,58 @@ class SmartBrainAdapter extends utils.Adapter {
             );
             return;
         }
+        if (message.command === 'getActionAudit') {
+            const input = this.messageInput(message.message);
+            const page = typeof input.page === 'number' ? input.page : 0;
+            const pageSize = typeof input.pageSize === 'number' ? input.pageSize : 50;
+            this.sendTo(message.from, message.command, this.actionAudit.page(page, pageSize), message.callback);
+            return;
+        }
+        if (message.command === 'executePattern') {
+            const input = this.messageInput(message.message);
+            const patternId = typeof input.patternId === 'string' ? input.patternId : '';
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { executed: false, error: 'action_source_denied' },
+                    message.callback,
+                );
+                return;
+            }
+            if (!/^[a-f0-9]{16}$/.test(patternId)) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { executed: false, error: 'invalid_pattern_id' },
+                    message.callback,
+                );
+                return;
+            }
+            const suggestion = this.suggestionService?.find(patternId);
+            if (!suggestion || !this.actionExecutor) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { executed: false, error: 'pattern_not_found' },
+                    message.callback,
+                );
+                return;
+            }
+            const timestamp = Date.now();
+            const result = await this.actionExecutor.execute({
+                correlationId: randomUUID(),
+                patternId,
+                targetStateId: suggestion.actionStateId,
+                value: suggestion.expectedAction,
+                createdAt: timestamp,
+                expiresAt: timestamp + 10_000,
+                contextTimestamp: timestamp,
+            });
+            await this.publishActionResult(result);
+            this.sendTo(message.from, message.command, result, message.callback);
+            return;
+        }
         if (message.command === 'setPatternStatus') {
             const input = this.messageInput(message.message);
             const patternId = typeof input.patternId === 'string' ? input.patternId : '';
@@ -523,6 +590,19 @@ class SmartBrainAdapter extends utils.Adapter {
         );
         await this.setOwnState('activity.count', summary?.activityCount ?? 0);
         await this.setOwnState('activity.lastTimestamp', summary?.lastActivityTimestamp ?? 0);
+    }
+
+    private async publishActionResult(result: Awaited<ReturnType<ActionExecutor['execute']>>): Promise<void> {
+        await this.setOwnState(
+            'actions.lastResult',
+            JSON.stringify({
+                correlationId: result.correlationId,
+                executed: result.executed,
+                reasons: result.reasons,
+                errorCode: result.errorCode,
+            }).slice(0, 2_000),
+        );
+        await this.setOwnState('actions.auditCount', this.actionAudit.page(0, 1).total);
     }
 
     private async setOwnState(id: string, value: ioBroker.StateValue): Promise<void> {

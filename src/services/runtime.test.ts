@@ -20,6 +20,9 @@ describe('SmartBrainRuntime', () => {
             discoveryMaxStates: 20_000,
             statePolicies: [],
             environmentMappings: [],
+            minimumActionConfidence: 0.7,
+            actionCooldownSeconds: 300,
+            blockedStateIds: [],
             unsafeConfigurationIgnored: false,
         });
 
@@ -59,6 +62,9 @@ describe('SmartBrainRuntime', () => {
                 discoveryMaxStates: 20_000,
                 statePolicies: [],
                 environmentMappings: [],
+                minimumActionConfidence: 0.7,
+                actionCooldownSeconds: 300,
+                blockedStateIds: [],
                 unsafeConfigurationIgnored: false,
             },
         );
@@ -68,6 +74,6 @@ describe('SmartBrainRuntime', () => {
         await runtime.stop();
         await runtime.stop();
 
-        expect(writes).to.have.length(15);
+        expect(writes).to.have.length(16);
     });
 });

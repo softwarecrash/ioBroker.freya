@@ -9,8 +9,8 @@
                 "phaseNotice": {
                     "type": "staticText",
                     "text": {
-                        "en": "Phase 6 can learn and create rules-only suggestions for explicitly permitted states. Approval changes only an internal status; autonomy remains fixed at 0 and no device action is executed.",
-                        "de": "Phase 6 kann für ausdrücklich freigegebene States lernen und regelbasierte Vorschläge erzeugen. Eine Freigabe ändert nur einen internen Status; die Autonomie bleibt auf 0 und es wird keine Geräteaktion ausgeführt."
+                        "en": "Controlled actions are deny-by-default. Level 3 still requires an eligible approved pattern, explicit Control permission, current conditions, confidence, writable metadata, and all safety checks. Level 0 is the installation default.",
+                        "de": "Kontrollierte Aktionen sind standardmäßig gesperrt. Stufe 3 benötigt weiterhin ein geeignetes freigegebenes Muster, explizite Control-Berechtigung, aktuelle Bedingungen, Confidence, schreibbare Metadaten und alle Sicherheitsprüfungen. Installationsstandard ist Stufe 0."
                     },
                     "newLine": true,
                     "xs": 12,
@@ -105,11 +105,10 @@
                     "type": "number",
                     "label": { "en": "Autonomy level", "de": "Autonomie-Level" },
                     "min": 0,
-                    "max": 0,
-                    "disabled": "true",
+                    "max": 3,
                     "help": {
-                        "en": "Fixed at level 0; learning never performs device actions",
-                        "de": "Fest auf Stufe 0; Lernen führt niemals Geräteaktionen aus"
+                        "en": "0 observe, 1 learn/suggest, 2 reserved for per-action approval, 3 controlled execution of approved patterns",
+                        "de": "0 beobachten, 1 lernen/vorschlagen, 2 für Einzel-Freigaben reserviert, 3 kontrollierte Ausführung freigegebener Muster"
                     },
                     "newLine": true,
                     "xs": 12,
@@ -141,6 +140,50 @@
                     "md": 4,
                     "lg": 4,
                     "xl": 4
+                },
+                "minimumActionConfidence": {
+                    "type": "number",
+                    "label": { "en": "Minimum action confidence", "de": "Minimale Aktions-Confidence" },
+                    "min": 0.58,
+                    "max": 1,
+                    "step": 0.01,
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "actionCooldownSeconds": {
+                    "type": "number",
+                    "label": { "en": "Target cooldown (seconds)", "de": "Ziel-Cooldown (Sekunden)" },
+                    "min": 5,
+                    "max": 86400,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
+                "blockedStateIds": {
+                    "type": "table",
+                    "label": { "en": "Always blocked targets", "de": "Immer gesperrte Ziele" },
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 8,
+                    "lg": 8,
+                    "xl": 8,
+                    "items": [
+                        {
+                            "type": "objectId",
+                            "attr": "stateId",
+                            "title": { "en": "State", "de": "State" },
+                            "types": ["state"],
+                            "filter": false,
+                            "sort": false
+                        }
+                    ]
                 }
             }
         },
@@ -173,8 +216,8 @@
                 "policyNotice": {
                     "type": "staticText",
                     "text": {
-                        "en": "All permissions default to off. Control is stored for future phases only and cannot execute actions in Phase 2. Locks and security states remain denied.",
-                        "de": "Alle Berechtigungen sind standardmäßig aus. Control wird nur für spätere Phasen gespeichert und kann in Phase 2 keine Aktionen ausführen. Schlösser und Sicherheits-States bleiben gesperrt."
+                        "en": "All permissions default to off. Control requires Observe, Learn, and Suggest and is used only by the controlled Action Executor. Locks and security states remain denied.",
+                        "de": "Alle Berechtigungen sind standardmäßig aus. Control benötigt Observe, Learn und Suggest und wird nur vom kontrollierten Action Executor verwendet. Schlösser und Sicherheits-States bleiben gesperrt."
                     },
                     "newLine": true,
                     "xs": 12,
@@ -346,8 +389,8 @@
                 "patternNotice": {
                     "type": "staticText",
                     "text": {
-                        "en": "Suggestions require explicit Suggest permission on both trigger and light. Approve/disable transitions are accepted only from ioBroker Admin and never grant Control permission.",
-                        "de": "Vorschläge benötigen die explizite Vorschlagsberechtigung für Auslöser und Licht. Freigabe-/Deaktivierungswechsel werden nur vom ioBroker-Admin angenommen und vergeben niemals eine Steuerungsberechtigung."
+                        "en": "Suggestions require explicit Suggest permission on both trigger and light. Approve/disable transitions are accepted only from ioBroker Admin and never grant Control permission. Execution additionally requires level 3 and every current safety check.",
+                        "de": "Vorschläge benötigen die explizite Vorschlagsberechtigung für Auslöser und Licht. Freigabe-/Deaktivierungswechsel werden nur vom ioBroker-Admin angenommen und vergeben niemals eine Steuerungsberechtigung. Ausführung benötigt zusätzlich Stufe 3 und alle aktuellen Sicherheitsprüfungen."
                     },
                     "newLine": true,
                     "xs": 12,
@@ -432,6 +475,27 @@
                     "type": "state",
                     "label": { "en": "Last activity timestamp", "de": "Letzte Aktivität" },
                     "oid": "activity.lastTimestamp",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "actionAuditCount": {
+                    "type": "state",
+                    "label": { "en": "Action audit records", "de": "Aktions-Audit-Einträge" },
+                    "oid": "actions.auditCount",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "lastActionResult": {
+                    "type": "state",
+                    "label": { "en": "Last action result", "de": "Letztes Aktionsergebnis" },
+                    "oid": "actions.lastResult",
                     "xs": 12,
                     "sm": 6,
                     "md": 6,

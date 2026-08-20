@@ -12,6 +12,9 @@ declare global {
             environmentMappings: EnvironmentMappingInput[];
             manualLatitude?: number;
             manualLongitude?: number;
+            minimumActionConfidence: number;
+            actionCooldownSeconds: number;
+            blockedStateIds: Array<string | { stateId: string }>;
         }
     }
 }

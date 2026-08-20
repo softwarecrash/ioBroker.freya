@@ -1,8 +1,12 @@
 {
     "common": {
         "name": "smartbrain",
-        "version": "0.6.0",
+        "version": "0.7.0",
         "news": {
+            "0.7.0": {
+                "en": "Add deny-by-default controlled actions with last-moment safety validation",
+                "de": "Standardmäßig gesperrte Aktionen mit Sicherheitsprüfung unmittelbar vor Ausführung hinzugefügt"
+            },
             "0.6.0": {
                 "en": "Add rules-only suggestions, approval lifecycle, and bounded activity auditing",
                 "de": "Regelbasierte Vorschläge, Freigabe-Lebenszyklus und begrenztes Aktivitäts-Audit hinzugefügt"
@@ -69,6 +73,9 @@
     },
     "native": {
         "autonomyLevel": 0,
+        "minimumActionConfidence": 0.7,
+        "actionCooldownSeconds": 300,
+        "blockedStateIds": [],
         "learningEnabled": false,
         "historyInstance": "none",
         "discoveryEnabled": true,
@@ -589,6 +596,20 @@
                 "read": true,
                 "write": false,
                 "def": "none"
+            },
+            "native": {}
+        },
+        {
+            "_id": "actions.auditCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Action audit records", "de": "Aktions-Audit-Einträge" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
             },
             "native": {}
         }

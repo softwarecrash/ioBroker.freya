@@ -120,14 +120,14 @@ Last updated: 2026-08-20
 
 ## Phase 7 — controlled actions
 
-- [ ] Implement typed Safety Engine decisions and reason codes.
-- [ ] Validate existence, writability, permissions, autonomy, pattern status,
+- [x] Implement typed Safety Engine decisions and reason codes.
+- [x] Validate existence, writability, permissions, autonomy, pattern status,
       confidence, cooldown, blocks, value type/range, expiry, and context freshness.
-- [ ] Implement Action Executor as the only foreign-state write boundary.
-- [ ] Add correlation IDs, complete audit records, and last-moment revalidation.
-- [ ] Test writes only through mocks or SmartBrain-owned test states.
-- [ ] Enable level 3 only for explicitly approved/trusted patterns.
-- [ ] Update documentation and changelog; commit and push.
+- [x] Implement Action Executor as the only foreign-state write boundary.
+- [x] Add correlation IDs, complete audit records, and last-moment revalidation.
+- [x] Test writes only through mocks or SmartBrain-owned test states.
+- [x] Enable level 3 only for explicitly approved/trusted patterns.
+- [x] Update documentation and changelog; commit and push.
 
 ## Phase 8 — optional LLM providers
 

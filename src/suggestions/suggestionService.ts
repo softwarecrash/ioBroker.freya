@@ -164,6 +164,11 @@ export class SuggestionService {
         return this.list(undefined, 0, 1).items[0]?.explanation ?? 'none';
     }
 
+    public find(patternId: string): PatternSuggestion | undefined {
+        const suggestion = this.suggestions.get(patternId);
+        return suggestion ? copySuggestion(suggestion) : undefined;
+    }
+
     private fromPattern(pattern: LearnedPattern, timestamp: number): PatternSuggestion {
         return {
             id: pattern.id,

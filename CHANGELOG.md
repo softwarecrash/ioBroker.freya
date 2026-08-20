@@ -7,6 +7,27 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-08-20
+
+### Added
+
+- Pure, typed Safety Engine with stable deny reason codes for autonomy, approval,
+  eligibility, confidence, current conditions, permissions, object metadata, value
+  constraints, deny-list, cooldown, expiry, and context freshness.
+- A single production foreign-state write boundary, per-target cooldowns, correlation
+  IDs, bounded action auditing, and Admin-only `executePattern`/`getActionAudit` APIs.
+- Action confidence, cooldown, explicit blocked-target settings, and adapter-owned
+  action status counters.
+
+### Security
+
+- Installation remains at autonomy 0. Execution requires level 3 plus an eligible,
+  approved pattern and explicit effective Control permission.
+- Target, value, approval, confidence, permissions, object metadata, and current pattern
+  conditions are not trusted from the caller and are revalidated immediately before a
+  write. Missing runtime context fails closed.
+- Action tests write only through mocks; no production device states are used.
+
 ## [0.6.0] - 2026-08-20
 
 ### Added

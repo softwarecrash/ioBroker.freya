@@ -30,7 +30,7 @@ export class SmartBrainRuntime {
         }
 
         if (this.config.unsafeConfigurationIgnored) {
-            this.port.warn('[Safety] Unsupported configuration ignored; enforcing autonomy level 0');
+            this.port.warn('[Safety] Unsupported configuration values were replaced by safe defaults');
         }
 
         await this.port.setState('info.autonomyLevel', this.config.autonomyLevel);
@@ -44,7 +44,14 @@ export class SmartBrainRuntime {
         await this.port.setState('activity.count', 0);
         await this.port.setState('activity.lastTimestamp', 0);
         await this.port.setState('actions.lastResult', 'none');
-        await this.port.setState('info.status', this.config.learningEnabled ? 'learning-read-only' : 'observe-only');
+        await this.port.setState('actions.auditCount', 0);
+        const status =
+            this.config.autonomyLevel === 3
+                ? 'controlled-actions'
+                : this.config.learningEnabled
+                  ? 'learning-read-only'
+                  : 'observe-only';
+        await this.port.setState('info.status', status);
         await this.port.setState('info.connection', true);
         this.started = true;
     }

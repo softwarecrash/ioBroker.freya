@@ -5,14 +5,15 @@ selected states, discovers repeatable home-automation patterns, and turns them i
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
 
-The project is currently in **Phase 6 (read-only suggestions and approval)**. The TypeScript daemon
+The project is currently in **Phase 7 (controlled actions)**. The TypeScript daemon
 scans ioBroker object metadata, classifies supported state semantics, ranks environment
 sources, synchronizes explicit state policies, and subscribes only to states with an
 explicit `observe` permission. Each relevant change becomes a bounded, in-memory
 observation with its event-time context snapshot. An optional bounded history provider
 can read only those same states. Learning is disabled by default and, when enabled,
 uses only states with an explicit `learn` permission. Rules-only suggestions additionally
-require `suggest` permission on both participating states. It never executes actions.
+require `suggest` permission on both participating states. Optional execution is disabled
+by default and passes through a deny-by-default safety boundary.
 
 ## Design goals
 
@@ -44,12 +45,14 @@ implementation plan.
 
 ## Safety status
 
-No foreign production state value is changed by this project. Phase 6 enforces autonomy
-level 0, keeps learning and history disabled by default, and uses
-deny-by-default state permissions even if unsupported persisted settings request
-otherwise. Lock and alarm states cannot receive control permission. Until the
-controlled-actions phase is implemented and tested, SmartBrain remains read-only by
-design.
+Installation remains at autonomy level 0, with learning and history disabled and all
+state permissions denied by default. A controlled action is possible only at level 3,
+through an explicit ioBroker Admin request, for a currently eligible and approved
+pattern whose target has the complete permission chain including `control`. Immediately
+before the only foreign-state write boundary, SmartBrain re-reads the object and context
+and validates confidence, conditions, target type/writability/value constraints,
+deny-list, cooldown, request expiry, and context freshness. Lock and alarm states cannot
+receive control permission. Tests exercise only mocks; local deployment stays at level 0.
 
 ## Semantic discovery
 
@@ -121,6 +124,16 @@ approval changes no state permission, does not raise autonomy, and cannot execut
 device action. Approved or disabled entries whose evidence disappears remain visible
 but are marked ineligible. Suggestion and activity storage is currently volatile.
 
+## Controlled actions
+
+`executePattern` accepts only a 16-character pattern ID from an ioBroker Admin adapter
+instance. It does not accept a target, value, permission, confidence, or approval flag
+from the caller: these values are resolved from trusted runtime state. The executor
+revalidates all mutable inputs immediately before writing and fails closed when context
+or object lookup is unavailable. `getActionAudit` exposes the bounded newest-first audit;
+summary states are available below `smartbrain.0.actions`. Cooldowns and audit records
+are intentionally volatile until the persistence and feedback phase.
+
 ## Development
 
 ```bash
@@ -154,11 +167,10 @@ visible in the local Admin UI.
 
 ## Changelog
 
-### 0.6.0 (2026-08-20)
+### 0.7.0 (2026-08-20)
 
-- Added rules-only suggestions, explicit lifecycle transitions, and bounded activity
-  auditing.
-- Added read-only Patterns and Activity views without enabling device actions.
+- Added deny-by-default controlled execution for approved patterns, with immediate
+  object/context revalidation, cooldowns, blocking, correlation IDs, and bounded audit.
 
 Older details are available in [CHANGELOG.md](CHANGELOG.md).
 
