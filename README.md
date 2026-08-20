@@ -5,8 +5,9 @@ selected states, discovers repeatable home-automation patterns, and turns them i
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
 
-The project is currently in **Phase 0 (analysis and architecture)**. It does not yet
-install an adapter instance, subscribe to states, or write any ioBroker state.
+The project is currently in **Phase 1 (read-only adapter skeleton)**. The TypeScript
+daemon builds and exposes only bounded, adapter-owned status states. It does not
+subscribe to foreign states, access history, learn patterns, or execute actions.
 
 ## Design goals
 
@@ -38,8 +39,23 @@ implementation plan.
 
 ## Safety status
 
-No production state has been changed by this project. Until the controlled-actions
-phase is implemented and tested, SmartBrain remains read-only by design.
+No production state has been changed by this project. Phase 1 enforces autonomy level
+0, learning disabled, and no history provider at runtime, even if unsupported persisted
+settings request otherwise. Until the controlled-actions phase is implemented and
+tested, SmartBrain remains read-only by design.
+
+## Development
+
+```bash
+npm install
+npm run check
+npm test
+npm run lint
+npm run build
+```
+
+The integration test requires an isolated host without another running js-controller.
+It is intended for CI and must not be run by stopping a production ioBroker instance.
 
 ## Development references
 
@@ -61,4 +77,3 @@ publication.
 ## License
 
 A license will be selected and added with the generated adapter skeleton in Phase 1.
-

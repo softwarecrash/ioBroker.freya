@@ -1,0 +1,39 @@
+{
+    "type": "panel",
+    "items": {
+        "phaseNotice": {
+            "type": "staticText",
+            "text": {
+                "en": "Phase 1 is intentionally read-only. Learning, history access, and automatic actions are disabled.",
+                "de": "Phase 1 arbeitet absichtlich nur lesend. Lernen, History-Zugriff und automatische Aktionen sind deaktiviert."
+            },
+            "newLine": true
+        },
+        "autonomyLevel": {
+            "type": "number",
+            "label": { "en": "Autonomy level", "de": "Autonomie-Level" },
+            "min": 0,
+            "max": 0,
+            "disabled": true,
+            "help": { "en": "Fixed at observe-only in Phase 1", "de": "In Phase 1 fest auf nur beobachten gesetzt" },
+            "newLine": true,
+            "sm": 4
+        },
+        "learningEnabled": {
+            "type": "checkbox",
+            "label": { "en": "Enable learning", "de": "Lernen aktivieren" },
+            "disabled": true,
+            "newLine": true,
+            "sm": 4
+        },
+        "historyInstance": {
+            "type": "select",
+            "label": { "en": "History provider", "de": "History-Provider" },
+            "options": [{ "label": { "en": "Disabled", "de": "Deaktiviert" }, "value": "none" }],
+            "disabled": true,
+            "newLine": true,
+            "sm": 4
+        }
+    }
+}
+

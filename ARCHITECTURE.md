@@ -138,6 +138,105 @@ Each classification includes evidence and a confidence/quality flag. Missing or
 conflicting metadata produces `unknown`, never an assumed actuator. Automatic
 classification does not grant `control`; the user must explicitly grant it.
 
+### Context provider system
+
+Context is not embedded as special-case logic in the Pattern Engine. A dedicated
+Context Engine composes snapshots from independent providers:
+
+```ts
+interface ContextProvider<TContext extends object> {
+    readonly id: string;
+    isAvailable(): Promise<boolean>;
+    getContext(request: ContextRequest): Promise<Partial<TContext>>;
+}
+
+interface ContextSnapshot {
+    timestamp: number;
+    time: {
+        hour: number;
+        minute: number;
+        weekday: number;
+        isWeekend: boolean;
+    };
+    sun?: {
+        elevation?: number;
+        azimuth?: number;
+        phase?: 'dawn' | 'day' | 'dusk' | 'night';
+        minutesSinceSunrise?: number;
+        minutesUntilSunset?: number;
+    };
+    environment?: {
+        outsideTemperature?: number;
+        outsideIlluminance?: number;
+        humidity?: number;
+        cloudCover?: number;
+        precipitation?: boolean;
+        windSpeed?: number;
+    };
+    presence?: {
+        home?: boolean;
+        personsHome?: number;
+    };
+    states?: Record<string, unknown>;
+}
+```
+
+Initial provider boundaries are:
+
+- `TimeContextProvider`: local clock, weekday, weekend, and time buckets.
+- `SunContextProvider`: sunrise, sunset, elevation, azimuth, phase, and relative
+  sunrise/sunset offsets calculated locally from coordinates and timestamp.
+- `EnvironmentContextProvider`: normalized semantic environment measurements.
+- `WeatherContextProvider`: optional weather-adapter values behind a provider port.
+- `PresenceContextProvider`: conservative aggregate presence with unknown values when
+  evidence is insufficient.
+- `DeviceContextProvider`: a bounded allow-list of relevant state values.
+
+Snapshots are created at the timestamp of a relevant observation. Providers have
+timeouts and independent failure handling; an unavailable optional provider produces
+missing fields, not fabricated defaults and not a failed observation.
+
+`SunContextProvider` first checks a user-approved manual latitude/longitude override,
+then ioBroker's configured system coordinates. Coordinates and timestamps are passed
+to a lightweight maintained local solar-position library; no cloud request is needed.
+Library selection requires a maintenance, license, size, accuracy, Node/ARM, and
+dependency review before Phase 3. Exact sunrise/sunset instants, solar elevation and
+azimuth, minutes relative to sunrise/sunset, and dawn/day/dusk/night phases are
+normalized into the snapshot.
+
+Environment inputs use semantic mapping keys rather than adapter-specific IDs:
+
+```text
+environment.outsideTemperature
+environment.outsideIlluminance
+environment.humidity
+environment.cloudCover
+environment.precipitation
+environment.windSpeed
+```
+
+Discovery ranks multiple candidates using role, localized name tokens, unit,
+readability, enum room/function membership, source class, freshness, and quality. A
+mapping stores all candidates, evidence, explicit priority, and the selected source.
+Users can correct and pin mappings. A typical illuminance priority is physical outdoor
+sensor, then weather-adapter measurement, then an explicitly labelled solar-position
+fallback. Fallback estimates remain tagged with provenance and lower quality; they are
+never presented as measured values.
+
+The Pattern Engine receives a generic snapshot and feature descriptors, never provider
+implementations. Context fields do not automatically become pattern conditions.
+Candidate selection must demonstrate out-of-sample predictive improvement over the
+simpler pattern, meet minimum support per branch, and overcome a documented complexity
+penalty. Redundant or correlated features are pruned and the smallest explainable
+feature set wins within a defined tolerance. This prevents irrelevant attributes such
+as outside temperature from entering a light pattern merely because they were
+available.
+
+Time features include absolute clock buckets, minutes relative to sunrise/sunset, and
+solar elevation thresholds. The learner may therefore prefer a seasonal rule such as
+`-20..+15 minutes from sunset` or `solar elevation < -2°` when it predicts materially
+better than a fixed `18:30..19:00` window.
+
 ### Permission model
 
 Permissions are explicit per state:
@@ -211,8 +310,9 @@ Confidence will be a pure, unit-tested function. The initial formula will combin
 4. a decay/staleness factor.
 
 Every component and threshold is stored with the pattern explanation. Candidate
-promotion requires both a minimum opportunity count and a minimum confidence. No LLM
-output participates in this calculation.
+promotion requires both a minimum opportunity count and a minimum confidence. Context
+conditions are admitted only through the provider-agnostic feature-selection rules
+above. No LLM output participates in this calculation.
 
 ### Decision and suggestion flow
 
@@ -341,4 +441,3 @@ unbounded queue. History analysis is batched and scheduled, not continuously rep
   dependency surface.
 - Exact confidence thresholds remain configuration decisions for Phase 5, after the
   pure formula and representative fixtures exist.
-

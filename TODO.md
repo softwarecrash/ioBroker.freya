@@ -25,24 +25,30 @@ Last updated: 2026-08-20
 - [x] Define module boundaries, data flow, permissions, safety, persistence, history,
   feedback, and LLM boundaries in `ARCHITECTURE.md`.
 - [x] Record the repository naming mismatch for owner decision before publication.
-- [ ] Review Phase 0 documentation and push the completed milestone.
+- [x] Review Phase 0 documentation and push the completed milestone.
 
 ## Phase 1 — TypeScript adapter skeleton
 
-- [ ] Generate the current official TypeScript daemon skeleton in a temporary folder.
-- [ ] Review generated files before merging them into this non-empty repository.
-- [ ] Set package metadata, supported Node versions, data folder, and JSON Config.
-- [ ] Add only bounded status/control states owned by SmartBrain.
-- [ ] Implement clean `ready`, `unload`, and dependency assembly lifecycle.
-- [ ] Default to autonomy level 0 with no foreign-state subscriptions or writes.
-- [ ] Add package, unit, startup, build, lint, and CI tests.
-- [ ] Update documentation and changelog; commit and push.
+- [x] Generate the current official TypeScript daemon skeleton in a temporary folder.
+- [x] Review generated files before merging them into this non-empty repository.
+- [x] Set package metadata, supported Node versions, data folder, and JSON Config.
+- [x] Add only bounded status states owned by SmartBrain.
+- [x] Implement clean `ready`, `unload`, and dependency assembly lifecycle.
+- [x] Default to autonomy level 0 with no foreign-state subscriptions or writes.
+- [x] Add package, unit, integration, build, lint, and CI tests.
+- [ ] Run the integration test in isolated CI; local execution correctly refuses to
+  interfere with the running production js-controller.
+- [x] Update documentation and changelog; commit and push.
 
 ## Phase 2 — semantic discovery and permissions
 
 - [ ] Define semantic state, evidence, confidence-quality, and permission types.
 - [ ] Read objects, ancestors, rooms, functions, roles, units, and capabilities.
 - [ ] Implement conservative classifier with `unknown` fallback.
+- [ ] Define semantic environment mapping keys, candidate evidence, source quality,
+  priorities, manual pinning, and fallback provenance.
+- [ ] Discover multiple environment candidates from role, name, unit, enums, and
+  room/function assignments without hard-coded adapter state IDs.
 - [ ] Add deny-by-default sensitive-device classification.
 - [ ] Persist user corrections separately from discovered metadata.
 - [ ] Implement permission registry and validation invariants.
@@ -54,7 +60,18 @@ Last updated: 2026-08-20
 
 - [ ] Subscribe only to explicitly observed states.
 - [ ] Normalize state changes into `Observation` records.
-- [ ] Add previous value, time, enum context, role, source, and bounded related context.
+- [ ] Define `ContextProvider`, `ContextRequest`, `ContextSnapshot`, provenance, quality,
+  timeout, and partial-failure contracts.
+- [ ] Implement `TimeContextProvider`.
+- [ ] Evaluate a lightweight maintained local solar library for license, size, accuracy,
+  Node versions, ARM/x64, and maintenance.
+- [ ] Implement `SunContextProvider` with manual coordinate override, ioBroker system
+  coordinate fallback, sunrise/sunset, elevation, azimuth, phases, and relative time.
+- [ ] Implement `EnvironmentContextProvider`, `WeatherContextProvider`,
+  `PresenceContextProvider`, and bounded `DeviceContextProvider` ports.
+- [ ] Compose a context snapshot at the timestamp of each relevant observation.
+- [ ] Add previous value, provider context, enum context, role, source, and bounded
+  related context.
 - [ ] Add deduplication, queue limits, cache limits, and debug-only raw event logging.
 - [ ] Keep production behavior read-only.
 - [ ] Test event ordering, deletion/null events, overload, and shutdown.
@@ -75,7 +92,13 @@ Last updated: 2026-08-20
 
 - [ ] Define bounded candidate key and pattern lifecycle.
 - [ ] Correlate boolean triggers with boolean light actions in a time window.
-- [ ] Add time, weekday/weekend, room, optional brightness, and optional presence.
+- [ ] Expose provider-agnostic candidate features for time, weekday/weekend, room,
+  brightness, presence, solar elevation, and time relative to sunrise/sunset.
+- [ ] Add deterministic feature selection based on held-out predictive improvement,
+  minimum branch support, redundancy pruning, and a documented complexity penalty.
+- [ ] Prefer the smallest explainable condition set within a defined quality tolerance;
+  never attach every available context field to a pattern.
+- [ ] Compare fixed clock windows with seasonal sunrise/sunset-relative windows.
 - [ ] Implement pure deterministic confidence components and explanations.
 - [ ] Require minimum opportunities, matches, repeatability, and recency.
 - [ ] Add candidate aging, merging, limits, and pruning.
@@ -126,9 +149,8 @@ Last updated: 2026-08-20
 
 - [ ] Rename the GitHub repository from `ioBorker.smartbrain` to
   `ioBroker.smartbrain` after owner approval.
-- [ ] Select and add an open-source license.
+- [x] Select and add the MIT license.
 - [ ] Complete ioBroker repository checker and adapter-checker requirements.
 - [ ] Security/privacy review and dependency audit.
 - [ ] Multi-platform CI and installation tests.
 - [ ] English end-user configuration and privacy documentation.
-

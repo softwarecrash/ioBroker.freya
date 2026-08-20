@@ -1,0 +1,186 @@
+{
+    "common": {
+        "name": "smartbrain",
+        "version": "0.0.1",
+        "news": {
+            "0.0.1": {
+                "en": "Initial read-only adapter skeleton",
+                "de": "Initiales schreibgeschütztes Adaptergerüst"
+            }
+        },
+        "titleLang": {
+            "en": "SmartBrain",
+            "de": "SmartBrain"
+        },
+        "desc": {
+            "en": "Learns explainable smart-home patterns and proposes safety-controlled automations",
+            "de": "Lernt erklärbare Smart-Home-Muster und schlägt sicherheitsgeprüfte Automatisierungen vor"
+        },
+        "authors": ["softwarecrash <44615614+softwarecrash@users.noreply.github.com>"],
+        "keywords": ["automation", "learning", "patterns", "smart-home", "local-first"],
+        "licenseInformation": {
+            "type": "free",
+            "license": "MIT"
+        },
+        "platform": "Javascript/Node.js",
+        "icon": "smartbrain.svg",
+        "enabled": false,
+        "extIcon": "https://raw.githubusercontent.com/softwarecrash/ioBorker.smartbrain/main/admin/smartbrain.svg",
+        "readme": "https://github.com/softwarecrash/ioBorker.smartbrain/blob/main/README.md",
+        "loglevel": "info",
+        "tier": 3,
+        "mode": "daemon",
+        "type": "logic",
+        "compact": true,
+        "connectionType": "local",
+        "dataSource": "assumption",
+        "dataFolder": "smartbrain.%INSTANCE%",
+        "adminUI": {
+            "config": "json"
+        },
+        "dependencies": [{ "js-controller": ">=6.0.11" }],
+        "globalDependencies": [{ "admin": ">=7.0.23" }]
+    },
+    "native": {
+        "autonomyLevel": 0,
+        "learningEnabled": false,
+        "historyInstance": "none"
+    },
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": { "name": { "en": "Information", "de": "Information" } },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "name": { "en": "Adapter ready", "de": "Adapter bereit" },
+                "type": "boolean",
+                "role": "indicator.connected",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.status",
+            "type": "state",
+            "common": {
+                "name": { "en": "Runtime status", "de": "Laufzeitstatus" },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": "starting"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.autonomyLevel",
+            "type": "state",
+            "common": {
+                "name": { "en": "Effective autonomy level", "de": "Effektiver Autonomie-Level" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "max": 4,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "learning",
+            "type": "channel",
+            "common": { "name": { "en": "Learning", "de": "Lernen" } },
+            "native": {}
+        },
+        {
+            "_id": "learning.enabled",
+            "type": "state",
+            "common": {
+                "name": { "en": "Learning active", "de": "Lernen aktiv" },
+                "type": "boolean",
+                "role": "indicator",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        },
+        {
+            "_id": "learning.observedStateCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Observed state count", "de": "Anzahl beobachteter States" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "patterns",
+            "type": "channel",
+            "common": { "name": { "en": "Patterns", "de": "Muster" } },
+            "native": {}
+        },
+        {
+            "_id": "patterns.candidateCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Candidate patterns", "de": "Musterkandidaten" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "patterns.approvedCount",
+            "type": "state",
+            "common": {
+                "name": { "en": "Approved patterns", "de": "Freigegebene Muster" },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "actions",
+            "type": "channel",
+            "common": { "name": { "en": "Actions", "de": "Aktionen" } },
+            "native": {}
+        },
+        {
+            "_id": "actions.lastResult",
+            "type": "state",
+            "common": {
+                "name": { "en": "Last action result", "de": "Letztes Aktionsergebnis" },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": "none"
+            },
+            "native": {}
+        }
+    ]
+}
+

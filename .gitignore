@@ -3,4 +3,7 @@ build/
 coverage/
 *.log
 .DS_Store
+.dev-server/
+.idea/
+*.tgz
 
