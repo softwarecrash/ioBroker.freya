@@ -19,7 +19,6 @@ for (const required of [
     'admin/jsonCustom.json',
     'admin/smartbrain.svg',
     'README.md',
-    'CHANGELOG.md',
     'SECURITY.md',
     'PRIVACY.md',
 ]) {

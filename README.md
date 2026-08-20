@@ -236,7 +236,7 @@ visible in the local Admin UI.
 - Added release hardening, eleven-language JSON Config translations, security/privacy
   documentation, safer dependency automation, and release-package smoke testing.
 
-Older details are available in [CHANGELOG.md](CHANGELOG.md).
+Older release history is available in [CHANGELOG_OLD.md](CHANGELOG_OLD.md).
 
 ## License
 
