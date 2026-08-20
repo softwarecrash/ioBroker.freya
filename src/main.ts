@@ -275,7 +275,7 @@ class SmartBrainAdapter extends utils.Adapter {
                 semanticType: state.semanticType,
                 valueType: state.valueType,
                 rooms: state.rooms.slice(0, 20),
-                canSuggest: state.permissions.suggest,
+                canBeSuggested: state.permissions.suggest,
             }));
         this.patternEngine = new PatternEngine(learnableStates, { enabled: config.learningEnabled });
         this.suggestionService = new SuggestionService();

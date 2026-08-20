@@ -112,7 +112,8 @@
         },
         "suggest": {
             "type": "checkbox",
-            "label": "Suggest",
+            "label": "Suggest target",
+            "help": "Only required when this state may be the target of a proposed action; trigger and context sources need only Learn.",
             "default": false,
             "xs": 12,
             "sm": 6,

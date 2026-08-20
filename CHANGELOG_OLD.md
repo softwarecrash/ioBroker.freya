@@ -20,6 +20,8 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 - Arrival events without a light transition remain negative evidence and cannot be
   misinterpreted as an instruction to switch a light off.
+- Suggest permission now applies only to the proposed action target; learned trigger
+  and context states no longer need Suggest permission to contribute to a suggestion.
 
 ## [0.9.1] - 2026-08-20
 

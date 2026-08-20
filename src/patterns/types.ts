@@ -35,7 +35,7 @@ export interface LearnableState {
     semanticType: SemanticType;
     valueType?: ioBroker.CommonType;
     rooms: string[];
-    canSuggest?: boolean;
+    canBeSuggested?: boolean;
 }
 
 export interface PatternSelection {

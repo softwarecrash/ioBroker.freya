@@ -12,9 +12,9 @@ sources, synchronizes explicit state policies, and subscribes only to states wit
 explicit `observe` permission. Each relevant change becomes a bounded, in-memory
 observation with its event-time context snapshot. An optional bounded history provider
 can read only those same states. Learning is disabled by default and, when enabled,
-uses only states with an explicit `learn` permission. Rules-only suggestions additionally
-require `suggest` permission on both participating states. Optional execution is disabled
-by default and passes through a deny-by-default safety boundary.
+uses only states with an explicit `learn` permission. `suggest` applies only to the
+proposed action target; learned trigger and context states do not need it. Optional
+execution is disabled by default and passes through a deny-by-default safety boundary.
 
 ## Design goals
 
@@ -56,8 +56,8 @@ Rules Only LLM, and no state permissions.
 2. Correct the semantic type or room assignment only when discovery is ambiguous.
 3. Optionally choose an installed History, SQL, or InfluxDB instance and configure
    semantic environment source priorities.
-4. Enable learning after reviewing the observed-state list. Suggestions still require
-   explicit Suggest permission and approval.
+4. Enable learning after reviewing the observed-state list. A proposed action still
+   requires Suggest permission on its target state and explicit approval.
 5. Keep autonomy at 0 while validating learned patterns. Controlled execution is an
    advanced, explicit level-3 opt-in and additionally requires Control permission.
 
@@ -140,6 +140,10 @@ Eligible candidates become deterministic suggestions containing the trigger, tar
 conditions, two-minute action window, match/opportunity counts, confidence, and every
 confidence component. Candidate creation, withdrawal, accepted status changes, and
 rejected commands enter a newest-first audit store capped at 500 records.
+
+`Learn` authorizes a state to contribute observations, triggers, or context to pattern
+learning. `Suggest` is deliberately target-only: a presence or illuminance sensor can
+influence a light rule with Learn enabled even when Suggest is disabled on the sensor.
 
 `getSuggestionSummary`, paginated `getSuggestions`, and paginated `getActivity` expose
 read-only views. `setPatternStatus` supports `candidate`, `approved`, and `disabled`

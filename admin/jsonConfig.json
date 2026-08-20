@@ -323,7 +323,7 @@
                         {
                             "type": "checkbox",
                             "attr": "suggest",
-                            "title": "Suggest",
+                            "title": "Suggest target",
                             "width": "8%",
                             "default": false
                         },
@@ -454,7 +454,7 @@
             "items": {
                 "patternNotice": {
                     "type": "staticText",
-                    "text": "Suggestions require explicit Suggest permission on both trigger and light. Approve/disable transitions are accepted only from ioBroker Admin and never grant Control permission. Execution additionally requires level 3 and every current safety check.",
+                    "text": "Learn allows a state to contribute as a trigger or context source. Suggest applies only when the state is the proposed action target. Approval never grants Control permission; execution additionally requires level 3 and every current safety check.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,

@@ -48,7 +48,13 @@ describe('PatternEngine', () => {
         const engine = new PatternEngine(
             [
                 { id: 'sensor.motion', semanticType: 'motion', valueType: 'boolean', rooms: ['living'] },
-                { id: 'lamp.on', semanticType: 'light', valueType: 'boolean', rooms: ['living'], canSuggest: true },
+                {
+                    id: 'lamp.on',
+                    semanticType: 'light',
+                    valueType: 'boolean',
+                    rooms: ['living'],
+                    canBeSuggested: true,
+                },
             ],
             { enabled: true, actionWindowMs: 60_000 },
         );
@@ -71,7 +77,7 @@ describe('PatternEngine', () => {
         expect(pattern.opportunities).to.equal(12);
         expect(pattern.matches).to.equal(12);
         expect(pattern.explanation).to.contain('environment.illuminanceBand = dark');
-        expect(pattern.suggestionEligible).to.equal(false);
+        expect(pattern.suggestionEligible).to.equal(true);
     });
 
     it('uses a same-room illuminance state as context without exposing its state id', () => {
@@ -113,14 +119,14 @@ describe('PatternEngine', () => {
                     semanticType: 'presence',
                     valueType: 'boolean',
                     rooms: ['kitchen'],
-                    canSuggest: true,
+                    canBeSuggested: false,
                 },
                 {
                     id: 'kitchen.light',
                     semanticType: 'light',
                     valueType: 'boolean',
                     rooms: ['kitchen'],
-                    canSuggest: true,
+                    canBeSuggested: true,
                 },
             ],
             { enabled: true, actionWindowMs: 60_000 },
