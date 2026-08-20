@@ -36,7 +36,7 @@ Last updated: 2026-08-20
 - [x] Implement clean `ready`, `unload`, and dependency assembly lifecycle.
 - [x] Default to autonomy level 0 with no foreign-state subscriptions or writes.
 - [x] Add package, unit, integration, build, lint, and CI tests.
-- [ ] Run the integration test in isolated CI; local execution correctly refuses to
+- [x] Run the integration test in isolated CI; local execution correctly refuses to
   interfere with the running production js-controller.
 - [x] Update documentation and changelog; commit and push.
 
