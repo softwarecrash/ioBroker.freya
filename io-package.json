@@ -25,8 +25,8 @@
         "platform": "Javascript/Node.js",
         "icon": "smartbrain.svg",
         "enabled": false,
-        "extIcon": "https://raw.githubusercontent.com/softwarecrash/ioBorker.smartbrain/main/admin/smartbrain.svg",
-        "readme": "https://github.com/softwarecrash/ioBorker.smartbrain/blob/main/README.md",
+        "extIcon": "https://raw.githubusercontent.com/softwarecrash/ioBroker.smartbrain/main/admin/smartbrain.svg",
+        "readme": "https://github.com/softwarecrash/ioBroker.smartbrain/blob/main/README.md",
         "loglevel": "info",
         "tier": 3,
         "mode": "daemon",
@@ -183,4 +183,3 @@
         }
     ]
 }
-

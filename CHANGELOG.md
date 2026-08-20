@@ -21,6 +21,8 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 - TypeScript daemon skeleton generated from `@iobroker/create-adapter` 3.1.5 conventions.
 - JSON Config settings, adapter-owned status states, modular lifecycle service, tests,
   lint/build configuration, and multi-platform GitHub Actions workflow.
+- Canonical `ioBroker.smartbrain` repository metadata and a paired GitHub/local
+  development deployment workflow.
 
 ### Security
 

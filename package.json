@@ -6,12 +6,12 @@
         "name": "softwarecrash",
         "email": "44615614+softwarecrash@users.noreply.github.com"
     },
-    "homepage": "https://github.com/softwarecrash/ioBorker.smartbrain",
+    "homepage": "https://github.com/softwarecrash/ioBroker.smartbrain",
     "license": "MIT",
     "keywords": ["automation", "learning", "patterns", "smart-home", "local-first"],
     "repository": {
         "type": "git",
-        "url": "git@github.com:softwarecrash/ioBorker.smartbrain.git"
+        "url": "git@github.com:softwarecrash/ioBroker.smartbrain.git"
     },
     "engines": {
         "node": ">=20"
@@ -68,7 +68,7 @@
         "instrument": true
     },
     "bugs": {
-        "url": "https://github.com/softwarecrash/ioBorker.smartbrain/issues"
+        "url": "https://github.com/softwarecrash/ioBroker.smartbrain/issues"
     },
     "readmeFilename": "README.md"
 }

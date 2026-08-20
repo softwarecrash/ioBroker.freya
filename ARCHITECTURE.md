@@ -435,8 +435,9 @@ unbounded queue. History analysis is batched and scheduled, not continuously rep
 
 - SQLite is deferred until measured data volume justifies it; portable atomic JSON is
   safer for the first publishable baseline.
-- The active GitHub repository is misspelled `ioBorker.smartbrain`. ioBroker publication
-  convention expects `ioBroker.smartbrain`; owner approval is required to rename it.
+- GitHub and the local ioBroker development installation are updated together after a
+  milestone passes its tests. Installation is followed by metadata upload and an
+  explicit instance/configuration verification before enabling the instance.
 - No concrete LLM SDK is selected in the MVP skeleton, avoiding unnecessary network and
   dependency surface.
 - Exact confidence thresholds remain configuration decisions for Phase 5, after the

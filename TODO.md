@@ -7,8 +7,11 @@ Last updated: 2026-08-20
 - [x] Verify GitHub read/write access and perform an authenticated push.
 - [x] Work in a dedicated project checkout outside `/opt/iobroker`.
 - [x] Keep production ioBroker inspection read-only.
+- [x] Install the Phase 1 package locally and verify `smartbrain.0` at autonomy level 0.
 - [ ] Never commit state IDs, room/device names, addresses, values, credentials, or raw
   ioBroker exports.
+- [ ] After every completed milestone: test, push to GitHub, build a local package,
+  install/upload it, then verify SmartBrain-owned states and logs.
 - [ ] Keep installation default at autonomy level 0 and `control: false` for every
   discovered state.
 - [ ] Test every safety rule before implementing production action execution.
@@ -24,7 +27,7 @@ Last updated: 2026-08-20
   persistence, and history guidance.
 - [x] Define module boundaries, data flow, permissions, safety, persistence, history,
   feedback, and LLM boundaries in `ARCHITECTURE.md`.
-- [x] Record the repository naming mismatch for owner decision before publication.
+- [x] Record and resolve the repository naming mismatch before publication.
 - [x] Review Phase 0 documentation and push the completed milestone.
 
 ## Phase 1 — TypeScript adapter skeleton
@@ -147,8 +150,7 @@ Last updated: 2026-08-20
 
 ## Before public release
 
-- [ ] Rename the GitHub repository from `ioBorker.smartbrain` to
-  `ioBroker.smartbrain` after owner approval.
+- [x] Rename the GitHub repository to the canonical `ioBroker.smartbrain` spelling.
 - [x] Select and add the MIT license.
 - [ ] Complete ioBroker repository checker and adapter-checker requirements.
 - [ ] Security/privacy review and dependency audit.

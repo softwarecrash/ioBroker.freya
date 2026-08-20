@@ -67,12 +67,13 @@ The project follows the current official ioBroker guidance:
 - [ioBroker JSON Config](https://github.com/ioBroker/json-config)
 - [ioBroker adapter publication requirements](https://github.com/ioBroker/ioBroker.docs/blob/master/docs/en/dev/adapterpublish.md)
 
-## Repository naming note
+## Local development deployment
 
-The configured remote is currently named `ioBorker.smartbrain`. Official publication
-guidance expects the GitHub repository name `ioBroker.smartbrain` (capital `B`). The
-remote will not be renamed without owner approval, but it should be corrected before
-publication.
+Milestones are built and tested in this checkout, pushed to GitHub, and then installed
+into the existing ioBroker host from the local project path. A disabled instance is
+created when needed and is enabled only after its effective configuration has been
+verified as autonomy level 0. Admin assets are uploaded after changes so they are
+visible in the local Admin UI.
 
 ## License
 
