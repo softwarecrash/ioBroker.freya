@@ -87,9 +87,9 @@ Last updated: 2026-08-20
 - [x] Detect alive providers using instance capabilities.
 - [x] Prioritize `influxdb.0`; keep SQL and History adapters pluggable.
 - [x] Add timeouts, cancellation, ordering, deduplication, and hard result limits.
-- [ ] Run read-only provider tests against a safe, selected production state only after
+- [x] Run read-only provider tests against a safe, selected production state only after
       local mocked tests pass.
-- [ ] Update documentation and changelog; commit and push.
+- [x] Update documentation and changelog; commit and push.
 
 ## Phase 5 — explainable light-pattern learning
 
