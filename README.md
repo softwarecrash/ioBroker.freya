@@ -87,10 +87,11 @@ ranked candidates and manual pinning without hard-coded adapter state IDs.
 Room and function enums assigned to a parent folder or device are inherited by nested
 states. This includes deeply structured alias paths such as
 `alias.0.Kitchen.light.ceiling.power` when `alias.0.Kitchen` is assigned to a room.
-Configured states also expose a read-only room diagnostic in Admin. A state can be
-marked `Automatic`, `Room related`, or `Global`; only unresolved or explicitly
-room-related learning states warn when no room is available. Global states remain valid
-whole-home/context inputs and are excluded from same-room action correlations.
+Configured states expose their read-only room diagnostic directly in the permissions
+table in Admin. A state can be marked `Automatic`, `Room related`, or `Global`; only
+unresolved or explicitly room-related learning states warn when no room is available.
+Global states remain valid whole-home/context inputs and are excluded from same-room
+action correlations.
 
 The adapter message API provides `getDiscoverySummary` and `getDiscoveredStates`.
 State pages are capped at 100 entries and support a text query.

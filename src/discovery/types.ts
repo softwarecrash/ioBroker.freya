@@ -58,6 +58,8 @@ export interface StatePolicyInput extends StatePermissions {
     stateId: string;
     semanticType?: SemanticType | 'auto';
     scope?: StateScope;
+    /** Cached Admin-only display value; ignored by permission and learning logic. */
+    roomAssignment?: string;
 }
 
 export interface EffectiveStatePolicy {

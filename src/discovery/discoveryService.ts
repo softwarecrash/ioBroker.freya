@@ -126,4 +126,23 @@ export class DiscoveryService {
                 warning: state.roomStatus === 'missing' || state.roomStatus === 'unresolved' ? '⚠' : '✓',
             }));
     }
+
+    /** Add current room information to the editable policy rows shown in Admin. */
+    public statePoliciesWithRoomDiagnostics(): Array<StatePolicyInput & { roomAssignment: string }> {
+        const statesById = new Map((this.result?.states ?? []).map(state => [state.id, state]));
+        return this.options.policies.map(policy => {
+            const state = statesById.get(policy.stateId);
+            let roomAssignment = '? —';
+            if (state?.roomStatus === 'global') {
+                roomAssignment = '✓ Global';
+            } else if (state?.roomStatus === 'missing' || state?.roomStatus === 'unresolved') {
+                roomAssignment = '⚠ —';
+            } else if (state?.rooms.length) {
+                roomAssignment = `✓ ${state.rooms.join(', ')}`;
+            } else if (state?.roomStatus === 'not-required') {
+                roomAssignment = '—';
+            }
+            return { ...policy, roomAssignment };
+        });
+    }
 }

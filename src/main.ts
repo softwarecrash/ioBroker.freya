@@ -399,7 +399,7 @@ class SmartBrainAdapter extends utils.Adapter {
             this.sendTo(
                 message.from,
                 message.command,
-                { native: { roomDiagnostics: this.discovery?.roomDiagnostics() ?? [] } },
+                { native: { statePolicies: this.discovery?.statePoliciesWithRoomDiagnostics() ?? [] } },
                 message.callback,
             );
             return;

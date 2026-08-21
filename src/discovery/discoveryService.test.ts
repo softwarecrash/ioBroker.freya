@@ -95,5 +95,27 @@ describe('DiscoveryService', () => {
                 warning: '⚠',
             },
         ]);
+        expect(service.statePoliciesWithRoomDiagnostics()).to.deep.equal([
+            {
+                stateId: 'fixture.0.light.state',
+                semanticType: 'light',
+                scope: 'room',
+                observe: true,
+                learn: true,
+                suggest: true,
+                control: false,
+                roomAssignment: '✓ Room',
+            },
+            {
+                stateId: 'fixture.0.generic.state',
+                semanticType: 'presence',
+                scope: 'auto',
+                observe: true,
+                learn: true,
+                suggest: false,
+                control: false,
+                roomAssignment: '⚠ —',
+            },
+        ]);
     });
 });

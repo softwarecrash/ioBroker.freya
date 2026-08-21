@@ -229,7 +229,7 @@
                             "attr": "stateId",
                             "title": "State",
                             "types": ["state"],
-                            "width": "32%",
+                            "width": "25%",
                             "filter": false,
                             "sort": false
                         },
@@ -237,7 +237,7 @@
                             "type": "select",
                             "attr": "semanticType",
                             "title": "Semantic type",
-                            "width": "16%",
+                            "width": "14%",
                             "default": "auto",
                             "options": [
                                 {
@@ -310,7 +310,7 @@
                             "type": "select",
                             "attr": "scope",
                             "title": "Scope",
-                            "width": "14%",
+                            "width": "12%",
                             "default": "auto",
                             "options": [
                                 {
@@ -326,6 +326,14 @@
                                     "value": "global"
                                 }
                             ]
+                        },
+                        {
+                            "type": "text",
+                            "attr": "roomAssignment",
+                            "title": "Rooms",
+                            "width": "17%",
+                            "readOnly": true,
+                            "doNotSave": true
                         },
                         {
                             "type": "checkbox",
@@ -381,55 +389,6 @@
                     "md": 4,
                     "lg": 3,
                     "xl": 3
-                },
-                "roomDiagnostics": {
-                    "type": "table",
-                    "label": "Room assignment status",
-                    "doNotSave": true,
-                    "noDelete": true,
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 12,
-                    "md": 12,
-                    "lg": 12,
-                    "xl": 12,
-                    "items": [
-                        {
-                            "type": "text",
-                            "attr": "warning",
-                            "title": "Status",
-                            "width": "7%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "stateId",
-                            "title": "State",
-                            "width": "39%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "semanticType",
-                            "title": "Semantic type",
-                            "width": "16%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "scope",
-                            "title": "Scope",
-                            "width": "14%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "rooms",
-                            "title": "Rooms",
-                            "width": "24%",
-                            "readOnly": true
-                        }
-                    ]
                 }
             }
         },
