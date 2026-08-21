@@ -32,7 +32,7 @@ describe('HistoricalLearningService', () => {
                     { timestamp: base - 1_000, value: false, ack: true },
                     ...Array.from({ length: 8 }, (_, index) => ({
                         timestamp: base + Math.floor(index / 3) * day + (index % 3) * 60 * 60_000,
-                        value: index % 2 === 0,
+                        value: Number(index % 2 === 0),
                         ack: true,
                     })),
                 ],
@@ -43,7 +43,7 @@ describe('HistoricalLearningService', () => {
                     { timestamp: base - 1_000, value: false, ack: true },
                     ...Array.from({ length: 8 }, (_, index) => ({
                         timestamp: base + Math.floor(index / 3) * day + (index % 3) * 60 * 60_000 + 10_000,
-                        value: index % 2 === 0,
+                        value: Number(index % 2 === 0),
                         ack: true,
                     })),
                 ],

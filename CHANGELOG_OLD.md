@@ -28,6 +28,8 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
   English.
 - Context providers now honor Learn permission as well as Observe permission before a
   state value can influence pattern conditions.
+- Historical `0`/`1` and exact `true`/`false` representations are normalized only for
+  metadata-declared Boolean states before replay, matching live ioBroker Boolean values.
 
 ### Security
 

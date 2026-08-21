@@ -107,6 +107,22 @@ function environmentValue(key: EnvironmentKey, value: ioBroker.StateValue): numb
     return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
+function stateValue(state: HistoricalLearningState, value: ioBroker.StateValue): ioBroker.StateValue | undefined {
+    if (state.valueType !== 'boolean') {
+        return value;
+    }
+    if (typeof value === 'boolean') {
+        return value;
+    }
+    if (value === 0 || value === 'false') {
+        return false;
+    }
+    if (value === 1 || value === 'true') {
+        return true;
+    }
+    return undefined;
+}
+
 /** Add bounded historical device, presence, and mapped environment values to calculated time/sun context. */
 export function enrichHistoricalContext(
     base: ContextSnapshot,
@@ -217,28 +233,33 @@ export class HistoricalLearningService {
             if (signal?.aborted) {
                 throw new Error('historical_learning_cancelled');
             }
-            const previousValue = values.get(event.state.id);
-            values.set(event.state.id, event.value);
-            if (!initialized.has(event.state.id)) {
-                initialized.add(event.state.id);
-                sourceAttribution(event.state.id, event, pendingCommands, this.selfSource);
+            const normalizedValue = stateValue(event.state, event.value);
+            if (normalizedValue === undefined) {
                 continue;
             }
-            if (!BEHAVIOR_TYPES.has(event.state.semanticType) || Object.is(previousValue, event.value)) {
+            const normalizedEvent = { ...event, value: normalizedValue };
+            const previousValue = values.get(event.state.id);
+            values.set(event.state.id, normalizedValue);
+            if (!initialized.has(event.state.id)) {
+                initialized.add(event.state.id);
+                sourceAttribution(event.state.id, normalizedEvent, pendingCommands, this.selfSource);
+                continue;
+            }
+            if (!BEHAVIOR_TYPES.has(event.state.semanticType) || Object.is(previousValue, normalizedValue)) {
                 continue;
             }
             const context = await this.contextFactory(event.timestamp, values);
             this.patterns.observe({
                 sequence: ++sequence,
                 stateId: event.state.id,
-                value: event.value,
+                value: normalizedValue,
                 previousValue,
                 timestamp: event.timestamp,
                 receivedAt: event.timestamp,
                 ack: event.ack ?? true,
                 quality: event.quality ?? 0,
                 source: event.source,
-                attribution: sourceAttribution(event.state.id, event, pendingCommands, this.selfSource),
+                attribution: sourceAttribution(event.state.id, normalizedEvent, pendingCommands, this.selfSource),
                 deleted: false,
                 semanticType: event.state.semanticType,
                 role: event.state.role,
