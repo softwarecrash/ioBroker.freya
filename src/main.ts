@@ -504,6 +504,34 @@ class FreyaAdapter extends utils.Adapter {
             this.sendTo(message.from, message.command, this.suggestionService?.summary() ?? null, message.callback);
             return;
         }
+        if (message.command === 'getPatternAdminData') {
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(message.from, message.command, { error: 'pattern_view_source_denied' }, message.callback);
+                return;
+            }
+            this.sendTo(
+                message.from,
+                message.command,
+                { native: { patternRows: this.patternAdminRows() } },
+                message.callback,
+            );
+            return;
+        }
+        if (message.command === 'getPatternOptions') {
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(message.from, message.command, [], message.callback);
+                return;
+            }
+            const options = (this.suggestionService?.list(undefined, 0, 100).items ?? []).map(suggestion => ({
+                label: `${suggestion.status.toUpperCase()} · ${suggestion.rooms.join(', ') || 'Global'} · ${suggestion.triggerStateId} → ${suggestion.actionStateId} = ${String(suggestion.expectedAction)}`.slice(
+                    0,
+                    500,
+                ),
+                value: suggestion.id,
+            }));
+            this.sendTo(message.from, message.command, options, message.callback);
+            return;
+        }
         if (message.command === 'getLlmStatus') {
             this.sendTo(message.from, message.command, this.llmService?.status() ?? null, message.callback);
             return;
@@ -839,6 +867,21 @@ class FreyaAdapter extends utils.Adapter {
         );
         await this.setOwnState('activity.count', summary?.activityCount ?? 0);
         await this.setOwnState('activity.lastTimestamp', summary?.lastActivityTimestamp ?? 0);
+    }
+
+    private patternAdminRows(): Array<Record<string, ioBroker.StateValue>> {
+        return (this.suggestionService?.list(undefined, 0, 100).items ?? []).map(suggestion => ({
+            patternId: suggestion.id,
+            status: suggestion.status,
+            eligible: suggestion.eligible ? '✓' : '⚠',
+            rooms: suggestion.rooms.join(', ') || 'Global',
+            trigger: suggestion.triggerStateId,
+            target: suggestion.actionStateId,
+            action: String(suggestion.expectedAction),
+            confidence: `${Math.round(suggestion.confidence * 100)} %`,
+            evidence: `${suggestion.matches}/${suggestion.opportunities}`,
+            explanation: suggestion.explanation.slice(0, 2_000),
+        }));
     }
 
     private async publishActionResult(result: Awaited<ReturnType<ActionExecutor['execute']>>): Promise<void> {

@@ -532,6 +532,158 @@
                     "lg": 12,
                     "xl": 12
                 },
+                "patternRows": {
+                    "type": "table",
+                    "label": "Learned patterns",
+                    "doNotSave": true,
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "items": [
+                        {
+                            "type": "text",
+                            "attr": "status",
+                            "title": "Status",
+                            "width": "8%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "eligible",
+                            "title": "Eligible",
+                            "width": "5%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "rooms",
+                            "title": "Rooms",
+                            "width": "10%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "trigger",
+                            "title": "Trigger",
+                            "width": "16%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "target",
+                            "title": "Target",
+                            "width": "16%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "action",
+                            "title": "Action",
+                            "width": "6%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "confidence",
+                            "title": "Confidence",
+                            "width": "7%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "evidence",
+                            "title": "Evidence",
+                            "width": "7%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "explanation",
+                            "title": "Explanation",
+                            "width": "25%",
+                            "readOnly": true
+                        }
+                    ]
+                },
+                "_refreshPatterns": {
+                    "type": "sendTo",
+                    "label": "Refresh patterns",
+                    "command": "getPatternAdminData",
+                    "useNative": true,
+                    "onLoaded": true,
+                    "variant": "outlined",
+                    "icon": "refresh",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "_selectedPattern": {
+                    "type": "selectSendTo",
+                    "label": "Selected pattern",
+                    "command": "getPatternOptions",
+                    "manual": false,
+                    "doNotSave": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 9,
+                    "lg": 9,
+                    "xl": 9
+                },
+                "_approvePattern": {
+                    "type": "sendTo",
+                    "label": "Approve pattern",
+                    "command": "setPatternStatus",
+                    "jsonData": "{\"patternId\":\"${data._selectedPattern}\",\"status\":\"approved\"}",
+                    "disabled": "!data._selectedPattern",
+                    "variant": "contained",
+                    "color": "primary",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "_disablePattern": {
+                    "type": "sendTo",
+                    "label": "Disable pattern",
+                    "command": "setPatternStatus",
+                    "jsonData": "{\"patternId\":\"${data._selectedPattern}\",\"status\":\"disabled\"}",
+                    "disabled": "!data._selectedPattern",
+                    "variant": "outlined",
+                    "color": "secondary",
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "_executePattern": {
+                    "type": "sendTo",
+                    "label": "Execute once",
+                    "command": "executePattern",
+                    "jsonData": "{\"patternId\":\"${data._selectedPattern}\"}",
+                    "disabled": "!data._selectedPattern",
+                    "confirm": {
+                        "text": "Execute the selected approved pattern once after all current safety checks?",
+                        "title": "Confirm execution",
+                        "ok": "Execute",
+                        "cancel": "Cancel"
+                    },
+                    "variant": "outlined",
+                    "color": "warning",
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
                 "candidatePatterns": {
                     "type": "state",
                     "label": "Candidate patterns",

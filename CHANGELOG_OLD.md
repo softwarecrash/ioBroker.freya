@@ -11,6 +11,9 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- An actionable local Admin pattern view with bounded pattern rows, target/trigger,
+  confidence and evidence details, explicit approve/disable controls, and confirmed
+  one-shot execution through the existing safety boundary.
 - Schema-versioned, atomically replaced persistence for bounded learning evidence,
   suggestions, and explicit approval/disabled states, with validated backup recovery.
 - Independent presence-on/light-on and presence-off/light-off learning, including safe
