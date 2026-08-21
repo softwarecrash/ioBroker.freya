@@ -172,7 +172,7 @@ Last updated: 2026-08-21
       executions, and persistence health.
 - [ ] Verify restart recovery, duplicate suppression, cooldown behavior, feedback
       attribution, and source attribution in the running local installation.
-- [ ] Re-run the complete local quality gate, package, install, inspect logs, and push.
+- [x] Re-run the complete local quality gate, package, install, inspect logs, and push.
 
 ## Before public release
 
