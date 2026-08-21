@@ -330,7 +330,7 @@ class FreyaAdapter extends utils.Adapter {
             await this.setOwnState('history.learningStatus', summary.failedStates ? 'partial' : 'completed');
             await this.publishSuggestionSummary();
             this.log.info(
-                `[History] Learning backfill processed ${summary.replayedEvents} changes from ${summary.queriedStates} states; ${summary.failedStates} state queries failed`,
+                `[History] Learning backfill processed ${summary.replayedEvents} changes from ${summary.queriedStates} states: ${summary.triggerEvents} usable triggers, ${summary.lightEvents} usable light changes, ${summary.excludedEvents} source-excluded changes, ${summary.eligiblePairs} room pairs; ${summary.failedStates} state queries failed`,
             );
         } catch (error) {
             if (!this.unloading) {

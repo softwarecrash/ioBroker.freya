@@ -34,6 +34,10 @@ export interface HistoricalLearningSummary {
     failedStates: number;
     replayedEvents: number;
     retainedEntries: number;
+    triggerEvents: number;
+    lightEvents: number;
+    excludedEvents: number;
+    eligiblePairs: number;
 }
 
 export type HistoricalContextFactory = (
@@ -228,6 +232,9 @@ export class HistoricalLearningService {
         const initialized = new Set<string>();
         const pendingCommands = new Map<string, PendingCommand>();
         let replayedEvents = 0;
+        let triggerEvents = 0;
+        let lightEvents = 0;
+        let excludedEvents = 0;
         let sequence = 0;
         for (const event of events) {
             if (signal?.aborted) {
@@ -249,6 +256,14 @@ export class HistoricalLearningService {
                 continue;
             }
             const context = await this.contextFactory(event.timestamp, values);
+            const attribution = sourceAttribution(event.state.id, normalizedEvent, pendingCommands, this.selfSource);
+            if (['self', 'external-command', 'confirmation'].includes(attribution.kind)) {
+                excludedEvents++;
+            } else if (event.state.semanticType === 'light') {
+                lightEvents++;
+            } else {
+                triggerEvents++;
+            }
             this.patterns.observe({
                 sequence: ++sequence,
                 stateId: event.state.id,
@@ -259,7 +274,7 @@ export class HistoricalLearningService {
                 ack: event.ack ?? true,
                 quality: event.quality ?? 0,
                 source: event.source,
-                attribution: sourceAttribution(event.state.id, normalizedEvent, pendingCommands, this.selfSource),
+                attribution,
                 deleted: false,
                 semanticType: event.state.semanticType,
                 role: event.state.role,
@@ -275,6 +290,21 @@ export class HistoricalLearningService {
             failedStates,
             replayedEvents,
             retainedEntries: events.length,
+            triggerEvents,
+            lightEvents,
+            excludedEvents,
+            eligiblePairs: this.states
+                .filter(state => ['motion', 'presence', 'contact', 'switch'].includes(state.semanticType))
+                .reduce(
+                    (sum, trigger) =>
+                        sum +
+                        this.states.filter(
+                            state =>
+                                state.semanticType === 'light' &&
+                                trigger.rooms.some(room => state.rooms.includes(room)),
+                        ).length,
+                    0,
+                ),
         };
     }
 }
