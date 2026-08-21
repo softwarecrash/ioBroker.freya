@@ -7,6 +7,7 @@ import type { LearnableState, LearnedPattern, PatternExample, PatternSummary, Pe
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const TRIGGER_TYPES = new Set(['motion', 'presence', 'contact', 'switch']);
+const NON_BEHAVIORAL_ORIGINS = new Set(['smartbrain', 'external-command', 'confirmation']);
 
 interface CandidateRecord {
     trigger: LearnableState;
@@ -62,6 +63,9 @@ export class PatternEngine {
         this.flush(observation.timestamp);
         const state = this.states.get(observation.stateId);
         if (!state || state.valueType !== 'boolean' || observation.deleted || typeof observation.value !== 'boolean') {
+            return;
+        }
+        if (observation.attribution && NON_BEHAVIORAL_ORIGINS.has(observation.attribution.kind)) {
             return;
         }
         if (observation.previousValue === observation.value) {

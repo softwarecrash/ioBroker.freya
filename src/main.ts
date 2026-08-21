@@ -1,6 +1,7 @@
 import * as utils from '@iobroker/adapter-core';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
+import { SourceAttributionService } from './attribution/sourceAttribution';
 import { ActionAuditStore } from './actions/actionAuditStore';
 import { ActionExecutor, IoBrokerActionWriter, type ActionRecordPort } from './actions/actionExecutor';
 import { IoBrokerActionEnvironment } from './actions/ioBrokerActionEnvironment';
@@ -45,6 +46,7 @@ import { SuggestionService } from './suggestions/suggestionService';
 import type { SuggestionStatus } from './suggestions/types';
 
 class SmartBrainAdapter extends utils.Adapter {
+    private readonly sourceAttribution: SourceAttributionService;
     private runtime?: SmartBrainRuntime;
     private discovery?: DiscoveryService;
     private policySynchronizer?: IoBrokerPolicySynchronizer;
@@ -74,6 +76,7 @@ class SmartBrainAdapter extends utils.Adapter {
 
     public constructor(options: Partial<utils.AdapterOptions> = {}) {
         super({ ...options, name: 'smartbrain' });
+        this.sourceAttribution = new SourceAttributionService(`system.adapter.${this.namespace}`);
         this.on('ready', () => {
             void this.onReady().catch(error => {
                 if (!this.unloading) {
@@ -348,12 +351,13 @@ class SmartBrainAdapter extends utils.Adapter {
         if (this.unloading) {
             return;
         }
+        const attribution = this.sourceAttribution.classify(id, state ?? null, state?.ts);
         const metadata = this.observationMetadata.get(id);
         if (metadata) {
-            this.observationEngine?.ingest(id, state ?? null, metadata);
+            this.observationEngine?.ingest(id, state ?? null, metadata, attribution);
         }
         if (state && this.feedbackService) {
-            const task = this.feedbackService.observe(id, state, state.ts).then(async () => {
+            const task = this.feedbackService.observe(id, state, state.ts, attribution).then(async () => {
                 this.applyPersistedFeedback();
                 this.refreshSuggestions(state.ts);
                 await this.publishFeedbackSummary();
@@ -389,6 +393,30 @@ class SmartBrainAdapter extends utils.Adapter {
 
     private async onMessage(message: ioBroker.Message): Promise<void> {
         if (!message.callback) {
+            return;
+        }
+        if (message.command === 'reportExternalIntent') {
+            const input = this.messageInput(message.message);
+            const stateId = typeof input.stateId === 'string' ? input.stateId : '';
+            const origin = input.origin === 'user' || input.origin === 'automation' ? input.origin : undefined;
+            const value = input.value;
+            const validValue =
+                value === null ||
+                typeof value === 'boolean' ||
+                (typeof value === 'number' && Number.isFinite(value)) ||
+                (typeof value === 'string' && value.length <= 2_000);
+            const accepted =
+                /^system\.adapter\.[\w-]+\.\d+$/.test(message.from) &&
+                this.observedStateIds.includes(stateId) &&
+                origin !== undefined &&
+                validValue &&
+                this.sourceAttribution.reportIntent(stateId, value, origin, message.from, Date.now());
+            this.sendTo(
+                message.from,
+                message.command,
+                { accepted, reason: accepted ? 'intent_recorded' : 'intent_rejected' },
+                message.callback,
+            );
             return;
         }
         if (message.command === 'getDiscoverySummary') {

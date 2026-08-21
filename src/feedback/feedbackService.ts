@@ -1,4 +1,5 @@
 import type { PatternEngine } from '../patterns/patternEngine';
+import type { ChangeAttribution } from '../attribution/sourceAttribution';
 import type { ActionRepository } from './actionRepository';
 import type { FeedbackOutcome, PersistedActionRecord } from './types';
 
@@ -20,7 +21,12 @@ export class FeedbackService {
         this.windowMs = Math.max(5_000, Math.min(windowMs, 30 * 60_000));
     }
 
-    public async observe(stateId: string, state: ioBroker.State, timestamp = Date.now()): Promise<void> {
+    public async observe(
+        stateId: string,
+        state: ioBroker.State,
+        timestamp = Date.now(),
+        attribution?: ChangeAttribution,
+    ): Promise<void> {
         const now = Number.isFinite(timestamp) ? timestamp : Date.now();
         await this.expire(now);
         if (state.from === this.selfSource) {
@@ -33,14 +39,21 @@ export class FeedbackService {
         if (!candidate) {
             return;
         }
-        const adminSource = /^system\.adapter\.admin\.\d+$/.test(state.from ?? '');
+        const directUser =
+            attribution?.kind === 'direct-user' ||
+            attribution?.kind === 'device-originated' ||
+            /^system\.adapter\.admin\.\d+$/.test(state.from ?? '');
         await this.repository.feedback(
             candidate.correlationId,
-            adminSource ? 'negative' : 'unknown',
+            directUser ? 'negative' : 'unknown',
             'implicit',
             now,
             undefined,
-            adminSource ? 'opposing_admin_change' : 'ambiguous_opposing_change',
+            attribution?.kind === 'device-originated'
+                ? 'opposing_device_originated_change'
+                : directUser
+                  ? 'opposing_direct_user_change'
+                  : 'ambiguous_opposing_change',
         );
     }
 

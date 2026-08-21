@@ -44,6 +44,35 @@ function observation(
 }
 
 describe('PatternEngine', () => {
+    it('does not learn its own actions or generic external commands as user behavior', () => {
+        const engine = new PatternEngine(
+            [
+                { id: 'motion', semanticType: 'motion', valueType: 'boolean', rooms: ['living'] },
+                { id: 'light', semanticType: 'light', valueType: 'boolean', rooms: ['living'] },
+            ],
+            { enabled: true, actionWindowMs: 60_000 },
+        );
+        const trigger = observation('motion', 'motion', 1_000);
+        engine.observe(trigger);
+        const ownAction = observation('light', 'light', 2_000);
+        ownAction.attribution = {
+            kind: 'smartbrain',
+            source: 'system.adapter.smartbrain.0',
+            confidence: 1,
+            reason: 'self_source',
+        };
+        engine.observe(ownAction);
+        const externalAction = observation('light', 'light', 3_000, undefined, false);
+        externalAction.attribution = {
+            kind: 'external-command',
+            source: 'system.adapter.any-logic.0',
+            confidence: 0.8,
+            reason: 'foreign_command',
+        };
+        engine.observe(externalAction);
+        expect(engine.patterns(4_000)).to.have.length(0);
+    });
+
     it('learns an explainable dark-context trigger-to-light candidate', () => {
         const engine = new PatternEngine(
             [

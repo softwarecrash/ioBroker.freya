@@ -18,6 +18,9 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 - Room diagnostics integrated into the Admin state-policy table with resolved room names,
   warning symbols, and an explicit Automatic/Room/Global scope synchronized with
   per-object custom settings.
+- Generic command/device-confirmation attribution that excludes SmartBrain and foreign
+  command effects from behavioral learning, recognizes probable device-local reversals,
+  and accepts short-lived per-event user/automation intent from local bridges.
 
 ### Changed
 

@@ -96,6 +96,23 @@ action correlations.
 The adapter message API provides `getDiscoverySummary` and `getDiscoveredStates`.
 State pages are capped at 100 entries and support a text query.
 
+### Change-source attribution
+
+SmartBrain correlates generic ioBroker command writes (`ack=false`) with later device
+confirmations (`ack=true`) without assuming specific adapter IDs. Its own writes,
+foreign commands, and their confirmations are excluded from behavioral pattern evidence;
+an acknowledged change without a matching recent command remains usable as a probable
+device-local interaction. An opposing probable device-local interaction shortly after a
+SmartBrain action is retained as negative feedback, while an opposing foreign command is
+kept ambiguous.
+
+Bridges that know the actual intent can call `reportExternalIntent` immediately before
+writing an observed state. The local message contains `stateId`, `value`, and `origin`
+(`user` or `automation`). Attribution is short-lived, bound to the calling adapter, and
+applies only to that matching event. This lets mixed-purpose integrations such as voice
+bridges classify individual commands without classifying an entire adapter instance as
+human or automated.
+
 ## Read-only observations
 
 Only states enabled through the central policy table or the synchronized custom object
