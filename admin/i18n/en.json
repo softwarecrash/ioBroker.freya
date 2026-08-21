@@ -11,7 +11,7 @@
     "Room status shows a warning only when a learned room-relevant state has no room and its scope is not explicitly Global. Assign a room or choose Global for intentional whole-home states.": "Room status shows a warning only when a learned room-relevant state has no room and its scope is not explicitly Global. Assign a room or choose Global for intentional whole-home states.",
     "Level 0 - Observe only": "Level 0 - Observe only",
     "Level 1 - Learn and suggest": "Level 1 - Learn and suggest",
-    "Level 2 - Individual approval (reserved)": "Level 2 - Individual approval (reserved)",
+    "Level 2 - Individual approval (not yet available)": "Level 2 - Individual approval (not yet available)",
     "Level 3 - Controlled execution": "Level 3 - Controlled execution",
     "The autonomy level limits what Freya may do. Learning and state permissions are configured separately.": "The autonomy level limits what Freya may do. Learning and state permissions are configured separately.",
     "Action audit records": "Action audit records",

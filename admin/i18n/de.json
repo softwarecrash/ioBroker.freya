@@ -11,7 +11,7 @@
     "Room status shows a warning only when a learned room-relevant state has no room and its scope is not explicitly Global. Assign a room or choose Global for intentional whole-home states.": "Der Raumstatus warnt nur, wenn ein gelernter raumrelevanter State keinen Raum besitzt und nicht ausdrücklich Global gewählt wurde. Einen Raum zuweisen oder für bewusst hausweite States Global wählen.",
     "Level 0 - Observe only": "Stufe 0 – Nur beobachten",
     "Level 1 - Learn and suggest": "Stufe 1 – Lernen und vorschlagen",
-    "Level 2 - Individual approval (reserved)": "Stufe 2 – Einzelne Aktionen freigeben (vorbereitet)",
+    "Level 2 - Individual approval (not yet available)": "Stufe 2 – Einzelaktionen nach Freigabe (noch nicht verfügbar)",
     "Level 3 - Controlled execution": "Stufe 3 – Kontrolliert ausführen",
     "The autonomy level limits what Freya may do. Learning and state permissions are configured separately.": "Die Autonomiestufe begrenzt, was Freya tun darf. Lernen und State-Berechtigungen werden separat eingestellt.",
     "Action audit records": "Aktions-Audit-Einträge",
