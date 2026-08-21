@@ -51,14 +51,20 @@ export interface StatePermissions {
     control: boolean;
 }
 
+export type StateScope = 'auto' | 'room' | 'global';
+export type RoomAssignmentStatus = 'resolved' | 'global' | 'unresolved' | 'missing' | 'not-required';
+
 export interface StatePolicyInput extends StatePermissions {
     stateId: string;
     semanticType?: SemanticType | 'auto';
+    scope?: StateScope;
 }
 
 export interface EffectiveStatePolicy {
     stateId: string;
     semanticType: SemanticType;
+    scope: StateScope;
+    roomStatus: RoomAssignmentStatus;
     permissions: StatePermissions;
     violations: string[];
 }
@@ -93,6 +99,8 @@ export interface DiscoveredStateView {
     rooms: string[];
     functions: string[];
     semanticType: SemanticType;
+    scope: StateScope;
+    roomStatus: RoomAssignmentStatus;
     confidence: number;
     sensitive: boolean;
     permissions: StatePermissions;

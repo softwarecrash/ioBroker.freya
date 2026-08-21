@@ -237,7 +237,7 @@
                             "type": "select",
                             "attr": "semanticType",
                             "title": "Semantic type",
-                            "width": "18%",
+                            "width": "16%",
                             "default": "auto",
                             "options": [
                                 {
@@ -307,6 +307,27 @@
                             ]
                         },
                         {
+                            "type": "select",
+                            "attr": "scope",
+                            "title": "Scope",
+                            "width": "14%",
+                            "default": "auto",
+                            "options": [
+                                {
+                                    "label": "Automatic scope",
+                                    "value": "auto"
+                                },
+                                {
+                                    "label": "Room related",
+                                    "value": "room"
+                                },
+                                {
+                                    "label": "Global",
+                                    "value": "global"
+                                }
+                            ]
+                        },
+                        {
                             "type": "checkbox",
                             "attr": "observe",
                             "title": "Observe",
@@ -333,6 +354,80 @@
                             "title": "Control",
                             "width": "8%",
                             "default": false
+                        }
+                    ]
+                },
+                "roomDiagnosticsNotice": {
+                    "type": "staticText",
+                    "text": "Room status shows a warning only when a learned room-relevant state has no room and its scope is not explicitly Global. Assign a room or choose Global for intentional whole-home states.",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_refreshRoomDiagnostics": {
+                    "type": "sendTo",
+                    "label": "Refresh room status",
+                    "command": "getRoomDiagnostics",
+                    "useNative": true,
+                    "onLoaded": true,
+                    "variant": "outlined",
+                    "icon": "refresh",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "roomDiagnostics": {
+                    "type": "table",
+                    "label": "Room assignment status",
+                    "doNotSave": true,
+                    "noDelete": true,
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "items": [
+                        {
+                            "type": "text",
+                            "attr": "warning",
+                            "title": "Status",
+                            "width": "7%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "stateId",
+                            "title": "State",
+                            "width": "39%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "semanticType",
+                            "title": "Semantic type",
+                            "width": "16%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "scope",
+                            "title": "Scope",
+                            "width": "14%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "rooms",
+                            "title": "Rooms",
+                            "width": "24%",
+                            "readOnly": true
                         }
                     ]
                 }

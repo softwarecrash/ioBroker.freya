@@ -16,11 +16,14 @@ export interface DiscoveryOptions {
 /** Coordinate read-only semantic discovery and retain a bounded result page source. */
 export class DiscoveryService {
     private result?: DiscoveryResult;
+    private readonly configuredStateIds: Set<string>;
 
     public constructor(
         private readonly source: DiscoverySource,
         private readonly options: DiscoveryOptions,
-    ) {}
+    ) {
+        this.configuredStateIds = new Set(options.policies.map(policy => policy.stateId));
+    }
 
     /** Run one bounded discovery pass. */
     public async run(): Promise<DiscoveryResult> {
@@ -44,6 +47,8 @@ export class DiscoveryService {
                 rooms: descriptor.rooms,
                 functions: descriptor.functions,
                 semanticType: policy.semanticType,
+                scope: policy.scope,
+                roomStatus: policy.roomStatus,
                 confidence: classification.confidence,
                 sensitive: classification.sensitive,
                 permissions: policy.permissions,
@@ -100,5 +105,25 @@ export class DiscoveryService {
     /** Return the latest aggregate summary, if discovery has run. */
     public summary(): DiscoveryResult['summary'] | undefined {
         return this.result?.summary;
+    }
+
+    /** Build a bounded read-only room/scope diagnostic table for configured states. */
+    public roomDiagnostics(limit = 500): Array<{
+        stateId: string;
+        semanticType: string;
+        scope: string;
+        rooms: string;
+        warning: string;
+    }> {
+        return (this.result?.states ?? [])
+            .filter(state => this.configuredStateIds.has(state.id))
+            .slice(0, Math.max(1, Math.min(500, Math.floor(limit))))
+            .map(state => ({
+                stateId: state.id,
+                semanticType: state.semanticType,
+                scope: state.scope,
+                rooms: state.rooms.join(', ') || '—',
+                warning: state.roomStatus === 'missing' || state.roomStatus === 'unresolved' ? '⚠' : '✓',
+            }));
     }
 }

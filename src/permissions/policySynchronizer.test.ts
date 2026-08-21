@@ -4,6 +4,7 @@ import { createPolicySynchronizationPlan } from './policySynchronizer';
 const nativePolicy = {
     stateId: 'fixture.0.light',
     semanticType: 'light' as const,
+    scope: 'room' as const,
     observe: true,
     learn: false,
     suggest: false,
@@ -30,6 +31,7 @@ describe('policy synchronization', () => {
                 custom: {
                     enabled: true,
                     semanticType: 'dimmer',
+                    scope: 'global',
                     observe: true,
                     learn: true,
                     suggest: false,
@@ -40,7 +42,7 @@ describe('policy synchronization', () => {
 
         expect(plan.updateNative).to.equal(true);
         expect(plan.customUpdates).to.be.empty;
-        expect(plan.policies[0]).to.include({ semanticType: 'dimmer', learn: true });
+        expect(plan.policies[0]).to.include({ semanticType: 'dimmer', scope: 'global', learn: true });
     });
 
     it('removes a central policy when a newer custom entry is disabled', () => {

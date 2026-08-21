@@ -1,4 +1,4 @@
-import type { SemanticType, StatePolicyInput } from '../discovery/types';
+import type { SemanticType, StatePolicyInput, StateScope } from '../discovery/types';
 
 const SEMANTIC_TYPES = new Set<SemanticType | 'auto'>([
     'auto',
@@ -18,10 +18,12 @@ const SEMANTIC_TYPES = new Set<SemanticType | 'auto'>([
     'switch',
     'unknown',
 ]);
+const STATE_SCOPES = new Set<StateScope>(['auto', 'room', 'global']);
 
 interface CustomPolicyData {
     enabled?: boolean;
     semanticType?: unknown;
+    scope?: unknown;
     observe?: unknown;
     learn?: unknown;
     suggest?: unknown;
@@ -50,6 +52,7 @@ function parseCustom(stateId: string, custom: CustomPolicyData | undefined): Sta
     return {
         stateId,
         semanticType,
+        scope: STATE_SCOPES.has(custom.scope as StateScope) ? (custom.scope as StateScope) : 'auto',
         observe: custom.observe === true,
         learn: custom.learn === true,
         suggest: custom.suggest === true,
@@ -62,12 +65,21 @@ function customFromPolicy(policy: StatePolicyInput | undefined): CustomPolicyDat
         ? {
               enabled: true,
               semanticType: policy.semanticType ?? 'auto',
+              scope: policy.scope ?? 'auto',
               observe: policy.observe,
               learn: policy.learn,
               suggest: policy.suggest,
               control: policy.control,
           }
-        : { enabled: false, semanticType: 'auto', observe: false, learn: false, suggest: false, control: false };
+        : {
+              enabled: false,
+              semanticType: 'auto',
+              scope: 'auto',
+              observe: false,
+              learn: false,
+              suggest: false,
+              control: false,
+          };
 }
 
 function policyKey(policy: StatePolicyInput | undefined): string {

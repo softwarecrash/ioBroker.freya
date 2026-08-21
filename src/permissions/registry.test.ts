@@ -80,4 +80,45 @@ describe('PermissionRegistry', () => {
         expect(result.semanticType).to.equal('lock');
         expect(result.violations).to.include('sensitive_semantic_override_ignored');
     });
+
+    it('warns only when a room-relevant learned state has unresolved room scope', () => {
+        const roomlessPresence: StateDescriptor = { ...light, id: 'fixture.0.presence', rooms: [], write: false };
+        const classification: SemanticClassification = {
+            type: 'presence',
+            confidence: 0.9,
+            evidence: [],
+            sensitive: false,
+        };
+        const automatic = new PermissionRegistry([
+            {
+                stateId: roomlessPresence.id,
+                scope: 'auto',
+                observe: true,
+                learn: true,
+                suggest: false,
+                control: false,
+            },
+        ]).resolve(roomlessPresence, classification);
+        expect(automatic).to.include({ scope: 'auto', roomStatus: 'unresolved' });
+        expect(automatic.violations).to.include('room_scope_needs_classification');
+
+        const global = new PermissionRegistry([
+            {
+                stateId: roomlessPresence.id,
+                scope: 'global',
+                observe: true,
+                learn: true,
+                suggest: false,
+                control: false,
+            },
+        ]).resolve(roomlessPresence, classification);
+        expect(global).to.include({ scope: 'global', roomStatus: 'global' });
+        expect(global.violations).not.to.include('room_scope_needs_classification');
+    });
+
+    it('warns when an explicitly room-related state has no room', () => {
+        const result = registry({ scope: 'room' }).resolve({ ...light, rooms: [] }, lightClassification);
+        expect(result.roomStatus).to.equal('missing');
+        expect(result.violations).to.include('room_scope_requires_room');
+    });
 });

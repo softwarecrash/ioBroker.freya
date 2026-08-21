@@ -274,7 +274,7 @@ class SmartBrainAdapter extends utils.Adapter {
                 id: state.id,
                 semanticType: state.semanticType,
                 valueType: state.valueType,
-                rooms: state.rooms.slice(0, 20),
+                rooms: state.scope === 'global' ? [] : state.rooms.slice(0, 20),
                 canBeSuggested: state.permissions.suggest,
             }));
         this.patternEngine = new PatternEngine(learnableStates, { enabled: config.learningEnabled });
@@ -393,6 +393,15 @@ class SmartBrainAdapter extends utils.Adapter {
         }
         if (message.command === 'getDiscoverySummary') {
             this.sendTo(message.from, message.command, this.discovery?.summary() ?? null, message.callback);
+            return;
+        }
+        if (message.command === 'getRoomDiagnostics') {
+            this.sendTo(
+                message.from,
+                message.command,
+                { native: { roomDiagnostics: this.discovery?.roomDiagnostics() ?? [] } },
+                message.callback,
+            );
             return;
         }
         if (message.command === 'getDiscoveredStates') {

@@ -89,6 +89,31 @@
                 }
             ]
         },
+        "scope": {
+            "type": "select",
+            "label": "Scope",
+            "help": "Choose Room related when local pattern learning requires a room, or Global for intentional whole-home and context states.",
+            "default": "auto",
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 6,
+            "xl": 6,
+            "options": [
+                {
+                    "label": "Automatic scope",
+                    "value": "auto"
+                },
+                {
+                    "label": "Room related",
+                    "value": "room"
+                },
+                {
+                    "label": "Global",
+                    "value": "global"
+                }
+            ]
+        },
         "observe": {
             "type": "checkbox",
             "label": "Observe",

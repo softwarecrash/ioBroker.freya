@@ -48,4 +48,52 @@ describe('DiscoveryService', () => {
         expect(service.page(0, 1, 'generic').items[0].semanticType).to.equal('unknown');
         expect(service.page(0, 1000).pageSize).to.equal(100);
     });
+
+    it('provides warning-only room diagnostics for configured ambiguous states', async () => {
+        const source: DiscoverySource = {
+            load: () => Promise.resolve({ descriptors, totalAvailable: 2, truncated: false }),
+        };
+        const service = new DiscoveryService(source, {
+            maxStates: 2,
+            policies: [
+                {
+                    stateId: 'fixture.0.light.state',
+                    semanticType: 'light',
+                    scope: 'room',
+                    observe: true,
+                    learn: true,
+                    suggest: true,
+                    control: false,
+                },
+                {
+                    stateId: 'fixture.0.generic.state',
+                    semanticType: 'presence',
+                    scope: 'auto',
+                    observe: true,
+                    learn: true,
+                    suggest: false,
+                    control: false,
+                },
+            ],
+            environmentMappings: [],
+        });
+        await service.run();
+
+        expect(service.roomDiagnostics()).to.deep.equal([
+            {
+                stateId: 'fixture.0.light.state',
+                semanticType: 'light',
+                scope: 'room',
+                rooms: 'Room',
+                warning: '✓',
+            },
+            {
+                stateId: 'fixture.0.generic.state',
+                semanticType: 'presence',
+                scope: 'auto',
+                rooms: '—',
+                warning: '⚠',
+            },
+        ]);
+    });
 });
