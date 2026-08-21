@@ -298,7 +298,7 @@ interface LearnedPattern {
     confidence: number;
     firstSeen: number;
     lastSeen: number;
-    status: "learning" | "candidate" | "approved" | "trusted" | "disabled";
+    status: 'learning' | 'candidate' | 'approved' | 'trusted' | 'disabled';
 }
 ```
 
@@ -395,6 +395,8 @@ freya.0.patterns.learningCount
 freya.0.patterns.pendingOpportunityCount
 freya.0.patterns.retainedExampleCount
 freya.0.patterns.approvedCount
+freya.0.history.learningStatus
+freya.0.history.learningEventCount
 freya.0.suggestions.latest
 freya.0.actions.lastResult
 freya.0.feedback.pendingCount
@@ -437,6 +439,11 @@ All queues, caches, context relations, analysis batches, history ranges, activit
 records, and provider responses have configurable hard limits. Overload drops or
 coalesces low-value observations with metrics and debug logging; it never creates an
 unbounded queue. History analysis is batched and scheduled, not continuously replayed.
+The startup history batch is restricted to a seven-day window, 25 explicitly
+learn-enabled states, 1,000 entries per state, two concurrent reads, and 10,000 merged
+changes. It feeds only the Pattern Engine before live subscriptions start. Historical
+events never enter action dispatch, the first value per state is a baseline, and
+persisted example timestamps make repeated startup backfills idempotent.
 
 ### Testing strategy
 

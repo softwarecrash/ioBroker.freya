@@ -14,6 +14,10 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
   of remaining empty until a suggestion becomes eligible.
 - Bounded runtime counters expose learning relationships, open trigger windows, and
   retained learning examples for direct local observation.
+- A bounded, read-only seven-day history backfill now feeds explicitly learn-enabled
+  states into the same Pattern Engine before live observation starts. It excludes
+  foreign commands and confirmations, never dispatches actions, and deduplicates
+  persisted examples across restarts.
 
 ### Fixed
 
@@ -22,6 +26,8 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 - Synchronized newly introduced Admin translation keys across every declared locale;
   reviewed German text remains localized and untranslated values safely fall back to
   English.
+- Context providers now honor Learn permission as well as Observe permission before a
+  state value can influence pattern conditions.
 
 ### Security
 

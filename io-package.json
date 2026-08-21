@@ -805,6 +805,73 @@
             "native": {}
         },
         {
+            "_id": "history.learningStatus",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Historical learning status",
+                    "de": "Status des historischen Lernens"
+                },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": "idle"
+            },
+            "native": {}
+        },
+        {
+            "_id": "history.learningStateCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "History states used for learning",
+                    "de": "Für Lernen verwendete History-States"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "history.learningEventCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Historical changes replayed for learning",
+                    "de": "Für Lernen ausgewertete historische Änderungen"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "history.learningFailedStateCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "History states unavailable for learning",
+                    "de": "Für Lernen nicht verfügbare History-States"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
             "_id": "history.lastQueryTimestamp",
             "type": "state",
             "common": {

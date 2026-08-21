@@ -268,6 +268,9 @@ export class PatternEngine {
             };
             this.records.set(opportunity.key, record);
         }
+        if (record.examples.some(example => example.timestamp === opportunity.timestamp)) {
+            return;
+        }
         record.examples.push({
             timestamp: opportunity.timestamp,
             matched,

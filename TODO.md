@@ -87,6 +87,8 @@ Last updated: 2026-08-21
 - [x] Detect alive providers using instance capabilities.
 - [x] Prioritize `influxdb.0`; keep SQL and History adapters pluggable.
 - [x] Add timeouts, cancellation, ordering, deduplication, and hard result limits.
+- [x] Replay a bounded seven-day historical window into the Pattern Engine at startup,
+      without dispatching actions or duplicating persisted examples.
 - [x] Run read-only provider tests against a safe, selected production state only after
       local mocked tests pass.
 - [x] Update documentation and changelog; commit and push.

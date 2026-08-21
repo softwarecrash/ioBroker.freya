@@ -137,6 +137,12 @@ Queries are restricted to explicitly observed states, seven days, 1,000 results,
 concurrent requests, and a five-second provider timeout. Provider responses are treated
 as untrusted input: values are validated and bounded, duplicates removed, and results
 sorted before use. `getHistoryStatus` and `getStateHistory` expose the bounded API.
+When learning is enabled, startup replays at most seven days from up to 25 explicitly
+learn-enabled states, with 1,000 entries per state and 10,000 merged changes overall.
+Only the Pattern Engine receives this replay: it cannot create action proposals or
+execute an action. First samples establish a baseline, foreign commands and their device
+confirmations are excluded conservatively, and example timestamps prevent duplicate
+learning after a restart. Status and aggregate counts are exposed below `history.*`.
 
 ## Explainable pattern learning
 

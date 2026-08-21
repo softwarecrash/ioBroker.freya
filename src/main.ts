@@ -21,8 +21,9 @@ import { SunContextProvider } from './context/providers/sunContextProvider';
 import { TimeContextProvider } from './context/providers/timeContextProvider';
 import { DiscoveryService } from './discovery/discoveryService';
 import { IoBrokerDiscoverySource } from './discovery/ioBrokerDiscoverySource';
-import type { DiscoveryResult, DiscoveredStateView } from './discovery/types';
+import type { DiscoveryResult, DiscoveredStateView, EnvironmentCandidate } from './discovery/types';
 import { HistoryService } from './history/historyService';
+import { HistoricalLearningService, enrichHistoricalContext } from './history/historicalLearningService';
 import { IoBrokerHistoryProvider, IoBrokerHistoryTransport } from './history/ioBrokerHistoryProvider';
 import { NoneHistoryProvider } from './history/noneHistoryProvider';
 import { ActionRepository } from './feedback/actionRepository';
@@ -214,7 +215,9 @@ class FreyaAdapter extends utils.Adapter {
         if (this.unloading) {
             return;
         }
-        await this.setupHistory(config.historyInstance);
+        if (!this.historyService) {
+            await this.setupHistory(config.historyInstance);
+        }
         this.log.info(
             config.learningEnabled && config.autonomyLevel >= 1
                 ? '[Patterns] Freya started with read-only pattern learning enabled'
@@ -268,6 +271,78 @@ class FreyaAdapter extends utils.Adapter {
         await this.setOwnState('history.lastQueryTimestamp', summary?.lastQueryTimestamp ?? 0);
     }
 
+    private async backfillHistoricalLearning(
+        states: DiscoveredStateView[],
+        environmentCandidates: EnvironmentCandidate[],
+        timeProvider: TimeContextProvider,
+        sunProvider: SunContextProvider,
+        config: RuntimeConfig,
+    ): Promise<void> {
+        if (!this.patternEngine || !this.suggestionService || !config.learningEnabled || config.autonomyLevel < 1) {
+            await this.setOwnState('history.learningStatus', 'disabled');
+            return;
+        }
+        const historySummary = await this.historyService?.summary();
+        if (!historySummary?.available) {
+            await this.setOwnState('history.learningStatus', 'unavailable');
+            return;
+        }
+        const historicalStates = states.map(state => ({
+            id: state.id,
+            semanticType: state.semanticType,
+            valueType: state.valueType,
+            rooms: state.scope === 'global' ? [] : state.rooms.slice(0, 20),
+            role: state.role,
+            functions: state.functions.slice(0, 20),
+        }));
+        const baseContext = new ContextEngine(timeProvider, [sunProvider], { providerTimeoutMs: 1_000 });
+        const controller = new AbortController();
+        this.historyControllers.add(controller);
+        await this.setOwnState('history.learningStatus', 'running');
+        try {
+            const end = Date.now();
+            const service = new HistoricalLearningService(
+                this.historyService!,
+                this.patternEngine,
+                async (timestamp, values) =>
+                    enrichHistoricalContext(
+                        await baseContext.snapshot({ timestamp }),
+                        values,
+                        historicalStates,
+                        environmentCandidates,
+                    ),
+                historicalStates,
+                `system.adapter.${this.namespace}`,
+                { maxStates: 25, maxEntriesPerState: 1_000, maxEvents: 10_000, maxConcurrent: 2 },
+            );
+            const summary = await service.run(end - 7 * 24 * 60 * 60 * 1_000, end, controller.signal);
+            const patterns = this.patternEngine.patterns(end);
+            this.suggestionService.synchronize(patterns, end);
+            await this.persistLearningState();
+            const patternSummary = this.patternEngine.summary(end);
+            await this.setOwnState('patterns.candidateCount', patternSummary.candidates);
+            await this.setOwnState('patterns.learningCount', patternSummary.learningPatterns);
+            await this.setOwnState('patterns.pendingOpportunityCount', patternSummary.pendingOpportunities);
+            await this.setOwnState('patterns.retainedExampleCount', patternSummary.retainedExamples);
+            await this.setOwnState('history.learningStateCount', summary.queriedStates);
+            await this.setOwnState('history.learningEventCount', summary.replayedEvents);
+            await this.setOwnState('history.learningFailedStateCount', summary.failedStates);
+            await this.setOwnState('history.learningStatus', summary.failedStates ? 'partial' : 'completed');
+            await this.publishSuggestionSummary();
+            this.log.info(
+                `[History] Learning backfill processed ${summary.replayedEvents} changes from ${summary.queriedStates} states; ${summary.failedStates} state queries failed`,
+            );
+        } catch (error) {
+            if (!this.unloading) {
+                await this.setOwnState('history.learningStatus', 'error');
+                this.log.warn(`[History] Learning backfill failed: ${(error as Error).message.slice(0, 80)}`);
+            }
+        } finally {
+            this.historyControllers.delete(controller);
+            await this.publishHistorySummary();
+        }
+    }
+
     private async setupObservation(
         discoveryResult: DiscoveryResult,
         timeProvider: TimeContextProvider,
@@ -275,13 +350,14 @@ class FreyaAdapter extends utils.Adapter {
         config: RuntimeConfig,
     ): Promise<void> {
         const observedStates = discoveryResult.states.filter(state => state.permissions.observe);
+        const learnableObservedStates = observedStates.filter(state => state.permissions.learn);
         this.observedStateIds = observedStates.map(state => state.id);
         const reader = new IoBrokerContextStateReader(this, this.observedStateIds);
-        const observedIdSet = new Set(this.observedStateIds);
+        const learnableIdSet = new Set(learnableObservedStates.map(state => state.id));
         const environmentCandidates = Object.values(discoveryResult.environment)
             .flat()
-            .filter(candidate => observedIdSet.has(candidate.stateId));
-        const presenceStateIds = observedStates
+            .filter(candidate => learnableIdSet.has(candidate.stateId));
+        const presenceStateIds = learnableObservedStates
             .filter(state => state.semanticType === 'presence')
             .map(state => state.id);
         this.contextEngine = new ContextEngine(
@@ -291,22 +367,20 @@ class FreyaAdapter extends utils.Adapter {
                 new EnvironmentContextProvider(reader, environmentCandidates),
                 new WeatherContextProvider(reader, environmentCandidates),
                 new PresenceContextProvider(reader, presenceStateIds),
-                new DeviceContextProvider(reader, this.observedStateIds, 25),
+                new DeviceContextProvider(reader, [...learnableIdSet], 25),
             ],
             { providerTimeoutMs: 1_000 },
         );
         this.observationMetadata = new Map(
             observedStates.map(state => [state.id, this.observationMetadataFor(state, observedStates)]),
         );
-        const learnableStates = observedStates
-            .filter(state => state.permissions.learn)
-            .map(state => ({
-                id: state.id,
-                semanticType: state.semanticType,
-                valueType: state.valueType,
-                rooms: state.scope === 'global' ? [] : state.rooms.slice(0, 20),
-                canBeSuggested: state.permissions.suggest,
-            }));
+        const learnableStates = learnableObservedStates.map(state => ({
+            id: state.id,
+            semanticType: state.semanticType,
+            valueType: state.valueType,
+            rooms: state.scope === 'global' ? [] : state.rooms.slice(0, 20),
+            canBeSuggested: state.permissions.suggest,
+        }));
         const effectiveLearning = config.learningEnabled && config.autonomyLevel >= 1;
         this.patternEngine = new PatternEngine(learnableStates, { enabled: effectiveLearning });
         this.suggestionService = new SuggestionService();
@@ -325,6 +399,14 @@ class FreyaAdapter extends utils.Adapter {
             semanticType: state.semanticType,
             rooms: state.rooms,
         }));
+        await this.setupHistory(config.historyInstance);
+        await this.backfillHistoricalLearning(
+            learnableObservedStates,
+            environmentCandidates,
+            timeProvider,
+            sunProvider,
+            config,
+        );
         const permissions = new Map(discoveryResult.states.map(state => [state.id, state.permissions]));
         this.actionExecutor = new ActionExecutor(
             new SafetyEngine(),

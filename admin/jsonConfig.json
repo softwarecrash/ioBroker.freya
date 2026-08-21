@@ -98,6 +98,47 @@
                     "lg": 3,
                     "xl": 3
                 },
+                "historyLearningStatus": {
+                    "type": "state",
+                    "label": "Historical learning status",
+                    "oid": "history.learningStatus",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "historyLearningStates": {
+                    "type": "state",
+                    "label": "History states used for learning",
+                    "oid": "history.learningStateCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "historyLearningEvents": {
+                    "type": "state",
+                    "label": "Historical changes replayed for learning",
+                    "oid": "history.learningEventCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "historyLearningFailures": {
+                    "type": "state",
+                    "label": "History states unavailable for learning",
+                    "oid": "history.learningFailedStateCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
                 "autonomyLevel": {
                     "type": "select",
                     "label": "Autonomy level",

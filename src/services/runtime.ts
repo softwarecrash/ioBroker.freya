@@ -43,6 +43,10 @@ export class FreyaRuntime {
         await this.port.setState('patterns.learningCount', 0);
         await this.port.setState('patterns.pendingOpportunityCount', 0);
         await this.port.setState('patterns.retainedExampleCount', 0);
+        await this.port.setState('history.learningStatus', 'idle');
+        await this.port.setState('history.learningStateCount', 0);
+        await this.port.setState('history.learningEventCount', 0);
+        await this.port.setState('history.learningFailedStateCount', 0);
         await this.port.setState('patterns.approvedCount', 0);
         await this.port.setState('patterns.disabledCount', 0);
         await this.port.setState('suggestions.candidateCount', 0);
