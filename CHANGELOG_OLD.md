@@ -23,6 +23,11 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 - Suggest permission now applies only to the proposed action target; learned trigger
   and context states no longer need Suggest permission to contribute to a suggestion.
 
+### Fixed
+
+- Room and function assignments on parent folders now propagate reliably to deeply
+  nested alias states by loading state metadata, ancestors, and enums explicitly.
+
 ## [0.9.1] - 2026-08-20
 
 ### Added

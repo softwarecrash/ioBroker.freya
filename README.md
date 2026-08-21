@@ -84,6 +84,10 @@ object exports. Ambiguous metadata remains `unknown`; user corrections and permi
 are kept separately in adapter configuration. Environment mappings support multiple
 ranked candidates and manual pinning without hard-coded adapter state IDs.
 
+Room and function enums assigned to a parent folder or device are inherited by nested
+states. This includes deeply structured alias paths such as
+`alias.0.Kitchen.light.ceiling.power` when `alias.0.Kitchen` is assigned to a room.
+
 The adapter message API provides `getDiscoverySummary` and `getDiscoveredStates`.
 State pages are capped at 100 entries and support a text query.
 
