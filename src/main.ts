@@ -361,6 +361,13 @@ class FreyaAdapter extends utils.Adapter {
                         'patterns.candidateCount',
                         patterns.filter(pattern => pattern.status === 'candidate').length,
                     );
+                    const patternSummary = this.patternEngine?.summary(observation.timestamp);
+                    await this.setOwnState('patterns.learningCount', patternSummary?.learningPatterns ?? 0);
+                    await this.setOwnState(
+                        'patterns.pendingOpportunityCount',
+                        patternSummary?.pendingOpportunities ?? 0,
+                    );
+                    await this.setOwnState('patterns.retainedExampleCount', patternSummary?.retainedExamples ?? 0);
                     await this.publishSuggestionSummary();
                 },
                 onError: message => this.log.warn(message),
@@ -371,6 +378,11 @@ class FreyaAdapter extends utils.Adapter {
         );
         await this.setOwnState('learning.observedStateCount', this.observedStateIds.length);
         await this.setOwnState('observation.subscribedStateCount', this.observedStateIds.length);
+        const patternSummary = this.patternEngine.summary();
+        await this.setOwnState('patterns.candidateCount', patternSummary.candidates);
+        await this.setOwnState('patterns.learningCount', patternSummary.learningPatterns);
+        await this.setOwnState('patterns.pendingOpportunityCount', patternSummary.pendingOpportunities);
+        await this.setOwnState('patterns.retainedExampleCount', patternSummary.retainedExamples);
         await this.publishSuggestionSummary();
         await this.publishPendingActionSummary();
         await this.publishLearningPersistence(this.patternEngine.snapshot().length);
@@ -553,7 +565,7 @@ class FreyaAdapter extends utils.Adapter {
             this.sendTo(
                 message.from,
                 message.command,
-                { native: { patternRows: this.patternAdminRows() } },
+                { native: { _patternRows: this.patternAdminRows() } },
                 message.callback,
             );
             return;
@@ -584,7 +596,7 @@ class FreyaAdapter extends utils.Adapter {
             this.sendTo(
                 message.from,
                 message.command,
-                { native: { pendingActionRows: this.pendingActionAdminRows() } },
+                { native: { _pendingActionRows: this.pendingActionAdminRows() } },
                 message.callback,
             );
             return;
@@ -993,18 +1005,27 @@ class FreyaAdapter extends utils.Adapter {
     }
 
     private patternAdminRows(): Array<Record<string, ioBroker.StateValue>> {
-        return (this.suggestionService?.list(undefined, 0, 100).items ?? []).map(suggestion => ({
-            patternId: suggestion.id,
-            status: suggestion.status,
-            eligible: suggestion.eligible ? '✓' : '⚠',
-            rooms: suggestion.rooms.join(', ') || 'Global',
-            trigger: suggestion.triggerStateId,
-            target: suggestion.actionStateId,
-            action: String(suggestion.expectedAction),
-            confidence: `${Math.round(suggestion.confidence * 100)} %`,
-            evidence: `${suggestion.matches}/${suggestion.opportunities}`,
-            explanation: suggestion.explanation.slice(0, 2_000),
-        }));
+        const suggestions = new Map(
+            (this.suggestionService?.list(undefined, 0, 100).items ?? []).map(suggestion => [
+                suggestion.id,
+                suggestion,
+            ]),
+        );
+        return (this.patternEngine?.patterns().slice(0, 100) ?? []).map(pattern => {
+            const suggestion = suggestions.get(pattern.id);
+            return {
+                patternId: pattern.id,
+                status: suggestion?.status ?? pattern.status,
+                eligible: pattern.suggestionEligible ? '✓' : '…',
+                rooms: pattern.rooms.join(', ') || 'Global',
+                trigger: pattern.triggerStateId,
+                target: pattern.actionStateId,
+                action: String(pattern.expectedAction),
+                confidence: `${Math.round(pattern.confidence * 100)} %`,
+                evidence: `${pattern.matches}/${pattern.opportunities} · ${pattern.distinctDays} d`,
+                explanation: pattern.explanation.slice(0, 2_000),
+            };
+        });
     }
 
     private async publishActionResult(result: Awaited<ReturnType<ActionExecutor['execute']>>): Promise<void> {

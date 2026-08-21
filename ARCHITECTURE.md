@@ -391,6 +391,9 @@ freya.0.info.status
 freya.0.learning.enabled
 freya.0.learning.observedStateCount
 freya.0.patterns.candidateCount
+freya.0.patterns.learningCount
+freya.0.patterns.pendingOpportunityCount
+freya.0.patterns.retainedExampleCount
 freya.0.patterns.approvedCount
 freya.0.suggestions.latest
 freya.0.actions.lastResult
@@ -422,10 +425,11 @@ payloads, and logs.
 
 ### Admin UI
 
-Phase 1 uses JSON Config for safe bootstrap settings. Overview, Devices/States,
-Patterns, Activity, and AI views will be added incrementally. Admin 7.8.23 on the
-development host can support a JSON-defined adapter tab, but UI architecture must
-remain compatible with the adapter's declared minimum Admin version.
+Freya uses JSON Config for Overview, Devices/States, environment mappings, Patterns,
+Activity, feedback, and optional advisory-provider settings. The Patterns view exposes
+learning progress and separates persistent pattern approval from short-lived level-2
+action approval. Admin 7.8.23 on the development host supports the JSON-defined tab;
+the UI remains compatible with the adapter's declared minimum Admin version.
 
 ### Resource limits
 

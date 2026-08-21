@@ -347,6 +347,57 @@
             "native": {}
         },
         {
+            "_id": "patterns.learningCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Relationships still learning",
+                    "de": "Noch lernende Beziehungen"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "patterns.pendingOpportunityCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Open learning windows",
+                    "de": "Offene Lernfenster"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "patterns.retainedExampleCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Retained learning examples",
+                    "de": "Gespeicherte Lernbeispiele"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
             "_id": "patterns.approvedCount",
             "type": "state",
             "common": {

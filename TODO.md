@@ -8,7 +8,7 @@ Last updated: 2026-08-21
 - [x] Work in a dedicated project checkout outside `/opt/iobroker`.
 - [x] Keep production ioBroker inspection read-only.
 - [x] Install the Phase 1 package locally and verify `freya.0` at autonomy level 0.
-- [ ] Never commit state IDs, room/device names, addresses, values, credentials, or raw
+- [x] Never commit state IDs, room/device names, addresses, values, credentials, or raw
       ioBroker exports.
 - [ ] After every completed milestone: test, push to GitHub, build a local package,
       install/upload it, then verify Freya-owned states and logs.
@@ -137,7 +137,7 @@ Last updated: 2026-08-21
       pending actions, and execution deduplication.
 - [ ] Run an end-to-end production test with the explicitly configured kitchen
       presence, illuminance, and light aliases before marking controlled actions done.
-- [ ] Update documentation and changelog; commit and push.
+- [x] Update documentation and changelog; commit and push.
 
 ## Phase 8 — optional LLM providers
 
@@ -164,6 +164,8 @@ Last updated: 2026-08-21
       Learn, Suggest, Control, and pattern approval.
 - [x] Persist and restore learning state without restoring expired trigger windows.
 - [x] Expose actionable pattern and pending-action tables in JSON Config.
+- [x] Show pre-candidate learning progress, evidence days, open trigger windows, and
+      retained examples in Admin and bounded runtime states.
 - [x] Publish bounded diagnostics for pending actions, automatic executions, denied
       executions, and persistence health.
 - [ ] Verify restart recovery, duplicate suppression, cooldown behavior, feedback
@@ -175,6 +177,6 @@ Last updated: 2026-08-21
 - [x] Rename the GitHub repository to the canonical `ioBroker.freya` spelling.
 - [x] Select and add the MIT license.
 - [ ] Complete ioBroker repository checker and adapter-checker requirements.
-- [ ] Security/privacy review and dependency audit.
+- [x] Security/privacy review and production dependency audit.
 - [ ] Multi-platform CI and installation tests.
-- [ ] English end-user configuration and privacy documentation.
+- [x] English end-user configuration and privacy documentation.

@@ -40,6 +40,9 @@ export class FreyaRuntime {
         await this.port.setState('learning.persistenceStatus', 'initializing');
         await this.port.setState('learning.persistedPatternCount', 0);
         await this.port.setState('patterns.candidateCount', 0);
+        await this.port.setState('patterns.learningCount', 0);
+        await this.port.setState('patterns.pendingOpportunityCount', 0);
+        await this.port.setState('patterns.retainedExampleCount', 0);
         await this.port.setState('patterns.approvedCount', 0);
         await this.port.setState('patterns.disabledCount', 0);
         await this.port.setState('suggestions.candidateCount', 0);

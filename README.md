@@ -158,6 +158,12 @@ on three different days, and confidence of 0.58; any added context condition als
 requires held-out improvement. Confidence
 exposes smoothed match rate, sample maturity, repeatability, feedback adjustment, and
 recency. `getPatternSummary` and bounded `getPatterns` provide read-only inspection.
+The Admin Patterns table also includes relationships that are still learning. It shows
+matches/opportunities, distinct learning days, current confidence, and the explanation;
+the `patterns.learningCount`, `patterns.pendingOpportunityCount`, and
+`patterns.retainedExampleCount` states make incoming evidence visible before a pattern
+meets the candidate thresholds. Only candidate suggestions appear in the approval
+selector.
 Bounded learning evidence, suggestions, and explicit approval/disabled states are stored
 locally in a schema-versioned, atomically replaced file. Pending trigger windows are not
 restored; restart recovery never invents or replays an expired trigger.

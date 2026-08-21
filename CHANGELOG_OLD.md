@@ -7,6 +7,29 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The Admin pattern table now shows relationships while they are still learning, with
+  confidence, matches/opportunities, distinct learning days, and explanations instead
+  of remaining empty until a suggestion becomes eligible.
+- Bounded runtime counters expose learning relationships, open trigger windows, and
+  retained learning examples for direct local observation.
+
+### Fixed
+
+- Corrected JSON Config table, responsive layout, and button-color schema violations
+  reported by the local ioBroker repository checker.
+- Synchronized newly introduced Admin translation keys across every declared locale;
+  reviewed German text remains localized and untranslated values safely fall back to
+  English.
+
+### Security
+
+- Re-audited the release dependency tree and package contents: production dependencies
+  report no known vulnerabilities, no secret-like files are packaged, and the only
+  foreign-state write remains inside the Action Executor boundary. Remaining audit
+  findings are confined to upstream development/test tooling and are not shipped.
+
 ## [0.10.0] - 2026-08-21
 
 ### Added

@@ -82,11 +82,13 @@ describe('FreyaRuntime', () => {
         );
 
         await runtime.start();
+        const startedWrites = writes.length;
         await runtime.start();
+        expect(writes).to.have.length(startedWrites);
         await runtime.stop();
+        expect(writes).to.have.length(startedWrites + 2);
         await runtime.stop();
-
-        expect(writes).to.have.length(29);
+        expect(writes).to.have.length(startedWrites + 2);
     });
 
     it('publishes the distinct individual-approval runtime mode', async () => {
