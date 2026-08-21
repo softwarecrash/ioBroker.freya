@@ -54,6 +54,7 @@ function snapshot(): LearningSnapshot {
                 updatedAt: 2,
             },
         ],
+        pendingActions: [],
     };
 }
 
@@ -74,11 +75,15 @@ describe('LearningRepository', () => {
         const repository = new LearningRepository(filename);
         await repository.save(snapshot());
         expect(await repository.load()).to.deep.equal(snapshot());
-        expect(JSON.parse(await readFile(filename, 'utf8')).schemaVersion).to.equal(1);
+        expect(JSON.parse(await readFile(filename, 'utf8')).schemaVersion).to.equal(2);
     });
 
     it('returns an empty snapshot for a new installation', async () => {
-        expect(await new LearningRepository(filename).load()).to.deep.equal({ patterns: [], suggestions: [] });
+        expect(await new LearningRepository(filename).load()).to.deep.equal({
+            patterns: [],
+            suggestions: [],
+            pendingActions: [],
+        });
     });
 
     it('rejects an invalid schema and recovers the previous valid backup', async () => {
@@ -87,7 +92,21 @@ describe('LearningRepository', () => {
         const newer = snapshot();
         newer.suggestions[0].status = 'disabled';
         await repository.save(newer);
-        await writeFile(filename, '{"schemaVersion":1,"patterns":"invalid"}\n', 'utf8');
+        await writeFile(filename, '{"schemaVersion":2,"patterns":"invalid"}\n', 'utf8');
         expect(await repository.load()).to.deep.equal(snapshot());
+    });
+
+    it('migrates the schema-1 learning document with an empty pending-action queue', async () => {
+        const legacy = snapshot();
+        await writeFile(
+            filename,
+            `${JSON.stringify({ schemaVersion: 1, patterns: legacy.patterns, suggestions: legacy.suggestions })}\n`,
+            'utf8',
+        );
+        expect(await new LearningRepository(filename).load()).to.deep.equal({
+            patterns: legacy.patterns,
+            suggestions: legacy.suggestions,
+            pendingActions: [],
+        });
     });
 });

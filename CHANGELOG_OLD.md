@@ -11,6 +11,13 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Behaviorally distinct autonomy paths: level 2 creates expiring, persistent one-shot
+  proposals for Admin approval, while level 3 dispatches matching approved live triggers
+  automatically through the same Safety Engine and exactly-once claim.
+- Pending-action Admin table, approve/reject controls, bounded action counters, restart
+  interruption handling, and last-moment target-value deduplication.
+- Shared trigger-condition matching that re-evaluates same-room illuminance during both
+  live dispatch and final action validation.
 - An actionable local Admin pattern view with bounded pattern rows, target/trigger,
   confidence and evidence details, explicit approve/disable controls, and confirmed
   one-shot execution through the existing safety boundary.

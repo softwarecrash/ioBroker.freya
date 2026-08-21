@@ -1,20 +1,14 @@
 import type { RuntimeConfig } from '../config/runtimeConfig';
 import type { ContextEngine } from '../context/contextEngine';
 import type { StatePermissions } from '../discovery/types';
-import { extractPatternFeatures } from '../patterns/features';
+import { conditionsMatchSnapshot, type ContextStateDescriptor } from '../patterns/matching';
 import type { SuggestionService } from '../suggestions/suggestionService';
 import type { ActionEnvironmentProvider } from './actionExecutor';
 import type { FrozenActionRequest, SafetyEnvironment } from './types';
 
 interface ActionObjectReader {
     getForeignObjectAsync(id: string): Promise<ioBroker.Object | null | undefined>;
-}
-
-function conditionsMatch(
-    features: ReturnType<typeof extractPatternFeatures>,
-    conditions: NonNullable<ReturnType<SuggestionService['find']>>['conditions'],
-): boolean {
-    return conditions.every(condition => features.values[condition.feature] === condition.value);
+    getForeignStateAsync(id: string): Promise<ioBroker.State | null | undefined>;
 }
 
 /** Resolves every mutable safety input again immediately before execution. */
@@ -27,13 +21,15 @@ export class IoBrokerActionEnvironment implements ActionEnvironmentProvider {
         private readonly suggestions: SuggestionService,
         private readonly context: ContextEngine,
         private readonly permissions: ReadonlyMap<string, StatePermissions>,
+        private readonly contextStates: ContextStateDescriptor[] = [],
     ) {}
 
     public async inspect(request: FrozenActionRequest): Promise<SafetyEnvironment> {
         const now = Date.now();
         const suggestion = this.suggestions.find(request.patternId);
-        const [object, snapshot] = await Promise.all([
+        const [object, currentState, snapshot] = await Promise.all([
             this.adapter.getForeignObjectAsync(request.targetStateId),
+            this.adapter.getForeignStateAsync(request.targetStateId),
             this.context.snapshot({
                 timestamp: now,
                 triggerStateId: suggestion?.triggerStateId,
@@ -67,11 +63,12 @@ export class IoBrokerActionEnvironment implements ActionEnvironmentProvider {
                 min: target?.min,
                 max: target?.max,
                 states: target?.states,
+                currentValue: currentState?.val,
             },
             targetBlocked: this.config.blockedStateIds.includes(request.targetStateId),
             cooldownUntil: this.cooldowns.get(request.targetStateId) ?? 0,
             conditionsSatisfied: suggestion
-                ? conditionsMatch(extractPatternFeatures(snapshot, suggestion.rooms), suggestion.conditions)
+                ? conditionsMatchSnapshot(snapshot, suggestion.rooms, suggestion.conditions, this.contextStates)
                 : false,
             minimumConfidence: this.config.minimumActionConfidence,
             maximumContextAgeMs: 5_000,

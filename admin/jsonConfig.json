@@ -111,11 +111,11 @@
                             "value": 1
                         },
                         {
-                            "label": "Level 2 - Individual approval (not yet available)",
+                            "label": "Level 2 - Individual approval",
                             "value": 2
                         },
                         {
-                            "label": "Level 3 - Controlled execution",
+                            "label": "Level 3 - Controlled automatic execution",
                             "value": 3
                         }
                     ],
@@ -680,6 +680,143 @@
                     "color": "warning",
                     "xs": 12,
                     "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "pendingActionsHeader": {
+                    "type": "header",
+                    "text": "Pending one-shot actions",
+                    "size": 4,
+                    "newLine": true
+                },
+                "pendingActionRows": {
+                    "type": "table",
+                    "label": "Action proposals",
+                    "doNotSave": true,
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12,
+                    "items": [
+                        {
+                            "type": "text",
+                            "attr": "status",
+                            "title": "Status",
+                            "width": "8%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "rooms",
+                            "title": "Rooms",
+                            "width": "10%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "trigger",
+                            "title": "Trigger",
+                            "width": "18%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "target",
+                            "title": "Target",
+                            "width": "18%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "action",
+                            "title": "Action",
+                            "width": "7%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "confidence",
+                            "title": "Confidence",
+                            "width": "8%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "expires",
+                            "title": "Expires",
+                            "width": "14%",
+                            "readOnly": true
+                        },
+                        {
+                            "type": "text",
+                            "attr": "result",
+                            "title": "Result",
+                            "width": "17%",
+                            "readOnly": true
+                        }
+                    ]
+                },
+                "_refreshPendingActions": {
+                    "type": "sendTo",
+                    "label": "Refresh action proposals",
+                    "command": "getPendingActionAdminData",
+                    "useNative": true,
+                    "onLoaded": true,
+                    "variant": "outlined",
+                    "icon": "refresh",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "_selectedPendingAction": {
+                    "type": "selectSendTo",
+                    "label": "Selected action proposal",
+                    "command": "getPendingActionOptions",
+                    "manual": false,
+                    "doNotSave": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 9,
+                    "lg": 9,
+                    "xl": 9
+                },
+                "_approvePendingAction": {
+                    "type": "sendTo",
+                    "label": "Approve and execute once",
+                    "command": "approvePendingAction",
+                    "jsonData": "{\"pendingActionId\":\"${data._selectedPendingAction}\"}",
+                    "disabled": "!data._selectedPendingAction",
+                    "confirm": {
+                        "text": "Approve this exact action proposal and execute it once after all current safety checks?",
+                        "title": "Confirm one-shot action",
+                        "ok": "Approve and execute",
+                        "cancel": "Cancel"
+                    },
+                    "variant": "contained",
+                    "color": "primary",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "_rejectPendingAction": {
+                    "type": "sendTo",
+                    "label": "Reject action proposal",
+                    "command": "rejectPendingAction",
+                    "jsonData": "{\"pendingActionId\":\"${data._selectedPendingAction}\"}",
+                    "disabled": "!data._selectedPendingAction",
+                    "variant": "outlined",
+                    "color": "secondary",
+                    "xs": 12,
+                    "sm": 6,
                     "md": 3,
                     "lg": 3,
                     "xl": 3

@@ -269,6 +269,39 @@
             "native": {}
         },
         {
+            "_id": "learning.persistenceStatus",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Learning persistence status",
+                    "de": "Status der Lern-Persistenz"
+                },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": "initializing"
+            },
+            "native": {}
+        },
+        {
+            "_id": "learning.persistedPatternCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Persisted learned relationships",
+                    "de": "Persistierte gelernte Beziehungen"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
             "_id": "learning.observedStateCount",
             "type": "state",
             "common": {
@@ -848,6 +881,57 @@
                 "name": {
                     "en": "Action audit records",
                     "de": "Aktions-Audit-Einträge"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "actions.pendingCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Pending one-shot actions",
+                    "de": "Ausstehende Einzelaktionen"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "actions.executedCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Executed action records",
+                    "de": "Ausgeführte Aktionen"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "actions.deniedCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Denied action records",
+                    "de": "Abgewiesene Aktionen"
                 },
                 "type": "number",
                 "role": "value",

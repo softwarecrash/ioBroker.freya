@@ -34,8 +34,11 @@ export class FreyaRuntime {
         }
 
         await this.port.setState('info.autonomyLevel', this.config.autonomyLevel);
-        await this.port.setState('learning.enabled', this.config.learningEnabled);
+        const effectiveLearning = this.config.learningEnabled && this.config.autonomyLevel >= 1;
+        await this.port.setState('learning.enabled', effectiveLearning);
         await this.port.setState('learning.observedStateCount', 0);
+        await this.port.setState('learning.persistenceStatus', 'initializing');
+        await this.port.setState('learning.persistedPatternCount', 0);
         await this.port.setState('patterns.candidateCount', 0);
         await this.port.setState('patterns.approvedCount', 0);
         await this.port.setState('patterns.disabledCount', 0);
@@ -45,6 +48,9 @@ export class FreyaRuntime {
         await this.port.setState('activity.lastTimestamp', 0);
         await this.port.setState('actions.lastResult', 'none');
         await this.port.setState('actions.auditCount', 0);
+        await this.port.setState('actions.pendingCount', 0);
+        await this.port.setState('actions.executedCount', 0);
+        await this.port.setState('actions.deniedCount', 0);
         await this.port.setState('llm.provider', this.config.llmProvider);
         await this.port.setState('llm.external', ['openai', 'openai-compatible'].includes(this.config.llmProvider));
         await this.port.setState('llm.lastResult', 'none');
@@ -56,9 +62,11 @@ export class FreyaRuntime {
         const status =
             this.config.autonomyLevel === 3
                 ? 'controlled-actions'
-                : this.config.learningEnabled
-                  ? 'learning-read-only'
-                  : 'observe-only';
+                : this.config.autonomyLevel === 2
+                  ? 'individual-approval'
+                  : effectiveLearning
+                    ? 'learning-suggestions'
+                    : 'observe-only';
         await this.port.setState('info.status', status);
         await this.port.setState('info.connection', true);
         this.started = true;

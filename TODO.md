@@ -112,8 +112,8 @@ Last updated: 2026-08-21
 
 - [x] Generate rules-only human-readable suggestions.
 - [x] Add candidate/approved/disabled lifecycle actions.
-- [ ] Build an actionable Patterns view with inspect, approve, disable, one-shot
-      approval, and execution results; the current view exposes summary states only.
+- [x] Build an actionable Patterns view with inspect, approve, disable, one-shot
+      approval, and execution results.
 - [x] Ensure approval cannot grant state control or raise autonomy.
 - [x] Add bounded activity storage and audit records.
 - [x] Test all transitions and invalid commands.
@@ -127,12 +127,13 @@ Last updated: 2026-08-21
 - [x] Implement Action Executor as the only foreign-state write boundary.
 - [x] Add correlation IDs, complete audit records, and last-moment revalidation.
 - [x] Test writes only through mocks or Freya-owned test states.
-- [x] Reject every write below level 3 and require explicitly approved patterns.
-- [ ] Implement level 2 pending-action creation, expiry, one-shot approval, rejection,
+- [x] Reject automatic writes below level 3; allow level 2 only for an exactly-once
+      Admin-approved proposal and require explicitly approved patterns.
+- [x] Implement level 2 pending-action creation, expiry, one-shot approval, rejection,
       and exactly-once execution.
-- [ ] Connect eligible approved patterns to live trigger observations at level 3;
-      `executePattern` currently provides only an explicit Admin execution boundary.
-- [ ] Add restart-safe persistence for learned examples, suggestions, approvals,
+- [x] Connect eligible approved patterns to live trigger observations at level 3 through
+      the same persisted claim and Safety Engine boundary.
+- [x] Add restart-safe persistence for learned examples, suggestions, approvals,
       pending actions, and execution deduplication.
 - [ ] Run an end-to-end production test with the explicitly configured kitchen
       presence, illuminance, and light aliases before marking controlled actions done.
@@ -159,11 +160,11 @@ Last updated: 2026-08-21
 
 ## Phase 10 — end-to-end product completion
 
-- [ ] Make autonomy levels behaviorally distinct and document their interaction with
+- [x] Make autonomy levels behaviorally distinct and document their interaction with
       Learn, Suggest, Control, and pattern approval.
-- [ ] Persist and restore learning state without restoring expired trigger windows.
-- [ ] Expose actionable pattern and pending-action tables in JSON Config.
-- [ ] Publish bounded diagnostics for pending actions, automatic executions, denied
+- [x] Persist and restore learning state without restoring expired trigger windows.
+- [x] Expose actionable pattern and pending-action tables in JSON Config.
+- [x] Publish bounded diagnostics for pending actions, automatic executions, denied
       executions, and persistence health.
 - [ ] Verify restart recovery, duplicate suppression, cooldown behavior, feedback
       attribution, and source attribution in the running local installation.

@@ -5,6 +5,7 @@ import { SourceAttributionService } from './attribution/sourceAttribution';
 import { ActionAuditStore } from './actions/actionAuditStore';
 import { ActionExecutor, IoBrokerActionWriter, type ActionRecordPort } from './actions/actionExecutor';
 import { IoBrokerActionEnvironment } from './actions/ioBrokerActionEnvironment';
+import { PendingActionService } from './actions/pendingActionService';
 import { SafetyEngine } from './actions/safetyEngine';
 import type { RuntimeConfig } from './config/runtimeConfig';
 import { createRuntimeConfig } from './config/runtimeConfig';
@@ -37,6 +38,7 @@ import {
 import { ObservationEngine } from './observation/observationEngine';
 import type { ObservationMetadata } from './observation/types';
 import { PatternEngine } from './patterns/patternEngine';
+import { observationTriggersSuggestion, type ContextStateDescriptor } from './patterns/matching';
 import { LearningRepository, type LearningSnapshot } from './persistence/learningRepository';
 import { DiscoveryCoordinator } from './services/discoveryCoordinator';
 import { IoBrokerContextStateReader } from './services/ioBrokerContextStateReader';
@@ -56,6 +58,9 @@ class FreyaAdapter extends utils.Adapter {
     private patternEngine?: PatternEngine;
     private suggestionService?: SuggestionService;
     private actionExecutor?: ActionExecutor;
+    private readonly pendingActions = new PendingActionService();
+    private runtimeConfig?: RuntimeConfig;
+    private contextStateDescriptors: ContextStateDescriptor[] = [];
     private readonly actionAudit = new ActionAuditStore();
     private actionRecords: ActionRecordPort = {
         requested: () => Promise.reject(new Error('action_repository_unavailable')),
@@ -73,10 +78,12 @@ class FreyaAdapter extends utils.Adapter {
     private policyStateIds = new Set<string>();
     private policySyncTimer?: ioBroker.Timeout;
     private feedbackTimer?: ioBroker.Interval;
+    private pendingActionTimer?: ioBroker.Interval;
     private learningRepository?: LearningRepository;
-    private restoredLearning: LearningSnapshot = { patterns: [], suggestions: [] };
+    private restoredLearning: LearningSnapshot = { patterns: [], suggestions: [], pendingActions: [] };
     private learningSaveTimer?: ioBroker.Timeout;
     private learningSaveTask?: Promise<void>;
+    private learningPersistenceStatus = 'initializing';
     private unloading = false;
 
     public constructor(options: Partial<utils.AdapterOptions> = {}) {
@@ -97,12 +104,16 @@ class FreyaAdapter extends utils.Adapter {
 
     private async onReady(): Promise<void> {
         const config = createRuntimeConfig(this.config);
+        this.runtimeConfig = config;
         this.learningRepository = new LearningRepository(
             join(utils.getAbsoluteInstanceDataDir(this), 'learning.v1.json'),
         );
         try {
             this.restoredLearning = await this.learningRepository.load();
+            this.learningPersistenceStatus =
+                this.restoredLearning.patterns.length || this.restoredLearning.suggestions.length ? 'loaded' : 'empty';
         } catch (error) {
+            this.learningPersistenceStatus = 'error';
             this.log.warn(`[Patterns] Persistent learning state unavailable: ${(error as Error).message.slice(0, 80)}`);
         }
         try {
@@ -160,6 +171,7 @@ class FreyaAdapter extends utils.Adapter {
         );
 
         await this.runtime.start();
+        await this.publishLearningPersistence();
         await this.publishLlmStatus();
         await this.publishFeedbackSummary();
         this.feedbackTimer = this.setInterval(() => {
@@ -204,9 +216,11 @@ class FreyaAdapter extends utils.Adapter {
         }
         await this.setupHistory(config.historyInstance);
         this.log.info(
-            config.learningEnabled
+            config.learningEnabled && config.autonomyLevel >= 1
                 ? '[Patterns] Freya started with read-only pattern learning enabled'
-                : '[Patterns] Freya started in observe-only mode; learning is disabled',
+                : config.autonomyLevel === 0
+                  ? '[Patterns] Freya started in observe-only mode; autonomy level 0 disables learning'
+                  : '[Patterns] Freya started in observe-only mode; learning is disabled',
         );
     }
 
@@ -293,21 +307,35 @@ class FreyaAdapter extends utils.Adapter {
                 rooms: state.scope === 'global' ? [] : state.rooms.slice(0, 20),
                 canBeSuggested: state.permissions.suggest,
             }));
-        this.patternEngine = new PatternEngine(learnableStates, { enabled: config.learningEnabled });
+        const effectiveLearning = config.learningEnabled && config.autonomyLevel >= 1;
+        this.patternEngine = new PatternEngine(learnableStates, { enabled: effectiveLearning });
         this.suggestionService = new SuggestionService();
         const restoredPatterns = this.patternEngine.restore(this.restoredLearning.patterns);
         const restoredSuggestions = this.suggestionService.restore(this.restoredLearning.suggestions);
+        const restoredActions = this.pendingActions.restore(this.restoredLearning.pendingActions, Date.now());
         this.applyPersistedFeedback();
         this.refreshSuggestions();
-        if (restoredPatterns || restoredSuggestions) {
+        if (restoredPatterns || restoredSuggestions || restoredActions) {
             this.log.info(
-                `[Patterns] Restored ${restoredPatterns} learned relationships and ${restoredSuggestions} suggestions`,
+                `[Patterns] Restored ${restoredPatterns} learned relationships, ${restoredSuggestions} suggestions, and ${restoredActions} action records`,
             );
         }
+        this.contextStateDescriptors = learnableStates.map(state => ({
+            id: state.id,
+            semanticType: state.semanticType,
+            rooms: state.rooms,
+        }));
         const permissions = new Map(discoveryResult.states.map(state => [state.id, state.permissions]));
         this.actionExecutor = new ActionExecutor(
             new SafetyEngine(),
-            new IoBrokerActionEnvironment(this, config, this.suggestionService, this.contextEngine, permissions),
+            new IoBrokerActionEnvironment(
+                this,
+                config,
+                this.suggestionService,
+                this.contextEngine,
+                permissions,
+                this.contextStateDescriptors,
+            ),
             new IoBrokerActionWriter(this),
             this.actionAudit,
             this.actionRecords,
@@ -324,6 +352,7 @@ class FreyaAdapter extends utils.Adapter {
                     const summary = this.observationEngine?.summary();
                     const patterns = this.patternEngine?.patterns(observation.timestamp) ?? [];
                     this.suggestionService?.synchronize(patterns, observation.timestamp);
+                    await this.handleActionTrigger(observation);
                     this.scheduleLearningSave();
                     await this.setOwnState('observation.retainedCount', summary?.retainedObservations ?? 0);
                     await this.setOwnState('observation.droppedCount', summary?.droppedEvents ?? 0);
@@ -343,6 +372,18 @@ class FreyaAdapter extends utils.Adapter {
         await this.setOwnState('learning.observedStateCount', this.observedStateIds.length);
         await this.setOwnState('observation.subscribedStateCount', this.observedStateIds.length);
         await this.publishSuggestionSummary();
+        await this.publishPendingActionSummary();
+        await this.publishLearningPersistence(this.patternEngine.snapshot().length);
+        this.pendingActionTimer = this.setInterval(() => {
+            if (this.pendingActions.expire(Date.now()) > 0) {
+                this.scheduleLearningSave();
+                void this.publishPendingActionSummary().catch(error => {
+                    if (!this.unloading) {
+                        this.log.warn(`[Actions] Pending summary failed: ${(error as Error).message.slice(0, 80)}`);
+                    }
+                });
+            }
+        }, 5_000);
         if (this.observedStateIds.length) {
             const initialStates = await this.getForeignStatesAsync(this.observedStateIds);
             if (this.unloading) {
@@ -530,6 +571,87 @@ class FreyaAdapter extends utils.Adapter {
                 value: suggestion.id,
             }));
             this.sendTo(message.from, message.command, options, message.callback);
+            return;
+        }
+        if (message.command === 'getPendingActionAdminData') {
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(message.from, message.command, { error: 'pending_view_source_denied' }, message.callback);
+                return;
+            }
+            this.pendingActions.expire(Date.now());
+            await this.persistLearningState();
+            await this.publishPendingActionSummary();
+            this.sendTo(
+                message.from,
+                message.command,
+                { native: { pendingActionRows: this.pendingActionAdminRows() } },
+                message.callback,
+            );
+            return;
+        }
+        if (message.command === 'getPendingActionOptions') {
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(message.from, message.command, [], message.callback);
+                return;
+            }
+            this.pendingActions.expire(Date.now());
+            const options = this.pendingActions.list('pending', 0, 100).items.map(action => ({
+                label: `${action.rooms.join(', ') || 'Global'} · ${action.triggerStateId} → ${action.targetStateId} = ${String(action.value)} · ${Math.max(0, Math.ceil((action.expiresAt - Date.now()) / 1_000))}s`.slice(
+                    0,
+                    500,
+                ),
+                value: action.id,
+            }));
+            this.sendTo(message.from, message.command, options, message.callback);
+            return;
+        }
+        if (message.command === 'approvePendingAction') {
+            const input = this.messageInput(message.message);
+            const id = typeof input.pendingActionId === 'string' ? input.pendingActionId : '';
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { accepted: false, reason: 'approval_source_denied' },
+                    message.callback,
+                );
+                return;
+            }
+            const result = await this.executePendingAction(id);
+            this.sendTo(message.from, message.command, result, message.callback);
+            return;
+        }
+        if (message.command === 'rejectPendingAction') {
+            const input = this.messageInput(message.message);
+            const id = typeof input.pendingActionId === 'string' ? input.pendingActionId : '';
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { accepted: false, reason: 'approval_source_denied' },
+                    message.callback,
+                );
+                return;
+            }
+            const previous = this.pendingActions.snapshot();
+            const result = this.pendingActions.reject(id, Date.now());
+            if (result.accepted) {
+                try {
+                    await this.persistLearningState();
+                } catch (error) {
+                    this.pendingActions.restore(previous, Date.now());
+                    this.log.warn(`[Actions] Rejection persistence failed: ${(error as Error).message.slice(0, 80)}`);
+                    this.sendTo(
+                        message.from,
+                        message.command,
+                        { accepted: false, reason: 'persistence_failed' },
+                        message.callback,
+                    );
+                    return;
+                }
+            }
+            await this.publishPendingActionSummary();
+            this.sendTo(message.from, message.command, result, message.callback);
             return;
         }
         if (message.command === 'getLlmStatus') {
@@ -723,6 +845,7 @@ class FreyaAdapter extends utils.Adapter {
                 createdAt: timestamp,
                 expiresAt: timestamp + 10_000,
                 contextTimestamp: timestamp,
+                authorization: 'one-shot',
             });
             await this.publishActionResult(result);
             await this.publishFeedbackSummary();
@@ -897,6 +1020,112 @@ class FreyaAdapter extends utils.Adapter {
         await this.setOwnState('actions.auditCount', this.actionAudit.page(0, 1).total);
     }
 
+    private async handleActionTrigger(observation: Parameters<typeof observationTriggersSuggestion>[0]): Promise<void> {
+        const level = this.runtimeConfig?.autonomyLevel ?? 0;
+        if (level < 2 || !this.suggestionService || !this.actionExecutor) {
+            return;
+        }
+        const matching = this.suggestionService
+            .snapshot()
+            .filter(suggestion => observationTriggersSuggestion(observation, suggestion, this.contextStateDescriptors));
+        for (const suggestion of matching) {
+            const id = randomUUID();
+            const previous = this.pendingActions.snapshot();
+            if (level === 2) {
+                if (this.pendingActions.propose(suggestion, observation.timestamp, id)) {
+                    try {
+                        await this.persistLearningState();
+                        await this.publishPendingActionSummary();
+                    } catch (error) {
+                        this.pendingActions.restore(previous, Date.now());
+                        this.log.warn(
+                            `[Actions] Proposal persistence failed: ${(error as Error).message.slice(0, 80)}`,
+                        );
+                    }
+                }
+                continue;
+            }
+            const claim = this.pendingActions.beginAutomatic(suggestion, observation.timestamp, id);
+            if (!claim.accepted || !claim.request) {
+                continue;
+            }
+            try {
+                await this.persistLearningState();
+            } catch (error) {
+                this.pendingActions.restore(previous, Date.now());
+                this.log.warn(`[Actions] Automatic claim persistence failed: ${(error as Error).message.slice(0, 80)}`);
+                continue;
+            }
+            const result = await this.actionExecutor.execute(claim.request);
+            this.pendingActions.complete(id, result, Date.now());
+            try {
+                await this.persistLearningState();
+            } catch (error) {
+                this.log.warn(`[Actions] Result persistence failed: ${(error as Error).message.slice(0, 80)}`);
+            }
+            await this.publishActionResult(result);
+            await this.publishFeedbackSummary();
+            await this.publishPendingActionSummary();
+        }
+    }
+
+    private async executePendingAction(id: string): Promise<unknown> {
+        if (!this.actionExecutor) {
+            return { accepted: false, reason: 'action_executor_unavailable' };
+        }
+        const previous = this.pendingActions.snapshot();
+        const claim = this.pendingActions.claimOneShot(id, Date.now());
+        if (!claim.accepted || !claim.request) {
+            return claim;
+        }
+        try {
+            await this.persistLearningState();
+        } catch (error) {
+            this.pendingActions.restore(previous, Date.now());
+            this.log.warn(`[Actions] Approval persistence failed: ${(error as Error).message.slice(0, 80)}`);
+            return { accepted: false, reason: 'persistence_failed' };
+        }
+        const result = await this.actionExecutor.execute(claim.request);
+        this.pendingActions.complete(id, result, Date.now());
+        let pendingPersistenceFailed = false;
+        try {
+            await this.persistLearningState();
+        } catch (error) {
+            pendingPersistenceFailed = true;
+            this.log.warn(`[Actions] Result persistence failed: ${(error as Error).message.slice(0, 80)}`);
+        }
+        await this.publishActionResult(result);
+        await this.publishFeedbackSummary();
+        await this.publishPendingActionSummary();
+        return {
+            accepted: true,
+            reason: result.executed ? 'executed' : 'denied',
+            result,
+            pendingPersistenceFailed,
+        };
+    }
+
+    private pendingActionAdminRows(): Array<Record<string, ioBroker.StateValue>> {
+        return this.pendingActions.list(undefined, 0, 100).items.map(action => ({
+            pendingActionId: action.id,
+            status: action.status,
+            rooms: action.rooms.join(', ') || 'Global',
+            trigger: action.triggerStateId,
+            target: action.targetStateId,
+            action: String(action.value),
+            confidence: `${Math.round(action.confidence * 100)} %`,
+            expires: action.status === 'pending' ? new Date(action.expiresAt).toLocaleString() : '—',
+            result: [...(action.reasons ?? []), action.errorCode].filter(Boolean).join(', ') || '—',
+        }));
+    }
+
+    private async publishPendingActionSummary(): Promise<void> {
+        const summary = this.pendingActions.summary();
+        await this.setOwnState('actions.pendingCount', summary.pending);
+        await this.setOwnState('actions.executedCount', summary.executed);
+        await this.setOwnState('actions.deniedCount', summary.denied);
+    }
+
     private async publishLlmStatus(): Promise<void> {
         const status = this.llmService?.status();
         await this.setOwnState('llm.provider', status?.provider ?? 'disabled');
@@ -934,14 +1163,23 @@ class FreyaAdapter extends utils.Adapter {
         }, 500);
     }
 
-    private persistLearningState(): Promise<void> {
+    private async persistLearningState(): Promise<void> {
         if (!this.learningRepository || !this.patternEngine || !this.suggestionService) {
-            return Promise.resolve();
+            return;
         }
-        return this.learningRepository.save({
-            patterns: this.patternEngine.snapshot(),
+        const patterns = this.patternEngine.snapshot();
+        await this.learningRepository.save({
+            patterns,
             suggestions: this.suggestionService.snapshot(),
+            pendingActions: this.pendingActions.snapshot(),
         });
+        this.learningPersistenceStatus = 'saved';
+        await this.publishLearningPersistence(patterns.length);
+    }
+
+    private async publishLearningPersistence(patternCount = this.restoredLearning.patterns.length): Promise<void> {
+        await this.setOwnState('learning.persistenceStatus', this.learningPersistenceStatus);
+        await this.setOwnState('learning.persistedPatternCount', patternCount);
     }
 
     private async publishFeedbackSummary(): Promise<void> {
@@ -977,6 +1215,9 @@ class FreyaAdapter extends utils.Adapter {
             }
             if (this.feedbackTimer) {
                 this.clearInterval(this.feedbackTimer);
+            }
+            if (this.pendingActionTimer) {
+                this.clearInterval(this.pendingActionTimer);
             }
             if (this.learningSaveTimer) {
                 this.clearTimeout(this.learningSaveTimer);

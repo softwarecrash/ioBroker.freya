@@ -327,8 +327,9 @@ Supported levels are:
 
 - 0: observe only (installation default)
 - 1: learn and generate suggestions
-- 2: explicit approval required for each proposed action
-- 3: execute only explicitly approved/trusted patterns
+- 2: matching approved patterns create expiring action proposals; ioBroker Admin must
+  approve each exact proposal once
+- 3: matching approved patterns are submitted automatically to the same Safety Engine
 
 Immediately before an action, the Safety Engine validates a frozen action request:
 
@@ -345,6 +346,10 @@ Safety returns a typed allow/deny result with reason codes. The Action Executor 
 only an approved result and is the sole module allowed to call `setForeignStateAsync`.
 It rechecks the target identifier and records the outcome. Tests will assert that no
 other production module contains a foreign-state write.
+
+Pending actions are persisted before they can be claimed. A level-2 Admin approval and a
+level-3 automatic dispatch use distinct authorization types. Any `executing` record found
+after restart becomes denied with `execution_interrupted`; it is never replayed.
 
 ### Action attribution and feedback
 

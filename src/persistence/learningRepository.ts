@@ -1,15 +1,17 @@
 import { copyFile, mkdir, open, readFile, rename } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import type { PendingActionRecord } from '../actions/pendingActionService';
 import type { PatternFeatureKey, PatternFeatureValue, PersistedPatternRecord } from '../patterns/types';
 import type { PatternSuggestion } from '../suggestions/types';
 
 export interface LearningSnapshot {
     patterns: PersistedPatternRecord[];
     suggestions: PatternSuggestion[];
+    pendingActions: PendingActionRecord[];
 }
 
 interface PersistedDocument extends LearningSnapshot {
-    schemaVersion: 1;
+    schemaVersion: 2;
 }
 
 const FEATURE_KEYS = new Set<PatternFeatureKey>([
@@ -127,6 +129,36 @@ function validSuggestion(value: unknown): value is PatternSuggestion {
     );
 }
 
+function validPendingAction(value: unknown): value is PendingActionRecord {
+    if (typeof value !== 'object' || value === null) {
+        return false;
+    }
+    const action = value as Partial<PendingActionRecord>;
+    return (
+        typeof action.id === 'string' &&
+        /^[a-z0-9-]{1,80}$/i.test(action.id) &&
+        typeof action.patternId === 'string' &&
+        /^[a-f0-9]{16}$/.test(action.patternId) &&
+        boundedString(action.triggerStateId, 500) &&
+        boundedString(action.targetStateId, 500) &&
+        typeof action.value === 'boolean' &&
+        rooms(action.rooms) &&
+        finite(action.confidence) &&
+        typeof action.explanation === 'string' &&
+        action.explanation.length <= 2_000 &&
+        finite(action.triggeredAt) &&
+        finite(action.contextTimestamp) &&
+        finite(action.expiresAt) &&
+        ['pending', 'executing', 'executed', 'denied', 'rejected', 'expired'].includes(String(action.status)) &&
+        (action.completedAt === undefined || finite(action.completedAt)) &&
+        (action.reasons === undefined ||
+            (Array.isArray(action.reasons) &&
+                action.reasons.length <= 30 &&
+                action.reasons.every(reason => typeof reason === 'string' && reason.length <= 80))) &&
+        (action.errorCode === undefined || (typeof action.errorCode === 'string' && action.errorCode.length <= 80))
+    );
+}
+
 function copySnapshot(snapshot: LearningSnapshot): LearningSnapshot {
     return {
         patterns: snapshot.patterns.map(pattern => ({
@@ -143,6 +175,11 @@ function copySnapshot(snapshot: LearningSnapshot): LearningSnapshot {
             conditions: suggestion.conditions.map(condition => ({ ...condition })),
             confidenceComponents: { ...suggestion.confidenceComponents },
         })),
+        pendingActions: snapshot.pendingActions.map(action => ({
+            ...action,
+            rooms: [...action.rooms],
+            reasons: action.reasons ? [...action.reasons] : undefined,
+        })),
     };
 }
 
@@ -154,17 +191,25 @@ function decode(body: string): LearningSnapshot {
         throw new Error('learning_repository_json_invalid');
     }
     if (
-        value.schemaVersion !== 1 ||
+        ![1, 2].includes(Number(value.schemaVersion)) ||
         !Array.isArray(value.patterns) ||
         value.patterns.length > 1_000 ||
         !value.patterns.every(validPattern) ||
         !Array.isArray(value.suggestions) ||
         value.suggestions.length > 1_000 ||
-        !value.suggestions.every(validSuggestion)
+        !value.suggestions.every(validSuggestion) ||
+        (value.schemaVersion === 2 &&
+            (!Array.isArray(value.pendingActions) ||
+                value.pendingActions.length > 2_000 ||
+                !value.pendingActions.every(validPendingAction)))
     ) {
         throw new Error('learning_repository_schema_invalid');
     }
-    return copySnapshot({ patterns: value.patterns, suggestions: value.suggestions });
+    return copySnapshot({
+        patterns: value.patterns,
+        suggestions: value.suggestions,
+        pendingActions: value.schemaVersion === 2 ? value.pendingActions! : [],
+    });
 }
 
 /** Atomic schema-versioned persistence for learned evidence and approval state. */
@@ -178,7 +223,7 @@ export class LearningRepository {
             return decode(await readFile(this.filename, 'utf8'));
         } catch (primaryError) {
             if ((primaryError as NodeJS.ErrnoException).code === 'ENOENT') {
-                return { patterns: [], suggestions: [] };
+                return { patterns: [], suggestions: [], pendingActions: [] };
             }
             try {
                 return decode(await readFile(`${this.filename}.bak`, 'utf8'));
@@ -199,7 +244,7 @@ export class LearningRepository {
         await mkdir(dirname(this.filename), { recursive: true, mode: 0o700 });
         const temporary = `${this.filename}.tmp`;
         const backup = `${this.filename}.bak`;
-        const body = `${JSON.stringify({ schemaVersion: 1, ...snapshot } satisfies PersistedDocument)}\n`;
+        const body = `${JSON.stringify({ schemaVersion: 2, ...snapshot } satisfies PersistedDocument)}\n`;
         const file = await open(temporary, 'w', 0o600);
         try {
             await file.writeFile(body, 'utf8');

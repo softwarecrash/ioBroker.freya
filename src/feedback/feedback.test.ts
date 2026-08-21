@@ -15,6 +15,7 @@ function request(index = 1): FrozenActionRequest {
         createdAt: 1_000,
         expiresAt: 2_000,
         contextTimestamp: 1_000,
+        authorization: 'automatic',
     };
 }
 

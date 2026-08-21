@@ -86,6 +86,42 @@ describe('FreyaRuntime', () => {
         await runtime.stop();
         await runtime.stop();
 
-        expect(writes).to.have.length(24);
+        expect(writes).to.have.length(29);
+    });
+
+    it('publishes the distinct individual-approval runtime mode', async () => {
+        const writes: Array<[string, ioBroker.StateValue]> = [];
+        await new FreyaRuntime(
+            {
+                setState: (id, value) => {
+                    writes.push([id, value]);
+                    return Promise.resolve();
+                },
+                warn: () => undefined,
+            },
+            {
+                autonomyLevel: 2,
+                learningEnabled: true,
+                historyInstance: 'none',
+                discoveryEnabled: true,
+                discoveryMaxStates: 20_000,
+                statePolicies: [],
+                environmentMappings: [],
+                minimumActionConfidence: 0.7,
+                actionCooldownSeconds: 300,
+                blockedStateIds: [],
+                llmProvider: 'rules',
+                llmModel: '',
+                llmBaseUrl: 'http://127.0.0.1:11434',
+                llmApiKey: '',
+                llmTimeoutSeconds: 20,
+                feedbackWindowSeconds: 120,
+                unsafeConfigurationIgnored: false,
+            },
+        ).start();
+        expect(writes).to.deep.include.members([
+            ['learning.enabled', true],
+            ['info.status', 'individual-approval'],
+        ]);
     });
 });

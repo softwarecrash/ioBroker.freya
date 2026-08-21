@@ -13,6 +13,7 @@ function request(): FrozenActionRequest {
         createdAt: 9_900,
         expiresAt: 15_000,
         contextTimestamp: 9_950,
+        authorization: 'automatic',
     };
 }
 

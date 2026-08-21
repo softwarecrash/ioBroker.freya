@@ -158,7 +158,9 @@ on three different days, and confidence of 0.58; any added context condition als
 requires held-out improvement. Confidence
 exposes smoothed match rate, sample maturity, repeatability, feedback adjustment, and
 recency. `getPatternSummary` and bounded `getPatterns` provide read-only inspection.
-Pattern memory is intentionally volatile until the schema-versioned persistence phase.
+Bounded learning evidence, suggestions, and explicit approval/disabled states are stored
+locally in a schema-versioned, atomically replaced file. Pending trigger windows are not
+restored; restart recovery never invents or replays an expired trigger.
 
 ## Suggestions, approval, and activity
 
@@ -174,20 +176,25 @@ influence a light rule with Learn enabled even when Suggest is disabled on the s
 `getSuggestionSummary`, paginated `getSuggestions`, and paginated `getActivity` expose
 read-only views. `setPatternStatus` supports `candidate`, `approved`, and `disabled`
 transitions, but accepts mutations only from an ioBroker Admin adapter instance. An
-approval changes no state permission, does not raise autonomy, and cannot execute a
-device action. Approved or disabled entries whose evidence disappears remain visible
-but are marked ineligible. Suggestion and activity storage is currently volatile.
+approval changes no state permission and does not raise autonomy. Approved or disabled
+entries whose evidence disappears remain visible but are marked ineligible. Suggestions
+and their approval states survive restarts; the bounded activity view remains volatile.
 
 ## Controlled actions
 
-`executePattern` accepts only a 16-character pattern ID from an ioBroker Admin adapter
-instance. It does not accept a target, value, permission, confidence, or approval flag
-from the caller: these values are resolved from trusted runtime state. The executor
-revalidates all mutable inputs immediately before writing and fails closed when context
-or object lookup is unavailable. `getActionAudit` exposes the bounded newest-first audit;
-summary states are available below `freya.0.actions`. Cooldowns remain volatile;
-complete action and feedback records are persisted locally while the operational audit
-view stays bounded in memory.
+At autonomy level 2, a matching approved trigger creates a short-lived persisted action
+proposal. ioBroker Admin may approve that exact proposal once or reject it; expiry and
+exactly-once claiming prevent delayed or duplicate execution. At level 3, the same live
+trigger path claims the proposal automatically before submitting it to the Safety Engine.
+
+`executePattern` remains an explicit one-shot Admin boundary. It accepts only a
+16-character pattern ID and never accepts a target, value, permission, confidence, or
+approval flag from the caller: these values are resolved from trusted runtime state. The
+executor revalidates current context, same-room illuminance, target value and metadata,
+permissions, blocks, confidence, cooldown, and pattern status immediately before writing.
+`getActionAudit` exposes the bounded newest-first audit; summary states are available
+below `freya.0.actions`. Cooldowns remain volatile; complete action, pending-action, and
+feedback records are persisted locally while the operational audit view stays bounded.
 
 ## Optional LLM advisory
 
