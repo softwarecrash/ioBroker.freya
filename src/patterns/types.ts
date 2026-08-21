@@ -30,6 +30,20 @@ export interface PatternExample {
     features: PatternFeatures;
 }
 
+/** Restart-safe evidence for one bounded learned relationship. */
+export interface PersistedPatternRecord {
+    key: string;
+    triggerStateId: string;
+    actionStateId: string;
+    rooms: string[];
+    examples: PatternExample[];
+    firstSeen: number;
+    lastSeen: number;
+    positiveFeedback: number;
+    negativeFeedback: number;
+    expectedAction: boolean;
+}
+
 export interface LearnableState {
     id: string;
     semanticType: SemanticType;

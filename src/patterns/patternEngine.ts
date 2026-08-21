@@ -3,7 +3,14 @@ import type { Observation } from '../observation/types';
 import { calculateConfidence } from './confidence';
 import { extractPatternFeatures } from './features';
 import { selectPatternFeatures } from './featureSelection';
-import type { LearnableState, LearnedPattern, PatternExample, PatternSummary, PendingOpportunity } from './types';
+import type {
+    LearnableState,
+    LearnedPattern,
+    PatternExample,
+    PatternSummary,
+    PendingOpportunity,
+    PersistedPatternRecord,
+} from './types';
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const TRIGGER_TYPES = new Set(['motion', 'presence', 'contact', 'switch']);
@@ -123,6 +130,67 @@ export class PatternEngine {
             }
         }
         return false;
+    }
+
+    /** Export bounded learning evidence. Pending action windows are deliberately excluded. */
+    public snapshot(): PersistedPatternRecord[] {
+        return [...this.records.entries()].map(([key, record]) => ({
+            key,
+            triggerStateId: record.trigger.id,
+            actionStateId: record.action.id,
+            rooms: [...record.rooms],
+            examples: record.examples.map(example => ({
+                timestamp: example.timestamp,
+                matched: example.matched,
+                features: { values: { ...example.features.values } },
+            })),
+            firstSeen: record.firstSeen,
+            lastSeen: record.lastSeen,
+            positiveFeedback: record.positiveFeedback,
+            negativeFeedback: record.negativeFeedback,
+            expectedAction: record.expectedAction,
+        }));
+    }
+
+    /** Restore validated evidence only when both configured states still match the record. */
+    public restore(records: PersistedPatternRecord[]): number {
+        let restored = 0;
+        for (const persisted of records.slice(-this.maxPatterns)) {
+            const trigger = this.states.get(persisted.triggerStateId);
+            const action = this.states.get(persisted.actionStateId);
+            const expectedKey = `${persisted.triggerStateId}\u0000${persisted.actionStateId}\u0000${String(persisted.expectedAction)}`;
+            if (
+                !trigger ||
+                !action ||
+                action.semanticType !== 'light' ||
+                action.valueType !== 'boolean' ||
+                persisted.key !== expectedKey
+            ) {
+                continue;
+            }
+            const rooms = persisted.rooms.filter(room => trigger.rooms.includes(room) && action.rooms.includes(room));
+            if (!rooms.length) {
+                continue;
+            }
+            this.records.set(persisted.key, {
+                trigger,
+                action,
+                rooms: rooms.slice(0, 20),
+                examples: persisted.examples.slice(-this.maxExamples).map(example => ({
+                    timestamp: example.timestamp,
+                    matched: example.matched,
+                    features: { values: { ...example.features.values } },
+                })),
+                firstSeen: persisted.firstSeen,
+                lastSeen: persisted.lastSeen,
+                positiveFeedback: Math.max(0, Math.min(persisted.positiveFeedback, 1_000)),
+                negativeFeedback: Math.max(0, Math.min(persisted.negativeFeedback, 1_000)),
+                expectedAction: persisted.expectedAction,
+            });
+            this.lastEvaluationTimestamp = Math.max(this.lastEvaluationTimestamp, persisted.lastSeen);
+            restored++;
+        }
+        return restored;
     }
 
     private createOpportunities(trigger: LearnableState, observation: Observation, expectedAction: boolean): void {

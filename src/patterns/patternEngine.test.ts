@@ -268,4 +268,20 @@ describe('PatternEngine', () => {
         engine.observe(observation('motion', 'motion', 1, context(1, true)));
         expect(engine.summary(2).pendingOpportunities).to.equal(10);
     });
+
+    it('restores bounded evidence but never restores pending trigger windows', () => {
+        const states = [
+            { id: 'motion', semanticType: 'motion' as const, valueType: 'boolean' as const, rooms: ['hall'] },
+            { id: 'light', semanticType: 'light' as const, valueType: 'boolean' as const, rooms: ['hall'] },
+        ];
+        const original = new PatternEngine(states, { enabled: true, actionWindowMs: 5_000 });
+        original.observe(observation('motion', 'motion', 1, context(1, true)));
+        original.observe(observation('light', 'light', 2, undefined, true, ['hall']));
+        original.observe(observation('motion', 'motion', 3, context(3, true)));
+
+        const restored = new PatternEngine(states, { enabled: true, actionWindowMs: 5_000 });
+        expect(restored.restore(original.snapshot())).to.equal(1);
+        expect(restored.summary(4)).to.include({ retainedExamples: 1, pendingOpportunities: 0 });
+        expect(restored.snapshot()).to.deep.equal(original.snapshot());
+    });
 });

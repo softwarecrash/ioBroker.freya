@@ -101,4 +101,17 @@ describe('SuggestionService', () => {
         service.synchronize(patterns, 10);
         expect(service.list(undefined).total).to.equal(10);
     });
+
+    it('restores an explicit approval and keeps it during evidence synchronization', () => {
+        const original = new SuggestionService();
+        original.synchronize([pattern()], 10);
+        original.transition('0123456789abcdef', 'approved', 'admin', 11);
+
+        const restored = new SuggestionService();
+        expect(restored.restore(original.snapshot())).to.equal(1);
+        restored.synchronize([pattern({ confidence: 0.9 })], 12);
+
+        const [suggestion] = restored.list('approved').items;
+        expect(suggestion).to.include({ status: 'approved', confidence: 0.9, eligible: true });
+    });
 });

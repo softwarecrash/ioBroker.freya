@@ -169,6 +169,20 @@ export class SuggestionService {
         return suggestion ? copySuggestion(suggestion) : undefined;
     }
 
+    /** Export restart-safe suggestions, including explicit approval state. */
+    public snapshot(): PatternSuggestion[] {
+        return [...this.suggestions.values()].map(copySuggestion);
+    }
+
+    /** Restore validated suggestions before synchronizing them with current evidence. */
+    public restore(suggestions: PatternSuggestion[]): number {
+        this.suggestions.clear();
+        for (const suggestion of suggestions.slice(-this.maximum)) {
+            this.suggestions.set(suggestion.id, copySuggestion(suggestion));
+        }
+        return this.suggestions.size;
+    }
+
     private fromPattern(pattern: LearnedPattern, timestamp: number): PatternSuggestion {
         return {
             id: pattern.id,

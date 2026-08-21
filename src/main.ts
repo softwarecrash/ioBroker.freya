@@ -37,6 +37,7 @@ import {
 import { ObservationEngine } from './observation/observationEngine';
 import type { ObservationMetadata } from './observation/types';
 import { PatternEngine } from './patterns/patternEngine';
+import { LearningRepository, type LearningSnapshot } from './persistence/learningRepository';
 import { DiscoveryCoordinator } from './services/discoveryCoordinator';
 import { IoBrokerContextStateReader } from './services/ioBrokerContextStateReader';
 import { IoBrokerPolicySynchronizer } from './services/ioBrokerPolicySynchronizer';
@@ -72,6 +73,10 @@ class FreyaAdapter extends utils.Adapter {
     private policyStateIds = new Set<string>();
     private policySyncTimer?: ioBroker.Timeout;
     private feedbackTimer?: ioBroker.Interval;
+    private learningRepository?: LearningRepository;
+    private restoredLearning: LearningSnapshot = { patterns: [], suggestions: [] };
+    private learningSaveTimer?: ioBroker.Timeout;
+    private learningSaveTask?: Promise<void>;
     private unloading = false;
 
     public constructor(options: Partial<utils.AdapterOptions> = {}) {
@@ -92,6 +97,14 @@ class FreyaAdapter extends utils.Adapter {
 
     private async onReady(): Promise<void> {
         const config = createRuntimeConfig(this.config);
+        this.learningRepository = new LearningRepository(
+            join(utils.getAbsoluteInstanceDataDir(this), 'learning.v1.json'),
+        );
+        try {
+            this.restoredLearning = await this.learningRepository.load();
+        } catch (error) {
+            this.log.warn(`[Patterns] Persistent learning state unavailable: ${(error as Error).message.slice(0, 80)}`);
+        }
         try {
             const repository = new ActionRepository(join(utils.getAbsoluteInstanceDataDir(this), 'actions.v1.json'));
             await repository.load();
@@ -282,6 +295,15 @@ class FreyaAdapter extends utils.Adapter {
             }));
         this.patternEngine = new PatternEngine(learnableStates, { enabled: config.learningEnabled });
         this.suggestionService = new SuggestionService();
+        const restoredPatterns = this.patternEngine.restore(this.restoredLearning.patterns);
+        const restoredSuggestions = this.suggestionService.restore(this.restoredLearning.suggestions);
+        this.applyPersistedFeedback();
+        this.refreshSuggestions();
+        if (restoredPatterns || restoredSuggestions) {
+            this.log.info(
+                `[Patterns] Restored ${restoredPatterns} learned relationships and ${restoredSuggestions} suggestions`,
+            );
+        }
         const permissions = new Map(discoveryResult.states.map(state => [state.id, state.permissions]));
         this.actionExecutor = new ActionExecutor(
             new SafetyEngine(),
@@ -302,6 +324,7 @@ class FreyaAdapter extends utils.Adapter {
                     const summary = this.observationEngine?.summary();
                     const patterns = this.patternEngine?.patterns(observation.timestamp) ?? [];
                     this.suggestionService?.synchronize(patterns, observation.timestamp);
+                    this.scheduleLearningSave();
                     await this.setOwnState('observation.retainedCount', summary?.retainedObservations ?? 0);
                     await this.setOwnState('observation.droppedCount', summary?.droppedEvents ?? 0);
                     await this.setOwnState('observation.lastTimestamp', observation.timestamp);
@@ -360,6 +383,7 @@ class FreyaAdapter extends utils.Adapter {
             const task = this.feedbackService.observe(id, state, state.ts, attribution).then(async () => {
                 this.applyPersistedFeedback();
                 this.refreshSuggestions(state.ts);
+                this.scheduleLearningSave();
                 await this.publishFeedbackSummary();
             });
             this.trackFeedback(task, 'Attribution');
@@ -683,6 +707,7 @@ class FreyaAdapter extends utils.Adapter {
             const status = typeof input.status === 'string' ? input.status : '';
             const timestamp = Date.now();
             let result;
+            const previousSuggestions = this.suggestionService?.snapshot() ?? [];
             if (!isTrustedApprovalSource(message.from)) {
                 result = this.suggestionService?.rejectCommand(
                     patternId,
@@ -706,6 +731,15 @@ class FreyaAdapter extends utils.Adapter {
                     message.from,
                     timestamp,
                 );
+            }
+            if (result?.changed) {
+                try {
+                    await this.persistLearningState();
+                } catch (error) {
+                    this.suggestionService?.restore(previousSuggestions);
+                    result = { accepted: false, changed: false, reason: 'persistence_failed' };
+                    this.log.warn(`[Patterns] Approval persistence failed: ${(error as Error).message.slice(0, 80)}`);
+                }
             }
             await this.publishSuggestionSummary();
             this.sendTo(
@@ -839,6 +873,34 @@ class FreyaAdapter extends utils.Adapter {
         }
     }
 
+    private scheduleLearningSave(): void {
+        if (!this.learningRepository || this.learningSaveTimer || this.unloading) {
+            return;
+        }
+        this.learningSaveTimer = this.setTimeout(() => {
+            this.learningSaveTimer = undefined;
+            this.learningSaveTask = this.persistLearningState()
+                .catch(error => {
+                    if (!this.unloading) {
+                        this.log.warn(`[Patterns] Persistence failed: ${(error as Error).message.slice(0, 80)}`);
+                    }
+                })
+                .finally(() => {
+                    this.learningSaveTask = undefined;
+                });
+        }, 500);
+    }
+
+    private persistLearningState(): Promise<void> {
+        if (!this.learningRepository || !this.patternEngine || !this.suggestionService) {
+            return Promise.resolve();
+        }
+        return this.learningRepository.save({
+            patterns: this.patternEngine.snapshot(),
+            suggestions: this.suggestionService.snapshot(),
+        });
+    }
+
     private async publishFeedbackSummary(): Promise<void> {
         const summary = this.feedbackService?.summary();
         await this.setOwnState('feedback.pendingCount', summary?.pendingCount ?? 0);
@@ -873,6 +935,10 @@ class FreyaAdapter extends utils.Adapter {
             if (this.feedbackTimer) {
                 this.clearInterval(this.feedbackTimer);
             }
+            if (this.learningSaveTimer) {
+                this.clearTimeout(this.learningSaveTimer);
+                this.learningSaveTimer = undefined;
+            }
             for (const controller of this.historyControllers) {
                 controller.abort();
             }
@@ -883,6 +949,8 @@ class FreyaAdapter extends utils.Adapter {
             this.llmControllers.clear();
             await Promise.allSettled([...this.feedbackTasks]);
             this.feedbackTasks.clear();
+            await this.learningSaveTask;
+            await this.persistLearningState();
             if (this.observedStateIds.length) {
                 await this.unsubscribeForeignStatesAsync(this.observedStateIds);
             }

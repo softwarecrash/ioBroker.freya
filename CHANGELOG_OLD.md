@@ -11,6 +11,8 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Schema-versioned, atomically replaced persistence for bounded learning evidence,
+  suggestions, and explicit approval/disabled states, with validated backup recovery.
 - Independent presence-on/light-on and presence-off/light-off learning, including safe
   propagation of boolean off actions into suggestions.
 - Semantic same-room illuminance bands as explainable candidate features without
@@ -24,6 +26,8 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Corrected the implementation plan so summary-only pattern UI, one-shot approval,
+  automatic level-3 dispatch, and end-to-end production verification remain open.
 - Replaced the free-form autonomy-level number input with a descriptive four-level
   dropdown while preserving the numeric configuration values.
 - Renamed the project, npm package, adapter namespace, data folder, Admin assets, and
