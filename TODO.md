@@ -1,4 +1,4 @@
-# SmartBrain Implementation Plan
+# Freya Implementation Plan
 
 Last updated: 2026-08-20
 
@@ -7,11 +7,11 @@ Last updated: 2026-08-20
 - [x] Verify GitHub read/write access and perform an authenticated push.
 - [x] Work in a dedicated project checkout outside `/opt/iobroker`.
 - [x] Keep production ioBroker inspection read-only.
-- [x] Install the Phase 1 package locally and verify `smartbrain.0` at autonomy level 0.
+- [x] Install the Phase 1 package locally and verify `freya.0` at autonomy level 0.
 - [ ] Never commit state IDs, room/device names, addresses, values, credentials, or raw
       ioBroker exports.
 - [ ] After every completed milestone: test, push to GitHub, build a local package,
-      install/upload it, then verify SmartBrain-owned states and logs.
+      install/upload it, then verify Freya-owned states and logs.
 - [ ] Keep installation default at autonomy level 0 and `control: false` for every
       discovered state.
 - [ ] Test every safety rule before implementing production action execution.
@@ -35,7 +35,7 @@ Last updated: 2026-08-20
 - [x] Generate the current official TypeScript daemon skeleton in a temporary folder.
 - [x] Review generated files before merging them into this non-empty repository.
 - [x] Set package metadata, supported Node versions, data folder, and JSON Config.
-- [x] Add only bounded status states owned by SmartBrain.
+- [x] Add only bounded status states owned by Freya.
 - [x] Implement clean `ready`, `unload`, and dependency assembly lifecycle.
 - [x] Default to autonomy level 0 with no foreign-state subscriptions or writes.
 - [x] Add package, unit, integration, build, lint, and CI tests.
@@ -125,7 +125,7 @@ Last updated: 2026-08-20
       confidence, cooldown, blocks, value type/range, expiry, and context freshness.
 - [x] Implement Action Executor as the only foreign-state write boundary.
 - [x] Add correlation IDs, complete audit records, and last-moment revalidation.
-- [x] Test writes only through mocks or SmartBrain-owned test states.
+- [x] Test writes only through mocks or Freya-owned test states.
 - [x] Enable level 3 only for explicitly approved/trusted patterns.
 - [x] Update documentation and changelog; commit and push.
 
@@ -141,7 +141,7 @@ Last updated: 2026-08-20
 
 ## Phase 9 — feedback learning
 
-- [x] Persist complete SmartBrain action records and correlation IDs.
+- [x] Persist complete Freya action records and correlation IDs.
 - [x] Implement explicit feedback.
 - [x] Implement conservative implicit feedback with `unknown` attribution.
 - [x] Apply bounded feedback adjustment to deterministic confidence.
@@ -150,7 +150,7 @@ Last updated: 2026-08-20
 
 ## Before public release
 
-- [x] Rename the GitHub repository to the canonical `ioBroker.smartbrain` spelling.
+- [x] Rename the GitHub repository to the canonical `ioBroker.freya` spelling.
 - [x] Select and add the MIT license.
 - [ ] Complete ioBroker repository checker and adapter-checker requirements.
 - [ ] Security/privacy review and dependency audit.

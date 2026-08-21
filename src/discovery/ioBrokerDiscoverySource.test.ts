@@ -24,8 +24,8 @@ describe('IoBrokerDiscoverySource', () => {
                 },
                 native: { deviceType: 'climate', secret: 'must-not-be-copied' },
             },
-            'smartbrain.0.info.status': {
-                _id: 'smartbrain.0.info.status',
+            'freya.0.info.status': {
+                _id: 'freya.0.info.status',
                 type: 'state',
                 common: { name: 'Own status', type: 'string', read: true, write: false },
                 native: {},
@@ -70,7 +70,7 @@ describe('IoBrokerDiscoverySource', () => {
             },
         } as unknown as Record<string, Record<string, ioBroker.EnumObject>>;
         const adapter = {
-            namespace: 'smartbrain.0',
+            namespace: 'freya.0',
             getForeignObjectsAsync: (pattern: string | string[], type?: string) => {
                 requests.push({ pattern, type });
                 return Promise.resolve(Array.isArray(pattern) ? ancestorObjects : stateObjects);
@@ -104,7 +104,7 @@ describe('IoBrokerDiscoverySource', () => {
     it('does not request ancestors for an empty bounded state result', async () => {
         let ancestorRequest = false;
         const adapter = {
-            namespace: 'smartbrain.0',
+            namespace: 'freya.0',
             getForeignObjectsAsync: (pattern: string | string[]) => {
                 if (Array.isArray(pattern)) {
                     ancestorRequest = true;

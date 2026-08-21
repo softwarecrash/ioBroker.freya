@@ -102,7 +102,7 @@
     "Switch": "Выключатель",
     "Target cooldown (seconds)": "Целевое время восстановления (секунды)",
     "Temperature": "Температура",
-    "This policy is synchronized with SmartBrain's Devices / States table. All permissions default to off; Control remains deny-by-default and requires the complete permission chain.": "Эта политика синхронизируется с таблицей устройств/состояний SmartBrain. Все разрешения по умолчанию отключены; По умолчанию управление остается запрещенным и требует полной цепочки разрешений.",
+    "This policy is synchronized with Freya's Devices / States table. All permissions default to off; Control remains deny-by-default and requires the complete permission chain.": "Эта политика синхронизируется с таблицей устройств/состояний Freya. Все разрешения по умолчанию отключены; По умолчанию управление остается запрещенным и требует полной цепочки разрешений.",
     "Timeout (seconds)": "Тайм-аут (секунды)",
     "Unknown": "Неизвестный",
     "Unknown states": "Неизвестные штаты",

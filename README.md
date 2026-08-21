@@ -1,6 +1,6 @@
-# SmartBrain for ioBroker
+# Freya for ioBroker
 
-SmartBrain is a local-first, self-learning ioBroker adapter. It observes explicitly
+Freya is a local-first, self-learning ioBroker adapter. It observes explicitly
 selected states, discovers repeatable home-automation patterns, and turns them into
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
@@ -46,7 +46,7 @@ implementation plan.
 
 ## Installation and initial configuration
 
-SmartBrain requires Node.js 22 or newer and a current ioBroker controller/Admin. A new
+Freya requires Node.js 22 or newer and a current ioBroker controller/Admin. A new
 instance starts disabled for automation: autonomy level 0, learning off, history off,
 Rules Only LLM, and no state permissions.
 
@@ -71,7 +71,7 @@ Installation remains at autonomy level 0, with learning and history disabled and
 state permissions denied by default. A controlled action is possible only at level 3,
 through an explicit ioBroker Admin request, for a currently eligible and approved
 pattern whose target has the complete permission chain including `control`. Immediately
-before the only foreign-state write boundary, SmartBrain re-reads the object and context
+before the only foreign-state write boundary, Freya re-reads the object and context
 and validates confidence, conditions, target type/writability/value constraints,
 deny-list, cooldown, request expiry, and context freshness. Lock and alarm states cannot
 receive control permission. Tests exercise only mocks; local deployment stays at level 0.
@@ -98,12 +98,12 @@ State pages are capped at 100 entries and support a text query.
 
 ### Change-source attribution
 
-SmartBrain correlates generic ioBroker command writes (`ack=false`) with later device
+Freya correlates generic ioBroker command writes (`ack=false`) with later device
 confirmations (`ack=true`) without assuming specific adapter IDs. Its own writes,
 foreign commands, and their confirmations are excluded from behavioral pattern evidence;
 an acknowledged change without a matching recent command remains usable as a probable
 device-local interaction. An opposing probable device-local interaction shortly after a
-SmartBrain action is retained as negative feedback, while an opposing foreign command is
+Freya action is retained as negative feedback, while an opposing foreign command is
 kept ambiguous.
 
 Bridges that know the actual intent can call `reportExternalIntent` immediately before
@@ -118,18 +118,18 @@ human or automated.
 Only states enabled through the central policy table or the synchronized custom object
 settings are subscribed. Unchanged events are deduplicated and normalized in order;
 the queue and retained observation cache are both bounded. Context reads are restricted
-to the same allow-list. Observation status is available under `smartbrain.0.observation`,
+to the same allow-list. Observation status is available under `freya.0.observation`,
 and bounded pages are available through `getObservationSummary` and `getObservations`.
 The cache is intentionally volatile in this phase.
 
 ## Read-only history
 
-History is disabled by default. When `Automatic` is explicitly selected, SmartBrain
+History is disabled by default. When `Automatic` is explicitly selected, Freya
 detects enabled and alive ioBroker instances that advertise the standard `getHistory`
 message and prefers InfluxDB, then SQL, then History. Per-state custom history metadata
 alone is not considered proof that a provider is available.
 
-The configuration retrieves its choices dynamically from the running SmartBrain
+The configuration retrieves its choices dynamically from the running Freya
 instance. Alongside `Disabled` and `Automatic`, every installed adapter instance with
 the capability is listed directly; unavailable instances carry an `offline` marker.
 
@@ -140,7 +140,7 @@ sorted before use. `getHistoryStatus` and `getStateHistory` expose the bounded A
 
 ## Explainable pattern learning
 
-When learning is explicitly enabled, SmartBrain correlates rising boolean motion,
+When learning is explicitly enabled, Freya correlates rising boolean motion,
 presence, contact, or switch events with a boolean light turning on in the same room
 within two minutes. For presence states it also learns absence-to-light-off independently.
 An arrival without a light change remains negative evidence, never an inferred off action.
@@ -185,7 +185,7 @@ instance. It does not accept a target, value, permission, confidence, or approva
 from the caller: these values are resolved from trusted runtime state. The executor
 revalidates all mutable inputs immediately before writing and fails closed when context
 or object lookup is unavailable. `getActionAudit` exposes the bounded newest-first audit;
-summary states are available below `smartbrain.0.actions`. Cooldowns remain volatile;
+summary states are available below `freya.0.actions`. Cooldowns remain volatile;
 complete action and feedback records are persisted locally while the operational audit
 view stays bounded in memory.
 
@@ -195,7 +195,7 @@ view stays bounded in memory.
 is restricted to the loopback interface. OpenAI uses the Responses endpoint with
 `store: false` and a strict JSON schema; an OpenAI-compatible provider uses HTTPS (or
 loopback HTTP) and the corresponding structured response format. Model names are
-always explicit and SmartBrain does not silently substitute one. See the official
+always explicit and Freya does not silently substitute one. See the official
 [OpenAI Responses API](https://developers.openai.com/api/reference/typescript/resources/beta/subresources/responses/methods/create)
 and [Ollama structured output documentation](https://docs.ollama.com/capabilities/structured-outputs).
 
@@ -210,7 +210,7 @@ response. The LLM layer has no dependency on or route into the Action Executor.
 
 ## Persistent action feedback
 
-Before the single foreign-state write boundary may run, SmartBrain atomically persists
+Before the single foreign-state write boundary may run, Freya atomically persists
 a schema-versioned `requested` action record in its ioBroker instance data directory.
 If this fails, execution fails closed. Completion, correlation ID, pattern, target,
 expected value, safety reasons, error code, and feedback are retained in a bounded
@@ -220,7 +220,7 @@ Admin-only; `getFeedbackSummary` exposes aggregate counters.
 
 `submitFeedback` accepts explicit positive, negative, or neutral feedback only from an
 ioBroker Admin instance. Explicit feedback supersedes an earlier implicit result.
-Implicit attribution considers only the newest executed SmartBrain action for the same
+Implicit attribution considers only the newest executed Freya action for the same
 target inside the configured window. An opposite Admin change is conservatively
 negative, an opposite change from another source remains `unknown`, unrelated or equal
 changes are ignored, and expiry without an opposite change becomes neutral. Only

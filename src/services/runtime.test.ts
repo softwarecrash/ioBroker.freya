@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { SmartBrainRuntime, type RuntimePort } from './runtime';
+import { FreyaRuntime, type RuntimePort } from './runtime';
 
-describe('SmartBrainRuntime', () => {
+describe('FreyaRuntime', () => {
     it('publishes only safe, adapter-owned runtime status', async () => {
         const writes: Array<[string, ioBroker.StateValue]> = [];
         const warnings: string[] = [];
@@ -12,7 +12,7 @@ describe('SmartBrainRuntime', () => {
             },
             warn: message => warnings.push(message),
         };
-        const runtime = new SmartBrainRuntime(port, {
+        const runtime = new FreyaRuntime(port, {
             autonomyLevel: 0,
             learningEnabled: false,
             historyInstance: 'none',
@@ -52,7 +52,7 @@ describe('SmartBrainRuntime', () => {
 
     it('is idempotent when started or stopped repeatedly', async () => {
         const writes: Array<[string, ioBroker.StateValue]> = [];
-        const runtime = new SmartBrainRuntime(
+        const runtime = new FreyaRuntime(
             {
                 setState: (id, value) => {
                     writes.push([id, value]);

@@ -102,7 +102,7 @@
     "Switch": "Schalten",
     "Target cooldown (seconds)": "Ziel-Cooldown (Sekunden)",
     "Temperature": "Temperatur",
-    "This policy is synchronized with SmartBrain's Devices / States table. All permissions default to off; Control remains deny-by-default and requires the complete permission chain.": "Diese Richtlinie wird mit der Geräte-/Zustandstabelle von SmartBrain synchronisiert. Alle Berechtigungen sind standardmäßig deaktiviert. Die Kontrolle bleibt standardmäßig verweigert und erfordert die vollständige Berechtigungskette.",
+    "This policy is synchronized with Freya's Devices / States table. All permissions default to off; Control remains deny-by-default and requires the complete permission chain.": "Diese Richtlinie wird mit der Geräte-/Zustandstabelle von Freya synchronisiert. Alle Berechtigungen sind standardmäßig deaktiviert. Die Kontrolle bleibt standardmäßig verweigert und erfordert die vollständige Berechtigungskette.",
     "Timeout (seconds)": "Timeout (Sekunden)",
     "Unknown": "Unbekannt",
     "Unknown states": "Unbekannte States",

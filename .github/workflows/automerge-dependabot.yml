@@ -11,7 +11,7 @@ permissions:
 jobs:
     enable-auto-merge:
         if: >-
-            github.repository == 'softwarecrash/ioBroker.smartbrain' &&
+            github.repository == 'softwarecrash/ioBroker.freya' &&
             github.event.pull_request.user.login == 'dependabot[bot]'
         runs-on: ubuntu-latest
         steps:

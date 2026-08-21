@@ -40,14 +40,14 @@ import { PatternEngine } from './patterns/patternEngine';
 import { DiscoveryCoordinator } from './services/discoveryCoordinator';
 import { IoBrokerContextStateReader } from './services/ioBrokerContextStateReader';
 import { IoBrokerPolicySynchronizer } from './services/ioBrokerPolicySynchronizer';
-import { SmartBrainRuntime } from './services/runtime';
+import { FreyaRuntime } from './services/runtime';
 import { isTrustedApprovalSource } from './suggestions/approvalPolicy';
 import { SuggestionService } from './suggestions/suggestionService';
 import type { SuggestionStatus } from './suggestions/types';
 
-class SmartBrainAdapter extends utils.Adapter {
+class FreyaAdapter extends utils.Adapter {
     private readonly sourceAttribution: SourceAttributionService;
-    private runtime?: SmartBrainRuntime;
+    private runtime?: FreyaRuntime;
     private discovery?: DiscoveryService;
     private policySynchronizer?: IoBrokerPolicySynchronizer;
     private contextEngine?: ContextEngine;
@@ -75,7 +75,7 @@ class SmartBrainAdapter extends utils.Adapter {
     private unloading = false;
 
     public constructor(options: Partial<utils.AdapterOptions> = {}) {
-        super({ ...options, name: 'smartbrain' });
+        super({ ...options, name: 'freya' });
         this.sourceAttribution = new SourceAttributionService(`system.adapter.${this.namespace}`);
         this.on('ready', () => {
             void this.onReady().catch(error => {
@@ -136,7 +136,7 @@ class SmartBrainAdapter extends utils.Adapter {
         );
         this.contextEngine = new ContextEngine(timeProvider, [sunProvider], { providerTimeoutMs: 1_000 });
 
-        this.runtime = new SmartBrainRuntime(
+        this.runtime = new FreyaRuntime(
             {
                 setState: async (id, value) => {
                     await this.setOwnState(id, value);
@@ -192,8 +192,8 @@ class SmartBrainAdapter extends utils.Adapter {
         await this.setupHistory(config.historyInstance);
         this.log.info(
             config.learningEnabled
-                ? '[Patterns] SmartBrain started with read-only pattern learning enabled'
-                : '[Patterns] SmartBrain started in observe-only mode; learning is disabled',
+                ? '[Patterns] Freya started with read-only pattern learning enabled'
+                : '[Patterns] Freya started in observe-only mode; learning is disabled',
         );
     }
 
@@ -897,7 +897,7 @@ class SmartBrainAdapter extends utils.Adapter {
 }
 
 if (require.main !== module) {
-    module.exports = (options: Partial<utils.AdapterOptions> | undefined) => new SmartBrainAdapter(options);
+    module.exports = (options: Partial<utils.AdapterOptions> | undefined) => new FreyaAdapter(options);
 } else {
-    new SmartBrainAdapter();
+    new FreyaAdapter();
 }

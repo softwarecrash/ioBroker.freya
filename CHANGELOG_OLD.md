@@ -18,12 +18,15 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 - Room diagnostics integrated into the Admin state-policy table with resolved room names,
   warning symbols, and an explicit Automatic/Room/Global scope synchronized with
   per-object custom settings.
-- Generic command/device-confirmation attribution that excludes SmartBrain and foreign
+- Generic command/device-confirmation attribution that excludes Freya and foreign
   command effects from behavioral learning, recognizes probable device-local reversals,
   and accepts short-lived per-event user/automation intent from local bridges.
 
 ### Changed
 
+- Renamed the project, npm package, adapter namespace, data folder, Admin assets, and
+  documentation from SmartBrain/`smartbrain` to Freya/`freya` before the first public
+  release.
 - Arrival events without a light transition remain negative evidence and cannot be
   misinterpreted as an instruction to switch a light off.
 - Suggest permission now applies only to the proposed action target; learned trigger
@@ -195,7 +198,7 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 - History remains disabled by default and can read only states carrying an explicit
   `observe` permission.
-- History access is message-based and read-only; SmartBrain does not connect directly
+- History access is message-based and read-only; Freya does not connect directly
   to provider databases or write foreign states.
 
 ## [0.3.0] - 2026-08-20
@@ -226,7 +229,7 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 - Time, Sun, Environment, Weather, Presence, and bounded Device context providers.
 - Local sunrise, sunset, elevation, azimuth, phase, and relative-time calculation using
   ioBroker system coordinates or an optional manual override.
-- Per-object SmartBrain custom settings synchronized with the central state-policy
+- Per-object Freya custom settings synchronized with the central state-policy
   table using last-edit timestamps.
 - A pinned local ioBroker repository-checker release gate and guarded npm-only
   Dependabot patch/minor auto-merge workflow.
@@ -256,7 +259,7 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Security
 
-- Discovery reads object metadata only and excludes SmartBrain-owned states; it does
+- Discovery reads object metadata only and excludes Freya-owned states; it does
   not read foreign values, subscribe to changes, access history, or execute actions.
 
 ## [0.0.1] - 2026-08-20
@@ -275,7 +278,7 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 - TypeScript daemon skeleton generated from `@iobroker/create-adapter` 3.1.5 conventions.
 - JSON Config settings, adapter-owned status states, modular lifecycle service, tests,
   lint/build configuration, and multi-platform GitHub Actions workflow.
-- Canonical `ioBroker.smartbrain` repository metadata and a paired GitHub/local
+- Canonical `ioBroker.freya` repository metadata and a paired GitHub/local
   development deployment workflow.
 
 ### Security

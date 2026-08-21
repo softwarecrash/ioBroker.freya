@@ -127,7 +127,7 @@ export class OpenAiLlmProvider extends RemoteLlmProvider {
                     text: {
                         format: {
                             type: 'json_schema',
-                            name: 'smartbrain_pattern_analysis',
+                            name: 'freya_pattern_analysis',
                             strict: true,
                             schema: LLM_ANALYSIS_SCHEMA,
                         },
@@ -174,7 +174,7 @@ export class OpenAiCompatibleLlmProvider extends RemoteLlmProvider {
                     temperature: 0,
                     response_format: {
                         type: 'json_schema',
-                        json_schema: { name: 'smartbrain_pattern_analysis', strict: true, schema: LLM_ANALYSIS_SCHEMA },
+                        json_schema: { name: 'freya_pattern_analysis', strict: true, schema: LLM_ANALYSIS_SCHEMA },
                     },
                 },
                 headers,

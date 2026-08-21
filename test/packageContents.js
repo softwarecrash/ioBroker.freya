@@ -17,7 +17,7 @@ for (const required of [
     'io-package.json',
     'admin/jsonConfig.json',
     'admin/jsonCustom.json',
-    'admin/smartbrain.svg',
+    'admin/freya.svg',
     'README.md',
     'SECURITY.md',
     'PRIVACY.md',

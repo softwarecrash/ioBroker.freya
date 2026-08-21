@@ -1,5 +1,5 @@
 export type ChangeOriginKind =
-    'smartbrain' | 'direct-user' | 'external-command' | 'device-originated' | 'confirmation' | 'unknown';
+    'self' | 'direct-user' | 'external-command' | 'device-originated' | 'confirmation' | 'unknown';
 
 export interface ChangeAttribution {
     kind: ChangeOriginKind;
@@ -20,7 +20,7 @@ export interface ChangeAttribution {
 
 interface PendingCommand {
     value: ioBroker.StateValue;
-    kind: 'smartbrain' | 'direct-user' | 'external-command';
+    kind: 'self' | 'direct-user' | 'external-command';
     source?: string;
     timestamp: number;
 }
@@ -99,7 +99,7 @@ export class SourceAttributionService {
             const kind = matchesReported
                 ? reported.kind
                 : source === this.selfSource
-                  ? 'smartbrain'
+                  ? 'self'
                   : isDirectAdminSource(source)
                     ? 'direct-user'
                     : 'external-command';
@@ -113,7 +113,7 @@ export class SourceAttributionService {
                     ? kind === 'direct-user'
                         ? 'reported_user_intent'
                         : 'reported_automation_intent'
-                    : kind === 'smartbrain'
+                    : kind === 'self'
                       ? 'self_source'
                       : kind === 'direct-user'
                         ? 'admin_command'

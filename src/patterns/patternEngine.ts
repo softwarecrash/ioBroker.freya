@@ -7,7 +7,7 @@ import type { LearnableState, LearnedPattern, PatternExample, PatternSummary, Pe
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const TRIGGER_TYPES = new Set(['motion', 'presence', 'contact', 'switch']);
-const NON_BEHAVIORAL_ORIGINS = new Set(['smartbrain', 'external-command', 'confirmation']);
+const NON_BEHAVIORAL_ORIGINS = new Set(['self', 'external-command', 'confirmation']);
 
 interface CandidateRecord {
     trigger: LearnableState;

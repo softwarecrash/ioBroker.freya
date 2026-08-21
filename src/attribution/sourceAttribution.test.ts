@@ -7,7 +7,7 @@ function state(value: ioBroker.StateValue, ack: boolean, source: string, timesta
 
 describe('SourceAttributionService', () => {
     it('correlates a generic foreign command with its device acknowledgement', () => {
-        const service = new SourceAttributionService('system.adapter.smartbrain.0');
+        const service = new SourceAttributionService('system.adapter.freya.0');
         expect(
             service.classify('alias.0.light', state(true, false, 'system.adapter.node-red.0', 1_000), 1_000),
         ).to.include({
@@ -24,7 +24,7 @@ describe('SourceAttributionService', () => {
     });
 
     it('recognizes direct Admin commands and unsolicited device changes without naming device adapters', () => {
-        const service = new SourceAttributionService('system.adapter.smartbrain.0');
+        const service = new SourceAttributionService('system.adapter.freya.0');
         expect(
             service.classify('alias.0.light', state(true, false, 'system.adapter.admin.0', 1_000), 1_000),
         ).to.include({
@@ -37,11 +37,11 @@ describe('SourceAttributionService', () => {
         });
     });
 
-    it('recognizes SmartBrain writes and does not correlate stale commands', () => {
-        const service = new SourceAttributionService('system.adapter.smartbrain.0', 1_000);
+    it('recognizes Freya writes and does not correlate stale commands', () => {
+        const service = new SourceAttributionService('system.adapter.freya.0', 1_000);
         expect(
-            service.classify('alias.0.light', state(true, false, 'system.adapter.smartbrain.0', 1_000), 1_000),
-        ).to.include({ kind: 'smartbrain' });
+            service.classify('alias.0.light', state(true, false, 'system.adapter.freya.0', 1_000), 1_000),
+        ).to.include({ kind: 'self' });
         expect(
             service.classify('alias.0.light', state(true, true, 'system.adapter.device.0', 2_001), 2_001),
         ).to.include({
@@ -50,7 +50,7 @@ describe('SourceAttributionService', () => {
     });
 
     it('uses a per-event bridge intent without classifying the whole adapter', () => {
-        const service = new SourceAttributionService('system.adapter.smartbrain.0');
+        const service = new SourceAttributionService('system.adapter.freya.0');
         expect(service.reportIntent('alias.0.light', true, 'user', 'system.adapter.node-red.0', 1_000)).to.equal(true);
         expect(
             service.classify('alias.0.light', state(true, false, 'system.adapter.node-red.0', 1_100), 1_100),

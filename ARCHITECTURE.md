@@ -1,4 +1,4 @@
-# SmartBrain Architecture
+# Freya Architecture
 
 ## Status and scope
 
@@ -348,13 +348,13 @@ other production module contains a foreign-state write.
 
 ### Action attribution and feedback
 
-Each SmartBrain action receives a correlation ID and is recorded before and after the
+Each Freya action receives a correlation ID and is recorded before and after the
 write. ioBroker's state `from`, `ack`, timestamps, and the correlation window help
 classify subsequent changes. These signals cannot reliably distinguish every user,
 script, adapter, and external device action. Ambiguous events remain `unknown`; they
 must not be described as certain user feedback.
 
-An opposing change shortly after a correlated SmartBrain action is candidate negative
+An opposing change shortly after a correlated Freya action is candidate negative
 feedback. Lack of an opposing change becomes neutral or weak positive evidence only
 after a configurable window. Explicit user feedback always remains distinct.
 
@@ -362,7 +362,7 @@ after a configurable window. Explicit user feedback always remains distinct.
 
 MVP persistence uses the ioBroker instance data directory returned by
 `getAbsoluteInstanceDataDir(adapter)`. `io-package.json` will declare
-`common.dataFolder: "smartbrain.%INSTANCE%"` so normal ioBroker backups include it.
+`common.dataFolder: "freya.%INSTANCE%"` so normal ioBroker backups include it.
 
 The action/feedback implementation uses a bounded schema-versioned JSON snapshot:
 
@@ -381,19 +381,19 @@ volume demonstrates the need.
 Only bounded integration/status states will be exposed, for example:
 
 ```text
-smartbrain.0.info.connection
-smartbrain.0.info.status
-smartbrain.0.learning.enabled
-smartbrain.0.learning.observedStateCount
-smartbrain.0.patterns.candidateCount
-smartbrain.0.patterns.approvedCount
-smartbrain.0.suggestions.latest
-smartbrain.0.actions.lastResult
-smartbrain.0.feedback.pendingCount
-smartbrain.0.ai.status
+freya.0.info.connection
+freya.0.info.status
+freya.0.learning.enabled
+freya.0.learning.observedStateCount
+freya.0.patterns.candidateCount
+freya.0.patterns.approvedCount
+freya.0.suggestions.latest
+freya.0.actions.lastResult
+freya.0.feedback.pendingCount
+freya.0.ai.status
 ```
 
-Internal observations and patterns remain in persistence; SmartBrain will not create a
+Internal observations and patterns remain in persistence; Freya will not create a
 state object per event or pattern. Secrets are stored only in protected adapter native
 configuration, never in ordinary states or logs.
 
@@ -439,7 +439,7 @@ unbounded queue. History analysis is batched and scheduled, not continuously rep
   failed check, and Action Executor as the single write boundary.
 - CI: build, lint, package tests, and unit tests on supported Node.js versions.
 - Production installation: read-only inspection only until controlled-action phases
-  are complete; writes are tested with mocks or SmartBrain-owned test states.
+  are complete; writes are tested with mocks or Freya-owned test states.
 
 ## Deliberate deviations and open decisions
 

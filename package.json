@@ -1,12 +1,12 @@
 {
-    "name": "iobroker.smartbrain",
+    "name": "iobroker.freya",
     "version": "0.10.0",
     "description": "Learns explainable smart-home patterns and proposes safety-controlled automations",
     "author": {
         "name": "softwarecrash",
         "email": "44615614+softwarecrash@users.noreply.github.com"
     },
-    "homepage": "https://github.com/softwarecrash/ioBroker.smartbrain",
+    "homepage": "https://github.com/softwarecrash/ioBroker.freya",
     "license": "MIT",
     "keywords": [
         "ioBroker",
@@ -18,7 +18,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/softwarecrash/ioBroker.smartbrain.git"
+        "url": "https://github.com/softwarecrash/ioBroker.freya.git"
     },
     "engines": {
         "node": ">=22"
@@ -61,7 +61,7 @@
         "test:ts": "mocha --config test/mocharc.custom.json \"src/**/*.test.ts\"",
         "test:package": "mocha test/package.js --exit",
         "test:pack": "npm run build && node test/packageContents.js",
-        "test:checker": "npx --yes @iobroker/repochecker@5.20.13 https://github.com/softwarecrash/ioBroker.smartbrain --local",
+        "test:checker": "npx --yes @iobroker/repochecker@5.20.13 https://github.com/softwarecrash/ioBroker.freya --local",
         "test:integration": "mocha test/integration.js --exit",
         "test": "npm run test:ts && npm run test:package",
         "check": "tsc --noEmit",
@@ -92,7 +92,7 @@
         "instrument": true
     },
     "bugs": {
-        "url": "https://github.com/softwarecrash/ioBroker.smartbrain/issues"
+        "url": "https://github.com/softwarecrash/ioBroker.freya/issues"
     },
     "readmeFilename": "README.md"
 }

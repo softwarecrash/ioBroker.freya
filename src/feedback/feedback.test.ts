@@ -29,7 +29,7 @@ describe('action persistence and feedback attribution', () => {
     let filename = '';
 
     beforeEach(async () => {
-        directory = await mkdtemp(join(tmpdir(), 'smartbrain-feedback-'));
+        directory = await mkdtemp(join(tmpdir(), 'freya-feedback-'));
         filename = join(directory, 'actions.json');
     });
 
@@ -90,7 +90,7 @@ describe('action persistence and feedback attribution', () => {
         await repository.load();
         await repository.requested(request(), 1_000);
         await repository.completed(request(), executed, 1_100);
-        const service = new FeedbackService(repository, 'system.adapter.smartbrain.0', 10_000);
+        const service = new FeedbackService(repository, 'system.adapter.freya.0', 10_000);
 
         await service.observe(
             'alias.0.unrelated',
@@ -117,7 +117,7 @@ describe('action persistence and feedback attribution', () => {
         await repository.load();
         await repository.requested(request(), 1_000);
         await repository.completed(request(), executed, 1_100);
-        const service = new FeedbackService(repository, 'system.adapter.smartbrain.0', 10_000);
+        const service = new FeedbackService(repository, 'system.adapter.freya.0', 10_000);
         await service.observe(
             'alias.0.room.light',
             { val: false, ack: false, ts: 1_400, lc: 1_400, from: 'system.adapter.admin.0' },
@@ -137,7 +137,7 @@ describe('action persistence and feedback attribution', () => {
         await deviceRepository.load();
         await deviceRepository.requested(request(), 1_000);
         await deviceRepository.completed(request(), executed, 1_100);
-        const deviceService = new FeedbackService(deviceRepository, 'system.adapter.smartbrain.0', 10_000);
+        const deviceService = new FeedbackService(deviceRepository, 'system.adapter.freya.0', 10_000);
         const opposing = state(false, true, 'system.adapter.device.0', 1_400);
         await deviceService.observe('alias.0.room.light', opposing, 1_400, {
             kind: 'device-originated',
@@ -169,7 +169,7 @@ describe('action persistence and feedback attribution', () => {
         await repository.load();
         await repository.requested(request(), 1_000);
         await repository.completed(request(), executed, 1_100);
-        const service = new FeedbackService(repository, 'system.adapter.smartbrain.0', 5_000);
+        const service = new FeedbackService(repository, 'system.adapter.freya.0', 5_000);
         await service.expire(6_101);
         expect(repository.find('correlation-1')?.feedback).to.include({ outcome: 'neutral', source: 'implicit' });
         expect(repository.totals('0123456789abcdef')).to.deep.equal({ positive: 0, negative: 0 });

@@ -1,6 +1,6 @@
 {
     "common": {
-        "name": "smartbrain",
+        "name": "freya",
         "version": "0.10.0",
         "news": {
             "0.10.0": {
@@ -96,17 +96,17 @@
             }
         },
         "titleLang": {
-            "en": "SmartBrain",
-            "de": "SmartBrain",
-            "ru": "SmartBrain",
-            "pt": "SmartBrain",
-            "nl": "SmartBrain",
-            "fr": "SmartBrain",
-            "it": "SmartBrain",
-            "es": "SmartBrain",
-            "pl": "SmartBrain",
-            "uk": "SmartBrain",
-            "zh-cn": "SmartBrain"
+            "en": "Freya",
+            "de": "Freya",
+            "ru": "Freya",
+            "pt": "Freya",
+            "nl": "Freya",
+            "fr": "Freya",
+            "it": "Freya",
+            "es": "Freya",
+            "pl": "Freya",
+            "uk": "Freya",
+            "zh-cn": "Freya"
         },
         "desc": {
             "en": "Learns explainable smart-home patterns and proposes safety-controlled automations",
@@ -128,10 +128,10 @@
             "license": "MIT"
         },
         "platform": "Javascript/Node.js",
-        "icon": "smartbrain.svg",
+        "icon": "freya.svg",
         "enabled": false,
-        "extIcon": "https://raw.githubusercontent.com/softwarecrash/ioBroker.smartbrain/codex/phase-0-analysis/admin/smartbrain.svg",
-        "readme": "https://github.com/softwarecrash/ioBroker.smartbrain/blob/codex/phase-0-analysis/README.md",
+        "extIcon": "https://raw.githubusercontent.com/softwarecrash/ioBroker.freya/codex/phase-0-analysis/admin/freya.svg",
+        "readme": "https://github.com/softwarecrash/ioBroker.freya/blob/codex/phase-0-analysis/README.md",
         "loglevel": "info",
         "tier": 3,
         "mode": "daemon",
@@ -139,7 +139,7 @@
         "compact": true,
         "connectionType": "local",
         "dataSource": "assumption",
-        "dataFolder": "smartbrain.%INSTANCE%",
+        "dataFolder": "freya.%INSTANCE%",
         "messagebox": true,
         "supportCustoms": true,
         "adminUI": {

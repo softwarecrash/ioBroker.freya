@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-SmartBrain is not yet a stable release. Security fixes are applied to the latest
+Freya is not yet a stable release. Security fixes are applied to the latest
 published pre-release line only.
 
 ## Reporting a vulnerability

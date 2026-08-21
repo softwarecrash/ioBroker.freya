@@ -9,7 +9,7 @@ export interface RuntimePort {
 }
 
 /** Publishes the bounded, read-only lifecycle status for Phase 6. */
-export class SmartBrainRuntime {
+export class FreyaRuntime {
     private started = false;
 
     /**

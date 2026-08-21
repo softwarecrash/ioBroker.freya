@@ -56,8 +56,8 @@ describe('PatternEngine', () => {
         engine.observe(trigger);
         const ownAction = observation('light', 'light', 2_000);
         ownAction.attribution = {
-            kind: 'smartbrain',
-            source: 'system.adapter.smartbrain.0',
+            kind: 'self',
+            source: 'system.adapter.freya.0',
             confidence: 1,
             reason: 'self_source',
         };
