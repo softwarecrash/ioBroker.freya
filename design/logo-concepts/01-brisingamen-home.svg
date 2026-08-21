@@ -1,14 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Freya logo concept Brisingamen Home">
-    <rect width="256" height="256" rx="52" fill="#172033"/>
-    <circle cx="128" cy="128" r="78" fill="none" stroke="#F5B642" stroke-width="10"/>
-    <g fill="#67D7C4" stroke="#172033" stroke-width="4">
+    <rect width="256" height="256" rx="52" fill="#21162F"/>
+    <circle cx="128" cy="128" r="78" fill="none" stroke="#F0BF62" stroke-width="10"/>
+    <g fill="#55D6C2" stroke="#21162F" stroke-width="4">
         <circle cx="128" cy="50" r="10"/>
         <circle cx="202" cy="104" r="10"/>
         <circle cx="174" cy="191" r="10"/>
         <circle cx="82" cy="191" r="10"/>
         <circle cx="54" cy="104" r="10"/>
     </g>
-    <path d="M82 126 128 87l46 39v52H82z" fill="none" stroke="#67D7C4" stroke-width="11" stroke-linejoin="round"/>
-    <path d="M128 106v54m-19-20h38" fill="none" stroke="#F5B642" stroke-width="9" stroke-linecap="round"/>
-    <circle cx="128" cy="140" r="10" fill="#F5B642"/>
+    <path d="M82 126 128 87l46 39v52H82z" fill="#21162F" stroke="#55D6C2" stroke-width="11" stroke-linejoin="round"/>
+    <path d="M128 112v25m0 0-20 19m20-19 20 19" fill="none" stroke="#F0BF62" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="#F0BF62">
+        <circle cx="128" cy="108" r="8"/>
+        <circle cx="106" cy="158" r="8"/>
+        <circle cx="150" cy="158" r="8"/>
+    </g>
 </svg>
