@@ -145,5 +145,14 @@
     "Timeout (seconds)": "Timeout (seconds)",
     "Unknown": "Unknown",
     "Unknown states": "Unknown states",
+    "Ignore pattern": "Ignore pattern",
+    "Continue learning": "Continue learning",
+    "Reset learning data": "Reset learning data",
+    "Discard all evidence and feedback for this pattern and learn it again from zero?": "Discard all evidence and feedback for this pattern and learn it again from zero?",
+    "Reset": "Reset",
+    "Delete pattern": "Delete pattern",
+    "Delete this learned pattern? It can be discovered again from future observations.": "Delete this learned pattern? It can be discovered again from future observations.",
+    "Delete": "Delete",
+    "Test connection": "Test connection",
     "Wind speed": "Wind speed"
 }

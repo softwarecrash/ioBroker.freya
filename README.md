@@ -168,12 +168,11 @@ on three different days, and confidence of 0.58; any added context condition als
 requires held-out improvement. Confidence
 exposes smoothed match rate, sample maturity, repeatability, feedback adjustment, and
 recency. `getPatternSummary` and bounded `getPatterns` provide read-only inspection.
-The Admin Patterns table also includes relationships that are still learning. It shows
+The Admin Patterns table and selector also include relationships that are still learning. They show
 matches/opportunities, distinct learning days, current confidence, and the explanation;
 the `patterns.learningCount`, `patterns.pendingOpportunityCount`, and
 `patterns.retainedExampleCount` states make incoming evidence visible before a pattern
-meets the candidate thresholds. Only candidate suggestions appear in the approval
-selector.
+meets the candidate thresholds.
 Bounded learning evidence, suggestions, and explicit approval/disabled states are stored
 locally in a schema-versioned, atomically replaced file. Pending trigger windows are not
 restored; restart recovery never invents or replays an expired trigger.
@@ -195,6 +194,12 @@ transitions, but accepts mutations only from an ioBroker Admin adapter instance.
 approval changes no state permission and does not raise autonomy. Approved or disabled
 entries whose evidence disappears remain visible but are marked ineligible. Suggestions
 and their approval states survive restarts; the bounded activity view remains volatile.
+Admin can explicitly return an approved pattern to continued learning, ignore it, reset
+its evidence and learning feedback, or delete it. Reset keeps the relationship at zero
+evidence; delete removes it. Both reject outstanding one-shot proposals, are persisted
+before success is reported, and allow future observations to learn the relationship again.
+Historical action feedback remains in the audit after a reset but is excluded from the
+new learning cycle.
 
 ## Controlled actions
 
@@ -224,6 +229,8 @@ and [Ollama structured output documentation](https://docs.ollama.com/capabilitie
 
 External calls happen only through the Admin-only `analyzePattern` command. Beforehand,
 `previewLlmDisclosure` shows the exact allow-listed payload and destination origin.
+The Admin-only connection test sends a synthetic pattern containing no household data;
+for a remote provider it performs one small model request and may therefore be billable.
 The payload contains aggregate evidence and selected semantic context features, but no
 state IDs, room names, raw values, person data, or API key. Keys are declared both
 protected and encrypted native configuration. Responses are size/time bounded and

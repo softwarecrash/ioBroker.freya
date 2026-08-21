@@ -22,7 +22,13 @@ export interface PatternSuggestion {
     updatedAt: number;
 }
 
-export type ActivityType = 'candidate_created' | 'candidate_withdrawn' | 'status_changed' | 'status_rejected';
+export type ActivityType =
+    | 'candidate_created'
+    | 'candidate_withdrawn'
+    | 'status_changed'
+    | 'status_rejected'
+    | 'learning_reset'
+    | 'pattern_deleted';
 
 export interface ActivityRecord {
     id: string;

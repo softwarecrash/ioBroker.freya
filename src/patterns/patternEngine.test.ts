@@ -254,6 +254,25 @@ describe('PatternEngine', () => {
         expect(engine.patterns(2 * DAY_MS)).to.have.length(0);
     });
 
+    it('can reset evidence or delete a learned relationship without affecting other patterns', () => {
+        const engine = new PatternEngine(
+            [
+                { id: 'motion', semanticType: 'motion', valueType: 'boolean', rooms: ['hall'] },
+                { id: 'light', semanticType: 'light', valueType: 'boolean', rooms: ['hall'] },
+            ],
+            { enabled: true, actionWindowMs: 5_000 },
+        );
+        engine.observe(observation('motion', 'motion', 1, context(1, true)));
+        engine.observe(observation('light', 'light', 2));
+        const patternId = engine.patterns(3)[0].id;
+
+        expect(engine.resetPattern(patternId, 10)).to.equal(true);
+        expect(engine.patterns(11)[0]).to.include({ id: patternId, opportunities: 0, matches: 0, status: 'learning' });
+        expect(engine.deletePattern(patternId)).to.equal(true);
+        expect(engine.patterns(12)).to.have.length(0);
+        expect(engine.deletePattern(patternId)).to.equal(false);
+    });
+
     it('hard-bounds simultaneous pending opportunities', () => {
         const states = [
             { id: 'motion', semanticType: 'motion' as const, valueType: 'boolean' as const, rooms: ['hall'] },

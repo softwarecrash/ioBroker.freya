@@ -101,4 +101,8 @@ export class FeedbackService {
     public actions(page = 0, pageSize = 50): ReturnType<ActionRepository['page']> {
         return this.repository.page(page, pageSize);
     }
+
+    public resetLearningFeedback(patternId: string): Promise<number> {
+        return this.repository.excludePatternFeedback(patternId);
+    }
 }

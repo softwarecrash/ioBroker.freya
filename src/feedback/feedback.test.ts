@@ -175,4 +175,25 @@ describe('action persistence and feedback attribution', () => {
         expect(repository.find('correlation-1')?.feedback).to.include({ outcome: 'neutral', source: 'implicit' });
         expect(repository.totals('0123456789abcdef')).to.deep.equal({ positive: 0, negative: 0 });
     });
+
+    it('preserves reset feedback in the audit but excludes it from future learning totals', async () => {
+        const repository = new ActionRepository(filename);
+        await repository.load();
+        await repository.requested(request(), 1_000);
+        await repository.completed(request(), executed, 1_100);
+        await repository.feedback('correlation-1', 'negative', 'explicit', 1_200, 'system.adapter.admin.0');
+
+        expect(repository.totals('0123456789abcdef')).to.deep.equal({ positive: 0, negative: 1 });
+        expect(await repository.excludePatternFeedback('0123456789abcdef')).to.equal(1);
+        expect(repository.totals('0123456789abcdef')).to.deep.equal({ positive: 0, negative: 0 });
+        expect(repository.find('correlation-1')?.feedback).to.include({
+            outcome: 'negative',
+            excludedFromLearning: true,
+        });
+
+        const restored = new ActionRepository(filename);
+        await restored.load();
+        expect(restored.allTotals().has('0123456789abcdef')).to.equal(false);
+        expect(restored.find('correlation-1')?.feedback?.excludedFromLearning).to.equal(true);
+    });
 });

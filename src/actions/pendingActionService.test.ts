@@ -77,4 +77,25 @@ describe('PendingActionService', () => {
         expect(claim.request).to.include({ authorization: 'automatic', patternId: suggestion().id });
         expect(service.beginAutomatic(suggestion(), 1_001, 'automatic-2').accepted).to.equal(false);
     });
+
+    it('rejects an outstanding proposal when its pattern is reset or deleted', () => {
+        const service = new PendingActionService();
+        service.propose(suggestion(), 1_000, 'pending-removal');
+        expect(service.rejectPattern(suggestion().id, 2_000)).to.equal(1);
+        expect(service.list('rejected').items[0]).to.include({
+            id: 'pending-removal',
+            completedAt: 2_000,
+            errorCode: 'pattern_removed',
+        });
+    });
+
+    it('supports an exact in-process restore without applying restart recovery', () => {
+        const service = new PendingActionService();
+        service.propose(suggestion(), 1_000, 'running');
+        service.claimOneShot('running', 1_500);
+
+        const restored = new PendingActionService();
+        restored.restore(service.snapshot(), 2_000, false);
+        expect(restored.list('executing').items[0]).to.include({ id: 'running', status: 'executing' });
+    });
 });

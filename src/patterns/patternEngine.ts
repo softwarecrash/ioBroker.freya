@@ -132,6 +132,37 @@ export class PatternEngine {
         return false;
     }
 
+    /** Keep the relationship but discard all evidence so it must mature again from zero. */
+    public resetPattern(patternId: string, timestamp = Date.now()): boolean {
+        for (const [key, record] of this.records) {
+            if (this.patternId(key) !== patternId) {
+                continue;
+            }
+            record.examples = [];
+            record.firstSeen = timestamp;
+            record.lastSeen = timestamp;
+            record.positiveFeedback = 0;
+            record.negativeFeedback = 0;
+            this.pending.delete(key);
+            this.lastEvaluationTimestamp = Math.max(this.lastEvaluationTimestamp, timestamp);
+            return true;
+        }
+        return false;
+    }
+
+    /** Remove the learned relationship. Future observations may discover it again. */
+    public deletePattern(patternId: string): boolean {
+        for (const key of this.records.keys()) {
+            if (this.patternId(key) !== patternId) {
+                continue;
+            }
+            this.records.delete(key);
+            this.pending.delete(key);
+            return true;
+        }
+        return false;
+    }
+
     /** Export bounded learning evidence. Pending action windows are deliberately excluded. */
     public snapshot(): PersistedPatternRecord[] {
         return [...this.records.entries()].map(([key, record]) => ({
@@ -313,7 +344,7 @@ export class PatternEngine {
                 : 'learning';
         const conditions = selection.conditions.map(condition => `${condition.feature} = ${String(condition.value)}`);
         return {
-            id: createHash('sha256').update(key).digest('hex').slice(0, 16),
+            id: this.patternId(key),
             triggerStateId: record.trigger.id,
             actionStateId: record.action.id,
             expectedAction: record.expectedAction,
@@ -338,6 +369,10 @@ export class PatternEngine {
                   ? `After ${record.trigger.semanticType} became ${String(record.expectedAction)}, ${record.action.semanticType} reliably became ${String(record.expectedAction)} without an additional context condition.`
                   : `Still learning whether ${record.trigger.semanticType} becoming ${String(record.expectedAction)} predicts ${record.action.semanticType} becoming ${String(record.expectedAction)}.`,
         };
+    }
+
+    private patternId(key: string): string {
+        return createHash('sha256').update(key).digest('hex').slice(0, 16);
     }
 
     private localIlluminance(opportunity: PendingOpportunity): number | undefined {

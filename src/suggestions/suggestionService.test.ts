@@ -58,16 +58,18 @@ describe('SuggestionService', () => {
         expect(suggestion.explanation).to.contain('light usually becomes false');
     });
 
-    it('allows only candidate-approved-disabled-candidate transitions', () => {
+    it('allows explicit approval, continue-learning and ignore transitions', () => {
         const service = new SuggestionService();
         service.synchronize([pattern()], 10);
 
         expect(service.transition('0123456789abcdef', 'approved', 'admin', 11).accepted).to.equal(true);
         expect(service.summary().approved).to.equal(1);
-        const invalid = service.transition('0123456789abcdef', 'candidate', 'admin', 12);
-        expect(invalid).to.include({ accepted: false, changed: false, reason: 'invalid_transition' });
+        const continueLearning = service.transition('0123456789abcdef', 'candidate', 'admin', 12);
+        expect(continueLearning).to.include({ accepted: true, changed: true, reason: 'status_changed' });
         expect(service.transition('0123456789abcdef', 'disabled', 'admin', 13).accepted).to.equal(true);
-        expect(service.transition('0123456789abcdef', 'candidate', 'admin', 14).accepted).to.equal(true);
+        const invalid = service.transition('0123456789abcdef', 'approved', 'admin', 14);
+        expect(invalid).to.include({ accepted: false, changed: false, reason: 'invalid_transition' });
+        expect(service.transition('0123456789abcdef', 'candidate', 'admin', 15).accepted).to.equal(true);
         expect(service.summary().candidates).to.equal(1);
         expect(service.activityPage().items.map(item => item.type)).to.include.members([
             'candidate_created',
@@ -113,5 +115,19 @@ describe('SuggestionService', () => {
 
         const [suggestion] = restored.list('approved').items;
         expect(suggestion).to.include({ status: 'approved', confidence: 0.9, eligible: true });
+    });
+
+    it('can return an approved pattern to learning and explicitly remove its suggestion', () => {
+        const service = new SuggestionService();
+        service.synchronize([pattern()], 10);
+        service.transition('0123456789abcdef', 'approved', 'admin', 11);
+
+        expect(service.transition('0123456789abcdef', 'candidate', 'admin', 12)).to.include({
+            accepted: true,
+            changed: true,
+        });
+        expect(service.remove('0123456789abcdef', 'admin', 13, 'learning_reset')).to.equal(true);
+        expect(service.find('0123456789abcdef')).to.equal(undefined);
+        expect(service.activityPage().items.map(item => item.type)).to.include('learning_reset');
     });
 });

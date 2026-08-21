@@ -145,5 +145,14 @@
     "Timeout (seconds)": "Timeout (Sekunden)",
     "Unknown": "Unbekannt",
     "Unknown states": "Unbekannte States",
+    "Ignore pattern": "Muster ignorieren",
+    "Continue learning": "Weiterlernen",
+    "Reset learning data": "Lerndaten zurücksetzen",
+    "Discard all evidence and feedback for this pattern and learn it again from zero?": "Alle Beobachtungen und Rückmeldungen dieses Musters verwerfen und wieder bei null beginnen?",
+    "Reset": "Zurücksetzen",
+    "Delete pattern": "Muster löschen",
+    "Delete this learned pattern? It can be discovered again from future observations.": "Dieses gelernte Muster löschen? Es kann durch zukünftige Beobachtungen erneut erkannt werden.",
+    "Delete": "Löschen",
+    "Test connection": "Verbindung testen",
     "Wind speed": "Windgeschwindigkeit"
 }

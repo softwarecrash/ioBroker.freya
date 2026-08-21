@@ -94,7 +94,7 @@ export class SuggestionService {
         }
         const valid =
             (suggestion.status === 'candidate' && (status === 'approved' || status === 'disabled')) ||
-            (suggestion.status === 'approved' && status === 'disabled') ||
+            (suggestion.status === 'approved' && (status === 'candidate' || status === 'disabled')) ||
             (suggestion.status === 'disabled' && status === 'candidate' && suggestion.eligible);
         if (!valid) {
             return this.reject(
@@ -122,6 +122,26 @@ export class SuggestionService {
 
     public rejectCommand(patternId: string, actor: string, reason: string, timestamp: number): TransitionResult {
         return this.reject(patternId, actor, timestamp, reason);
+    }
+
+    public remove(
+        patternId: string,
+        actor: string,
+        timestamp: number,
+        reason: 'learning_reset' | 'pattern_deleted',
+    ): boolean {
+        const removed = this.suggestions.delete(patternId);
+        if (removed) {
+            this.activity.append({
+                timestamp,
+                type: reason,
+                patternId,
+                actor: actor.slice(0, 120),
+                outcome: 'accepted',
+                reason: `explicit_user_${reason}`,
+            });
+        }
+        return removed;
     }
 
     public list(

@@ -14,7 +14,7 @@ Last updated: 2026-08-21
       install/upload it, then verify Freya-owned states and logs.
 - [ ] Keep installation default at autonomy level 0 and `control: false` for every
       discovered state.
-- [ ] Test every safety rule before implementing production action execution.
+- [x] Test every safety rule before implementing production action execution.
 
 ## Phase 0 — analysis and architecture
 
@@ -170,6 +170,9 @@ Last updated: 2026-08-21
       retained examples in Admin and bounded runtime states.
 - [x] Publish bounded diagnostics for pending actions, automatic executions, denied
       executions, and persistence health.
+- [x] Complete Admin lifecycle actions for continued learning, ignore, evidence reset,
+      feedback reset, and deletion with persisted rollback and pending-action rejection.
+- [x] Add an Admin-only LLM connection test using a synthetic data-free disclosure.
 - [ ] Verify restart recovery, duplicate suppression, cooldown behavior, feedback
       attribution, and source attribution in the running local installation.
 - [x] Re-run the complete local quality gate, package, install, inspect logs, and push.

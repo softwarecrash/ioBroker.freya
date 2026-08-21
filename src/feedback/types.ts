@@ -19,6 +19,7 @@ export interface PersistedActionRecord {
         timestamp: number;
         actor?: string;
         reason?: string;
+        excludedFromLearning?: boolean;
     };
 }
 

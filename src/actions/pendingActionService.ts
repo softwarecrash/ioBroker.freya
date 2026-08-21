@@ -124,15 +124,15 @@ export class PendingActionService {
         return copy(record);
     }
 
-    public restore(records: PendingActionRecord[], timestamp: number): number {
+    public restore(records: PendingActionRecord[], timestamp: number, recoverInterrupted = true): number {
         this.records.clear();
         for (const persisted of records.slice(-this.maximum)) {
             const record = copy(persisted);
-            if (record.status === 'executing') {
+            if (recoverInterrupted && record.status === 'executing') {
                 record.status = 'denied';
                 record.completedAt = timestamp;
                 record.errorCode = 'execution_interrupted';
-            } else if (record.status === 'pending' && record.expiresAt <= timestamp) {
+            } else if (recoverInterrupted && record.status === 'pending' && record.expiresAt <= timestamp) {
                 record.status = 'expired';
                 record.completedAt = timestamp;
             }
@@ -151,6 +151,20 @@ export class PendingActionService {
             }
         }
         return expired;
+    }
+
+    /** Reject proposals which can no longer be authorized after pattern removal/reset. */
+    public rejectPattern(patternId: string, timestamp: number): number {
+        let rejected = 0;
+        for (const record of this.records.values()) {
+            if (record.patternId === patternId && record.status === 'pending') {
+                record.status = 'rejected';
+                record.completedAt = timestamp;
+                record.errorCode = 'pattern_removed';
+                rejected++;
+            }
+        }
+        return rejected;
     }
 
     public list(

@@ -298,7 +298,7 @@ interface LearnedPattern {
     confidence: number;
     firstSeen: number;
     lastSeen: number;
-    status: 'learning' | 'candidate' | 'approved' | 'trusted' | 'disabled';
+    status: 'learning' | 'candidate' | 'approved' | 'disabled';
 }
 ```
 
@@ -320,6 +320,10 @@ The Decision Engine converts eligible candidates into deterministic suggestions.
 rules-only explanation includes the trigger, conditions, match count, opportunity
 count, time window, and confidence components. Approval changes pattern lifecycle but
 does not itself grant state control permission or raise autonomy.
+Returning an approval to candidate status continues learning without discarding evidence.
+Ignoring maps to the persistent disabled status. Reset discards evidence and excludes old
+feedback from future confidence while preserving the action audit; delete removes the
+relationship. Reset and delete reject any outstanding one-shot proposal.
 
 ### Autonomy and safety
 

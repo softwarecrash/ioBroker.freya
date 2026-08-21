@@ -664,13 +664,35 @@ class FreyaAdapter extends utils.Adapter {
                 this.sendTo(message.from, message.command, [], message.callback);
                 return;
             }
-            const options = (this.suggestionService?.list(undefined, 0, 100).items ?? []).map(suggestion => ({
-                label: `${suggestion.status.toUpperCase()} · ${suggestion.rooms.join(', ') || 'Global'} · ${suggestion.triggerStateId} → ${suggestion.actionStateId} = ${String(suggestion.expectedAction)}`.slice(
-                    0,
-                    500,
-                ),
-                value: suggestion.id,
-            }));
+            const suggestions = new Map(
+                (this.suggestionService?.list(undefined, 0, 100).items ?? []).map(suggestion => [
+                    suggestion.id,
+                    suggestion,
+                ]),
+            );
+            const optionsById = new Map<string, { label: string; value: string }>();
+            for (const pattern of this.patternEngine?.patterns().slice(0, 100) ?? []) {
+                const status = suggestions.get(pattern.id)?.status ?? pattern.status;
+                optionsById.set(pattern.id, {
+                    label: `${status.toUpperCase()} · ${pattern.rooms.join(', ') || 'Global'} · ${pattern.triggerStateId} → ${pattern.actionStateId} = ${String(pattern.expectedAction)}`.slice(
+                        0,
+                        500,
+                    ),
+                    value: pattern.id,
+                });
+            }
+            for (const suggestion of suggestions.values()) {
+                if (!optionsById.has(suggestion.id)) {
+                    optionsById.set(suggestion.id, {
+                        label: `${suggestion.status.toUpperCase()} · ${suggestion.rooms.join(', ') || 'Global'} · ${suggestion.triggerStateId} → ${suggestion.actionStateId} = ${String(suggestion.expectedAction)}`.slice(
+                            0,
+                            500,
+                        ),
+                        value: suggestion.id,
+                    });
+                }
+            }
+            const options = [...optionsById.values()];
             this.sendTo(message.from, message.command, options, message.callback);
             return;
         }
@@ -757,6 +779,45 @@ class FreyaAdapter extends utils.Adapter {
         }
         if (message.command === 'getLlmStatus') {
             this.sendTo(message.from, message.command, this.llmService?.status() ?? null, message.callback);
+            return;
+        }
+        if (message.command === 'testLlmConnection') {
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { ok: false, error: 'llm_test_source_denied' },
+                    message.callback,
+                );
+                return;
+            }
+            if (!this.llmService) {
+                this.sendTo(message.from, message.command, { ok: false, error: 'llm_unavailable' }, message.callback);
+                return;
+            }
+            const requestId = randomUUID();
+            const controller = new AbortController();
+            this.llmControllers.add(controller);
+            try {
+                const result = await this.llmService.testConnection(requestId, controller.signal);
+                await this.setOwnState('llm.lastResult', JSON.stringify({ requestId, test: result }).slice(0, 2_000));
+                this.sendTo(message.from, message.command, { requestId, ...result }, message.callback);
+            } catch (error) {
+                const rawCode = (error as Error).message;
+                const errorCode = /^llm_[a-z0-9_]+$/.test(rawCode) ? rawCode : 'llm_failed';
+                await this.setOwnState(
+                    'llm.lastResult',
+                    JSON.stringify({ requestId, test: { ok: false, error: errorCode } }),
+                );
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { requestId, ok: false, error: errorCode },
+                    message.callback,
+                );
+            } finally {
+                this.llmControllers.delete(controller);
+            }
             return;
         }
         if (message.command === 'previewLlmDisclosure') {
@@ -1002,6 +1063,88 @@ class FreyaAdapter extends utils.Adapter {
             );
             return;
         }
+        if (message.command === 'resetPatternLearning' || message.command === 'deletePattern') {
+            const input = this.messageInput(message.message);
+            const patternId = typeof input.patternId === 'string' ? input.patternId : '';
+            if (!isTrustedApprovalSource(message.from)) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { accepted: false, reason: 'pattern_source_denied' },
+                    message.callback,
+                );
+                return;
+            }
+            if (!/^[a-f0-9]{16}$/.test(patternId) || !this.patternEngine || !this.suggestionService) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { accepted: false, reason: 'invalid_pattern_id' },
+                    message.callback,
+                );
+                return;
+            }
+            const timestamp = Date.now();
+            const previousPatterns = this.patternEngine.snapshot();
+            const previousSuggestions = this.suggestionService.snapshot();
+            const previousActions = this.pendingActions.snapshot();
+            const reset = message.command === 'resetPatternLearning';
+            const evidenceChanged = reset
+                ? this.patternEngine.resetPattern(patternId, timestamp)
+                : this.patternEngine.deletePattern(patternId);
+            const suggestionChanged = this.suggestionService.remove(
+                patternId,
+                message.from,
+                timestamp,
+                reset ? 'learning_reset' : 'pattern_deleted',
+            );
+            if (!evidenceChanged && !suggestionChanged) {
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { accepted: false, reason: 'pattern_not_found' },
+                    message.callback,
+                );
+                return;
+            }
+            this.pendingActions.rejectPattern(patternId, timestamp);
+            try {
+                await this.persistLearningState();
+                await this.feedbackService?.resetLearningFeedback(patternId);
+            } catch (error) {
+                this.patternEngine.deletePattern(patternId);
+                this.patternEngine.restore(previousPatterns);
+                this.suggestionService.restore(previousSuggestions);
+                this.pendingActions.restore(previousActions, timestamp, false);
+                try {
+                    await this.persistLearningState();
+                } catch (rollbackError) {
+                    this.log.error(
+                        `[Patterns] Rollback persistence failed: ${(rollbackError as Error).message.slice(0, 80)}`,
+                    );
+                }
+                this.log.warn(
+                    `[Patterns] Destructive change persistence failed: ${(error as Error).message.slice(0, 80)}`,
+                );
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    { accepted: false, reason: 'persistence_failed' },
+                    message.callback,
+                );
+                return;
+            }
+            await this.publishPatternSummary();
+            await this.publishSuggestionSummary();
+            await this.publishPendingActionSummary();
+            this.sendTo(
+                message.from,
+                message.command,
+                { accepted: true, changed: true, reason: reset ? 'learning_reset' : 'pattern_deleted' },
+                message.callback,
+            );
+            return;
+        }
         if (message.command === 'getPatterns') {
             const input =
                 typeof message.message === 'object' && message.message
@@ -1093,6 +1236,14 @@ class FreyaAdapter extends utils.Adapter {
         await this.setOwnState('activity.lastTimestamp', summary?.lastActivityTimestamp ?? 0);
     }
 
+    private async publishPatternSummary(): Promise<void> {
+        const summary = this.patternEngine?.summary();
+        await this.setOwnState('patterns.candidateCount', summary?.candidates ?? 0);
+        await this.setOwnState('patterns.learningCount', summary?.learningPatterns ?? 0);
+        await this.setOwnState('patterns.pendingOpportunityCount', summary?.pendingOpportunities ?? 0);
+        await this.setOwnState('patterns.retainedExampleCount', summary?.retainedExamples ?? 0);
+    }
+
     private patternAdminRows(): Array<Record<string, ioBroker.StateValue>> {
         const suggestions = new Map(
             (this.suggestionService?.list(undefined, 0, 100).items ?? []).map(suggestion => [
@@ -1100,8 +1251,9 @@ class FreyaAdapter extends utils.Adapter {
                 suggestion,
             ]),
         );
-        return (this.patternEngine?.patterns().slice(0, 100) ?? []).map(pattern => {
+        const rows = (this.patternEngine?.patterns().slice(0, 100) ?? []).map(pattern => {
             const suggestion = suggestions.get(pattern.id);
+            suggestions.delete(pattern.id);
             return {
                 patternId: pattern.id,
                 status: suggestion?.status ?? pattern.status,
@@ -1115,6 +1267,21 @@ class FreyaAdapter extends utils.Adapter {
                 explanation: pattern.explanation.slice(0, 2_000),
             };
         });
+        for (const suggestion of suggestions.values()) {
+            rows.push({
+                patternId: suggestion.id,
+                status: suggestion.status,
+                eligible: suggestion.eligible ? '✓' : '—',
+                rooms: suggestion.rooms.join(', ') || 'Global',
+                trigger: suggestion.triggerStateId,
+                target: suggestion.actionStateId,
+                action: String(suggestion.expectedAction),
+                confidence: `${Math.round(suggestion.confidence * 100)} %`,
+                evidence: `${suggestion.matches}/${suggestion.opportunities}`,
+                explanation: suggestion.explanation.slice(0, 2_000),
+            });
+        }
+        return rows.slice(0, 100);
     }
 
     private async publishActionResult(result: Awaited<ReturnType<ActionExecutor['execute']>>): Promise<void> {
