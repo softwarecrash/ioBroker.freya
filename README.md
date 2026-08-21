@@ -143,6 +143,10 @@ Only the Pattern Engine receives this replay: it cannot create action proposals 
 execute an action. First samples establish a baseline, foreign commands and their device
 confirmations are excluded conservatively, and example timestamps prevent duplicate
 learning after a restart. Status and aggregate counts are exposed below `history.*`.
+For a direct alias without read/write transformation, Freya may read history from its
+type-compatible source state when the history adapter stores data there. The configured
+permission and every live observation/action continue to use the alias ID; the source
+mapping exists only inside the read-only History boundary.
 
 ## Explainable pattern learning
 

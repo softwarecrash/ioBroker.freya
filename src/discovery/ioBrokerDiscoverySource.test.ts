@@ -8,7 +8,20 @@ describe('IoBrokerDiscoverySource', () => {
             'alias.0.Kitchen.light.ceiling.power': {
                 _id: 'alias.0.Kitchen.light.ceiling.power',
                 type: 'state',
-                common: { name: 'Power', type: 'boolean', role: 'switch.light', read: true, write: true },
+                common: {
+                    name: 'Power',
+                    type: 'boolean',
+                    role: 'switch.light',
+                    read: true,
+                    write: true,
+                    alias: { id: 'fixture.0.device.light' },
+                },
+                native: {},
+            },
+            'fixture.0.device.light': {
+                _id: 'fixture.0.device.light',
+                type: 'state',
+                common: { name: 'Light', type: 'boolean', role: 'switch.light', read: true, write: true },
                 native: {},
             },
             'fixture.0.device.temperature': {
@@ -85,7 +98,7 @@ describe('IoBrokerDiscoverySource', () => {
 
         expect(requests[0]).to.deep.equal({ pattern: '*', type: 'state' });
         expect(requests[1].pattern).to.be.an('array').that.includes('alias.0.Kitchen');
-        expect(result).to.include({ totalAvailable: 2, truncated: false });
+        expect(result).to.include({ totalAvailable: 3, truncated: false });
         expect(result.descriptors.find(item => item.id === 'fixture.0.device.temperature')).to.deep.include({
             id: 'fixture.0.device.temperature',
             name: 'Temperature',
@@ -98,6 +111,7 @@ describe('IoBrokerDiscoverySource', () => {
         });
         expect(result.descriptors.find(item => item.id === 'alias.0.Kitchen.light.ceiling.power')).to.deep.include({
             rooms: ['Kitchen'],
+            historySourceId: 'fixture.0.device.light',
         });
     });
 

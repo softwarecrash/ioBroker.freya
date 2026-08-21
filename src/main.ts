@@ -76,6 +76,7 @@ class FreyaAdapter extends utils.Adapter {
     private readonly feedbackTasks = new Set<Promise<void>>();
     private observationMetadata = new Map<string, ObservationMetadata>();
     private observedStateIds: string[] = [];
+    private historySourceIds: Record<string, string> = {};
     private policyStateIds = new Set<string>();
     private policySyncTimer?: ioBroker.Timeout;
     private feedbackTimer?: ioBroker.Interval;
@@ -257,6 +258,7 @@ class FreyaAdapter extends utils.Adapter {
             maxRangeMs: 7 * 24 * 60 * 60 * 1_000,
             maxResults: 1_000,
             maxConcurrent: 2,
+            sourceStateIds: this.historySourceIds,
         });
         await this.publishHistorySummary();
     }
@@ -352,6 +354,11 @@ class FreyaAdapter extends utils.Adapter {
         const observedStates = discoveryResult.states.filter(state => state.permissions.observe);
         const learnableObservedStates = observedStates.filter(state => state.permissions.learn);
         this.observedStateIds = observedStates.map(state => state.id);
+        this.historySourceIds = Object.fromEntries(
+            Object.entries(discoveryResult.historySources ?? {}).filter(([stateId]) =>
+                this.observedStateIds.includes(stateId),
+            ),
+        );
         const reader = new IoBrokerContextStateReader(this, this.observedStateIds);
         const learnableIdSet = new Set(learnableObservedStates.map(state => state.id));
         const environmentCandidates = Object.values(discoveryResult.environment)

@@ -444,6 +444,9 @@ learn-enabled states, 1,000 entries per state, two concurrent reads, and 10,000 
 changes. It feeds only the Pattern Engine before live subscriptions start. Historical
 events never enter action dispatch, the first value per state is a baseline, and
 persisted example timestamps make repeated startup backfills idempotent.
+Direct aliases with no read/write expression may resolve to a type-compatible source
+state inside `HistoryService`; the permission gate remains keyed by the selected alias.
+The source ID is neither made controllable nor used by live observation/action paths.
 
 ### Testing strategy
 

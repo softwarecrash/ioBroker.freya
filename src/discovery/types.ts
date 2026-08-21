@@ -35,6 +35,8 @@ export interface StateDescriptor {
     functions: string[];
     ancestorNames: string[];
     nativeHints: string[];
+    /** Direct, type-compatible, transformation-free alias target usable only for read-only history lookup. */
+    historySourceId?: string;
 }
 
 export interface SemanticClassification {
@@ -126,4 +128,5 @@ export interface DiscoveryResult {
     summary: DiscoverySummary;
     states: DiscoveredStateView[];
     environment: Record<EnvironmentKey, EnvironmentCandidate[]>;
+    historySources?: Record<string, string>;
 }

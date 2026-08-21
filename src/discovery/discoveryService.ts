@@ -63,6 +63,11 @@ export class DiscoveryService {
         this.result = {
             states,
             environment,
+            historySources: Object.fromEntries(
+                loaded.descriptors.flatMap(descriptor =>
+                    descriptor.historySourceId ? [[descriptor.id, descriptor.historySourceId]] : [],
+                ),
+            ),
             summary: {
                 totalAvailable: loaded.totalAvailable,
                 scanned: states.length,

@@ -32,6 +32,25 @@ function primitiveHint(value: unknown): string | undefined {
     return undefined;
 }
 
+function directHistorySource(
+    object: ioBroker.StateObject,
+    stateObjects: Record<string, ioBroker.StateObject | undefined>,
+): string | undefined {
+    const alias = object.common.alias as { id?: unknown; read?: unknown; write?: unknown } | undefined;
+    if (
+        !alias ||
+        typeof alias.id !== 'string' ||
+        !alias.id ||
+        alias.id === object._id ||
+        (typeof alias.read === 'string' && alias.read.trim()) ||
+        (typeof alias.write === 'string' && alias.write.trim())
+    ) {
+        return undefined;
+    }
+    const target = stateObjects[alias.id];
+    return target?.type === 'state' && target.common.type === object.common.type ? target._id : undefined;
+}
+
 /** Read state/object metadata without reading state values or changing ioBroker. */
 export class IoBrokerDiscoverySource implements DiscoverySource {
     public constructor(private readonly adapter: ioBroker.Adapter) {}
@@ -89,6 +108,7 @@ export class IoBrokerDiscoverySource implements DiscoverySource {
                 functions,
                 ancestorNames,
                 nativeHints,
+                historySourceId: directHistorySource(object, stateObjectMap),
             };
         });
 

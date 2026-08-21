@@ -224,9 +224,11 @@ describe('HistoryService', () => {
 
     it('allows only permission-gated states and clamps results', async () => {
         let receivedLimit: number | undefined;
+        let receivedStateId: string | undefined;
         const service = new HistoryService(
             'auto',
-            provider((_stateId, _start, _end, options) => {
+            provider((stateId, _start, _end, options) => {
+                receivedStateId = stateId;
                 receivedLimit = options?.limit;
                 return Promise.resolve([
                     { timestamp: 1, value: 1 },
@@ -235,12 +237,18 @@ describe('HistoryService', () => {
             }),
             [influx],
             ['fixture.0.allowed'],
-            { maxRangeMs: 1_000, maxResults: 1, maxConcurrent: 1 },
+            {
+                maxRangeMs: 1_000,
+                maxResults: 1,
+                maxConcurrent: 1,
+                sourceStateIds: { 'fixture.0.allowed': 'fixture.0.physical' },
+            },
         );
 
         const entries = await service.query('fixture.0.allowed', 0, 10, 100);
 
         expect(receivedLimit).to.equal(1);
+        expect(receivedStateId).to.equal('fixture.0.physical');
         expect(entries).to.deep.equal([{ timestamp: 2, value: 2 }]);
         expect((await service.summary()).queryCount).to.equal(1);
     });

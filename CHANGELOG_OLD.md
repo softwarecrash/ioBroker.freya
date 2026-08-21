@@ -18,6 +18,9 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
   states into the same Pattern Engine before live observation starts. It excludes
   foreign commands and confirmations, never dispatches actions, and deduplicates
   persisted examples across restarts.
+- Direct, transformation-free aliases can use the history of a type-compatible source
+  state while permissions, live observations, suggestions, and actions remain keyed to
+  the user-selected alias.
 
 ### Fixed
 
