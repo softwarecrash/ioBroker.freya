@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Freya logo concept Circuit Knot">
+    <rect width="256" height="256" rx="52" fill="#172033"/>
+    <path d="M76 47h92v28H107v38h49v28h-49v68H76z" fill="none" stroke="#67D7C4" stroke-width="12" stroke-linejoin="round"/>
+    <path d="M94 75h41l35 35-42 42 35 35" fill="none" stroke="#F5B642" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M128 152 86 110l35-35" fill="none" stroke="#F5B642" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="#F5B642" stroke="#172033" stroke-width="4">
+        <circle cx="170" cy="110" r="10"/>
+        <circle cx="163" cy="187" r="10"/>
+        <circle cx="86" cy="110" r="10"/>
+    </g>
+</svg>
