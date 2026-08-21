@@ -24,6 +24,8 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Replaced the free-form autonomy-level number input with a descriptive four-level
+  dropdown while preserving the numeric configuration values.
 - Renamed the project, npm package, adapter namespace, data folder, Admin assets, and
   documentation from SmartBrain/`smartbrain` to Freya/`freya` before the first public
   release.

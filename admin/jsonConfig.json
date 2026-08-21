@@ -99,11 +99,27 @@
                     "xl": 3
                 },
                 "autonomyLevel": {
-                    "type": "number",
+                    "type": "select",
                     "label": "Autonomy level",
-                    "min": 0,
-                    "max": 3,
-                    "help": "0 observe, 1 learn/suggest, 2 reserved for per-action approval, 3 controlled execution of approved patterns",
+                    "options": [
+                        {
+                            "label": "Level 0 - Observe only",
+                            "value": 0
+                        },
+                        {
+                            "label": "Level 1 - Learn and suggest",
+                            "value": 1
+                        },
+                        {
+                            "label": "Level 2 - Individual approval (reserved)",
+                            "value": 2
+                        },
+                        {
+                            "label": "Level 3 - Controlled execution",
+                            "value": 3
+                        }
+                    ],
+                    "help": "The autonomy level limits what Freya may do. Learning and state permissions are configured separately.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 4,
