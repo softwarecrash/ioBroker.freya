@@ -79,6 +79,7 @@ class FreyaAdapter extends utils.Adapter {
     private historySourceIds: Record<string, string> = {};
     private policyStateIds = new Set<string>();
     private policySyncTimer?: ioBroker.Timeout;
+    private roomRefreshTimer?: ioBroker.Timeout;
     private feedbackTimer?: ioBroker.Interval;
     private pendingActionTimer?: ioBroker.Interval;
     private learningRepository?: LearningRepository;
@@ -208,6 +209,13 @@ class FreyaAdapter extends utils.Adapter {
                 return;
             }
             if (discoveryResult) {
+                const roomAssignmentsUpdated = await this.policySynchronizer.synchronizeRoomAssignments(
+                    this.discovery.statePoliciesWithRoomDiagnostics(),
+                );
+                if (roomAssignmentsUpdated) {
+                    this.log.info('[Discovery] Updated cached room assignments; waiting for the configured restart');
+                    return;
+                }
                 await this.setupObservation(discoveryResult, timeProvider, sunProvider, config);
             }
         } else {
@@ -536,6 +544,10 @@ class FreyaAdapter extends utils.Adapter {
         if (this.unloading) {
             return;
         }
+        if (id.startsWith('enum.rooms.')) {
+            this.scheduleRoomRefresh();
+            return;
+        }
         const custom = object?.type === 'state' ? object.common.custom?.[this.namespace] : undefined;
         if (!custom && !this.policyStateIds.has(id)) {
             return;
@@ -555,6 +567,47 @@ class FreyaAdapter extends utils.Adapter {
                     }
                 });
         }, 250);
+    }
+
+    private scheduleRoomRefresh(): void {
+        if (this.roomRefreshTimer) {
+            this.clearTimeout(this.roomRefreshTimer);
+        }
+        this.roomRefreshTimer = this.setTimeout(() => {
+            this.roomRefreshTimer = undefined;
+            void this.refreshRoomAssignments().catch(error => {
+                if (!this.unloading) {
+                    this.log.warn(`[Discovery] Room refresh failed: ${(error as Error).message.slice(0, 80)}`);
+                }
+            });
+        }, 500);
+    }
+
+    private async refreshRoomAssignments(): Promise<void> {
+        if (!this.policySynchronizer || !this.runtimeConfig || this.unloading) {
+            return;
+        }
+        const synchronization = await this.policySynchronizer.synchronize();
+        if (synchronization.instanceUpdated || this.unloading) {
+            return;
+        }
+        const discovery = new DiscoveryService(new IoBrokerDiscoverySource(this), {
+            maxStates: this.runtimeConfig.discoveryMaxStates,
+            policies: synchronization.policies,
+            environmentMappings: this.runtimeConfig.environmentMappings,
+        });
+        await discovery.run();
+        if (this.unloading) {
+            return;
+        }
+        const updated = await this.policySynchronizer.synchronizeRoomAssignments(
+            discovery.statePoliciesWithRoomDiagnostics(),
+        );
+        if (updated) {
+            this.log.info('[Discovery] Room assignments changed; waiting for the configured restart');
+        } else {
+            this.discovery = discovery;
+        }
     }
 
     private async onMessage(message: ioBroker.Message): Promise<void> {
@@ -1489,6 +1542,9 @@ class FreyaAdapter extends utils.Adapter {
         try {
             if (this.policySyncTimer) {
                 this.clearTimeout(this.policySyncTimer);
+            }
+            if (this.roomRefreshTimer) {
+                this.clearTimeout(this.roomRefreshTimer);
             }
             if (this.feedbackTimer) {
                 this.clearInterval(this.feedbackTimer);

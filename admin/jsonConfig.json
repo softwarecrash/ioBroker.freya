@@ -576,6 +576,7 @@
                 "_patternRows": {
                     "type": "table",
                     "label": "Learned patterns",
+                    "doNotSave": true,
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -787,6 +788,7 @@
                 "_pendingActionRows": {
                     "type": "table",
                     "label": "Action proposals",
+                    "doNotSave": true,
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
