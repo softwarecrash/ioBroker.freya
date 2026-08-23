@@ -5,9 +5,19 @@ import type {
     StateDescriptor,
     StatePermissions,
     StatePolicyInput,
+    StateScope,
 } from '../discovery/types';
 
 const DENY_ALL: StatePermissions = { observe: false, learn: false, suggest: false, control: false };
+const ROOM_RELEVANT_TYPES = new Set<SemanticType>([
+    'light',
+    'dimmer',
+    'motion',
+    'presence',
+    'illuminance',
+    'contact',
+    'switch',
+]);
 
 /** Resolve configured state permissions without ever granting implicit control. */
 export class PermissionRegistry {
@@ -33,6 +43,8 @@ export class PermissionRegistry {
             return {
                 stateId: descriptor.id,
                 semanticType: classification.type,
+                scope: 'auto',
+                roomStatus: 'not-required',
                 permissions: { ...DENY_ALL },
                 violations: [],
             };
@@ -40,6 +52,9 @@ export class PermissionRegistry {
 
         const violations: string[] = [];
         const semanticType = this.resolveSemanticOverride(input.semanticType, classification.type, violations);
+        const scope: StateScope = new Set<StateScope>(['auto', 'room', 'global']).has(input.scope as StateScope)
+            ? (input.scope as StateScope)
+            : 'auto';
         const permissions: StatePermissions = {
             observe: input.observe === true,
             learn: input.learn === true,
@@ -72,7 +87,24 @@ export class PermissionRegistry {
             violations.push('unknown_semantic_control_denied');
         }
 
-        return { stateId: descriptor.id, semanticType, permissions, violations };
+        const roomStatus = descriptor.rooms.length
+            ? scope === 'global'
+                ? 'global'
+                : 'resolved'
+            : scope === 'global'
+              ? 'global'
+              : scope === 'room'
+                ? 'missing'
+                : permissions.learn && ROOM_RELEVANT_TYPES.has(semanticType)
+                  ? 'unresolved'
+                  : 'not-required';
+        if (roomStatus === 'missing') {
+            violations.push('room_scope_requires_room');
+        } else if (roomStatus === 'unresolved') {
+            violations.push('room_scope_needs_classification');
+        }
+
+        return { stateId: descriptor.id, semanticType, scope, roomStatus, permissions, violations };
     }
 
     private resolveSemanticOverride(

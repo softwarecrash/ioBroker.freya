@@ -1,7 +1,7 @@
 import { expect } from 'chai';
-import { SmartBrainRuntime, type RuntimePort } from './runtime';
+import { FreyaRuntime, type RuntimePort } from './runtime';
 
-describe('SmartBrainRuntime', () => {
+describe('FreyaRuntime', () => {
     it('publishes only safe, adapter-owned runtime status', async () => {
         const writes: Array<[string, ioBroker.StateValue]> = [];
         const warnings: string[] = [];
@@ -12,7 +12,7 @@ describe('SmartBrainRuntime', () => {
             },
             warn: message => warnings.push(message),
         };
-        const runtime = new SmartBrainRuntime(port, {
+        const runtime = new FreyaRuntime(port, {
             autonomyLevel: 0,
             learningEnabled: false,
             historyInstance: 'none',
@@ -52,7 +52,7 @@ describe('SmartBrainRuntime', () => {
 
     it('is idempotent when started or stopped repeatedly', async () => {
         const writes: Array<[string, ioBroker.StateValue]> = [];
-        const runtime = new SmartBrainRuntime(
+        const runtime = new FreyaRuntime(
             {
                 setState: (id, value) => {
                     writes.push([id, value]);
@@ -82,10 +82,48 @@ describe('SmartBrainRuntime', () => {
         );
 
         await runtime.start();
+        const startedWrites = writes.length;
         await runtime.start();
+        expect(writes).to.have.length(startedWrites);
         await runtime.stop();
+        expect(writes).to.have.length(startedWrites + 2);
         await runtime.stop();
+        expect(writes).to.have.length(startedWrites + 2);
+    });
 
-        expect(writes).to.have.length(24);
+    it('publishes the distinct individual-approval runtime mode', async () => {
+        const writes: Array<[string, ioBroker.StateValue]> = [];
+        await new FreyaRuntime(
+            {
+                setState: (id, value) => {
+                    writes.push([id, value]);
+                    return Promise.resolve();
+                },
+                warn: () => undefined,
+            },
+            {
+                autonomyLevel: 2,
+                learningEnabled: true,
+                historyInstance: 'none',
+                discoveryEnabled: true,
+                discoveryMaxStates: 20_000,
+                statePolicies: [],
+                environmentMappings: [],
+                minimumActionConfidence: 0.7,
+                actionCooldownSeconds: 300,
+                blockedStateIds: [],
+                llmProvider: 'rules',
+                llmModel: '',
+                llmBaseUrl: 'http://127.0.0.1:11434',
+                llmApiKey: '',
+                llmTimeoutSeconds: 20,
+                feedbackWindowSeconds: 120,
+                unsafeConfigurationIgnored: false,
+            },
+        ).start();
+        expect(writes).to.deep.include.members([
+            ['learning.enabled', true],
+            ['info.status', 'individual-approval'],
+        ]);
     });
 });

@@ -1,6 +1,6 @@
-# SmartBrain for ioBroker
+# Freya for ioBroker
 
-SmartBrain is a local-first, self-learning ioBroker adapter. It observes explicitly
+Freya is a local-first, self-learning ioBroker adapter. It observes explicitly
 selected states, discovers repeatable home-automation patterns, and turns them into
 explainable suggestions. Automatic actions are a later, opt-in capability protected
 by explicit per-state permissions and a central safety engine.
@@ -12,9 +12,9 @@ sources, synchronizes explicit state policies, and subscribes only to states wit
 explicit `observe` permission. Each relevant change becomes a bounded, in-memory
 observation with its event-time context snapshot. An optional bounded history provider
 can read only those same states. Learning is disabled by default and, when enabled,
-uses only states with an explicit `learn` permission. Rules-only suggestions additionally
-require `suggest` permission on both participating states. Optional execution is disabled
-by default and passes through a deny-by-default safety boundary.
+uses only states with an explicit `learn` permission. `suggest` applies only to the
+proposed action target; learned trigger and context states do not need it. Optional
+execution is disabled by default and passes through a deny-by-default safety boundary.
 
 ## Design goals
 
@@ -46,7 +46,7 @@ implementation plan.
 
 ## Installation and initial configuration
 
-SmartBrain requires Node.js 22 or newer and a current ioBroker controller/Admin. A new
+Freya requires Node.js 22 or newer and a current ioBroker controller/Admin. A new
 instance starts disabled for automation: autonomy level 0, learning off, history off,
 Rules Only LLM, and no state permissions.
 
@@ -56,8 +56,8 @@ Rules Only LLM, and no state permissions.
 2. Correct the semantic type or room assignment only when discovery is ambiguous.
 3. Optionally choose an installed History, SQL, or InfluxDB instance and configure
    semantic environment source priorities.
-4. Enable learning after reviewing the observed-state list. Suggestions still require
-   explicit Suggest permission and approval.
+4. Enable learning after reviewing the observed-state list. A proposed action still
+   requires Suggest permission on its target state and explicit approval.
 5. Keep autonomy at 0 while validating learned patterns. Controlled execution is an
    advanced, explicit level-3 opt-in and additionally requires Control permission.
 
@@ -71,7 +71,7 @@ Installation remains at autonomy level 0, with learning and history disabled and
 state permissions denied by default. A controlled action is possible only at level 3,
 through an explicit ioBroker Admin request, for a currently eligible and approved
 pattern whose target has the complete permission chain including `control`. Immediately
-before the only foreign-state write boundary, SmartBrain re-reads the object and context
+before the only foreign-state write boundary, Freya re-reads the object and context
 and validates confidence, conditions, target type/writability/value constraints,
 deny-list, cooldown, request expiry, and context freshness. Lock and alarm states cannot
 receive control permission. Tests exercise only mocks; local deployment stays at level 0.
@@ -84,26 +84,52 @@ object exports. Ambiguous metadata remains `unknown`; user corrections and permi
 are kept separately in adapter configuration. Environment mappings support multiple
 ranked candidates and manual pinning without hard-coded adapter state IDs.
 
+Room and function enums assigned to a parent folder or device are inherited by nested
+states. This includes deeply structured alias paths such as
+`alias.0.Kitchen.light.ceiling.power` when `alias.0.Kitchen` is assigned to a room.
+Configured states expose their read-only room diagnostic directly in the permissions
+table in Admin. A state can be marked `Automatic`, `Room related`, or `Global`; only
+unresolved or explicitly room-related learning states warn when no room is available.
+Global states remain valid whole-home/context inputs and are excluded from same-room
+action correlations.
+
 The adapter message API provides `getDiscoverySummary` and `getDiscoveredStates`.
 State pages are capped at 100 entries and support a text query.
+
+### Change-source attribution
+
+Freya correlates generic ioBroker command writes (`ack=false`) with later device
+confirmations (`ack=true`) without assuming specific adapter IDs. Its own writes,
+foreign commands, and their confirmations are excluded from behavioral pattern evidence;
+an acknowledged change without a matching recent command remains usable as a probable
+device-local interaction. An opposing probable device-local interaction shortly after a
+Freya action is retained as negative feedback, while an opposing foreign command is
+kept ambiguous.
+
+Bridges that know the actual intent can call `reportExternalIntent` immediately before
+writing an observed state. The local message contains `stateId`, `value`, and `origin`
+(`user` or `automation`). Attribution is short-lived, bound to the calling adapter, and
+applies only to that matching event. This lets mixed-purpose integrations such as voice
+bridges classify individual commands without classifying an entire adapter instance as
+human or automated.
 
 ## Read-only observations
 
 Only states enabled through the central policy table or the synchronized custom object
 settings are subscribed. Unchanged events are deduplicated and normalized in order;
 the queue and retained observation cache are both bounded. Context reads are restricted
-to the same allow-list. Observation status is available under `smartbrain.0.observation`,
+to the same allow-list. Observation status is available under `freya.0.observation`,
 and bounded pages are available through `getObservationSummary` and `getObservations`.
 The cache is intentionally volatile in this phase.
 
 ## Read-only history
 
-History is disabled by default. When `Automatic` is explicitly selected, SmartBrain
+History is disabled by default. When `Automatic` is explicitly selected, Freya
 detects enabled and alive ioBroker instances that advertise the standard `getHistory`
 message and prefers InfluxDB, then SQL, then History. Per-state custom history metadata
 alone is not considered proof that a provider is available.
 
-The configuration retrieves its choices dynamically from the running SmartBrain
+The configuration retrieves its choices dynamically from the running Freya
 instance. Alongside `Disabled` and `Automatic`, every installed adapter instance with
 the capability is listed directly; unavailable instances carry an `offline` marker.
 
@@ -111,17 +137,29 @@ Queries are restricted to explicitly observed states, seven days, 1,000 results,
 concurrent requests, and a five-second provider timeout. Provider responses are treated
 as untrusted input: values are validated and bounded, duplicates removed, and results
 sorted before use. `getHistoryStatus` and `getStateHistory` expose the bounded API.
+When learning is enabled, startup replays at most seven days from up to 25 explicitly
+learn-enabled states, with 1,000 entries per state and 10,000 merged changes overall.
+Only the Pattern Engine receives this replay: it cannot create action proposals or
+execute an action. First samples establish a baseline, foreign commands and their device
+confirmations are excluded conservatively, and example timestamps prevent duplicate
+learning after a restart. Status and aggregate counts are exposed below `history.*`.
+For a direct alias without read/write transformation, Freya may read history from its
+type-compatible source state when the history adapter stores data there. The configured
+permission and every live observation/action continue to use the alias ID; the source
+mapping exists only inside the read-only History boundary.
 
 ## Explainable pattern learning
 
-When learning is explicitly enabled, SmartBrain correlates rising boolean motion,
+When learning is explicitly enabled, Freya correlates rising boolean motion,
 presence, contact, or switch events with a boolean light turning on in the same room
-within two minutes. Only states carrying both `observe` and `learn` permission enter
-the learner. Candidate examples, pending windows, and pattern count are hard-bounded
-and stale records are removed.
+within two minutes. For presence states it also learns absence-to-light-off independently.
+An arrival without a light change remains negative evidence, never an inferred off action.
+Only states carrying both `observe` and `learn` permission enter the learner. Candidate
+examples, pending windows, and pattern count are hard-bounded and stale records are removed.
 
-Context is not copied wholesale into a rule. Time, weekend, room, illuminance,
-temperature, presence, solar elevation, and sunrise/sunset-relative buckets compete in
+Context is not copied wholesale into a rule. Time, weekend, room, semantic same-room
+illuminance, outside illuminance, temperature, presence, solar elevation, and
+sunrise/sunset-relative buckets compete in
 a deterministic held-out test. A condition needs minimum support and predictive
 improvement; redundant clock and solar conditions cannot be combined. Each additional
 condition costs 0.01 quality points, favoring the smallest useful explanation.
@@ -130,7 +168,14 @@ on three different days, and confidence of 0.58; any added context condition als
 requires held-out improvement. Confidence
 exposes smoothed match rate, sample maturity, repeatability, feedback adjustment, and
 recency. `getPatternSummary` and bounded `getPatterns` provide read-only inspection.
-Pattern memory is intentionally volatile until the schema-versioned persistence phase.
+The Admin Patterns table and selector also include relationships that are still learning. They show
+matches/opportunities, distinct learning days, current confidence, and the explanation;
+the `patterns.learningCount`, `patterns.pendingOpportunityCount`, and
+`patterns.retainedExampleCount` states make incoming evidence visible before a pattern
+meets the candidate thresholds.
+Bounded learning evidence, suggestions, and explicit approval/disabled states are stored
+locally in a schema-versioned, atomically replaced file. Pending trigger windows are not
+restored; restart recovery never invents or replays an expired trigger.
 
 ## Suggestions, approval, and activity
 
@@ -139,23 +184,38 @@ conditions, two-minute action window, match/opportunity counts, confidence, and 
 confidence component. Candidate creation, withdrawal, accepted status changes, and
 rejected commands enter a newest-first audit store capped at 500 records.
 
+`Learn` authorizes a state to contribute observations, triggers, or context to pattern
+learning. `Suggest` is deliberately target-only: a presence or illuminance sensor can
+influence a light rule with Learn enabled even when Suggest is disabled on the sensor.
+
 `getSuggestionSummary`, paginated `getSuggestions`, and paginated `getActivity` expose
 read-only views. `setPatternStatus` supports `candidate`, `approved`, and `disabled`
 transitions, but accepts mutations only from an ioBroker Admin adapter instance. An
-approval changes no state permission, does not raise autonomy, and cannot execute a
-device action. Approved or disabled entries whose evidence disappears remain visible
-but are marked ineligible. Suggestion and activity storage is currently volatile.
+approval changes no state permission and does not raise autonomy. Approved or disabled
+entries whose evidence disappears remain visible but are marked ineligible. Suggestions
+and their approval states survive restarts; the bounded activity view remains volatile.
+Admin can explicitly return an approved pattern to continued learning, ignore it, reset
+its evidence and learning feedback, or delete it. Reset keeps the relationship at zero
+evidence; delete removes it. Both reject outstanding one-shot proposals, are persisted
+before success is reported, and allow future observations to learn the relationship again.
+Historical action feedback remains in the audit after a reset but is excluded from the
+new learning cycle.
 
 ## Controlled actions
 
-`executePattern` accepts only a 16-character pattern ID from an ioBroker Admin adapter
-instance. It does not accept a target, value, permission, confidence, or approval flag
-from the caller: these values are resolved from trusted runtime state. The executor
-revalidates all mutable inputs immediately before writing and fails closed when context
-or object lookup is unavailable. `getActionAudit` exposes the bounded newest-first audit;
-summary states are available below `smartbrain.0.actions`. Cooldowns remain volatile;
-complete action and feedback records are persisted locally while the operational audit
-view stays bounded in memory.
+At autonomy level 2, a matching approved trigger creates a short-lived persisted action
+proposal. ioBroker Admin may approve that exact proposal once or reject it; expiry and
+exactly-once claiming prevent delayed or duplicate execution. At level 3, the same live
+trigger path claims the proposal automatically before submitting it to the Safety Engine.
+
+`executePattern` remains an explicit one-shot Admin boundary. It accepts only a
+16-character pattern ID and never accepts a target, value, permission, confidence, or
+approval flag from the caller: these values are resolved from trusted runtime state. The
+executor revalidates current context, same-room illuminance, target value and metadata,
+permissions, blocks, confidence, cooldown, and pattern status immediately before writing.
+`getActionAudit` exposes the bounded newest-first audit; summary states are available
+below `freya.0.actions`. Cooldowns remain volatile; complete action, pending-action, and
+feedback records are persisted locally while the operational audit view stays bounded.
 
 ## Optional LLM advisory
 
@@ -163,12 +223,14 @@ view stays bounded in memory.
 is restricted to the loopback interface. OpenAI uses the Responses endpoint with
 `store: false` and a strict JSON schema; an OpenAI-compatible provider uses HTTPS (or
 loopback HTTP) and the corresponding structured response format. Model names are
-always explicit and SmartBrain does not silently substitute one. See the official
+always explicit and Freya does not silently substitute one. See the official
 [OpenAI Responses API](https://developers.openai.com/api/reference/typescript/resources/beta/subresources/responses/methods/create)
 and [Ollama structured output documentation](https://docs.ollama.com/capabilities/structured-outputs).
 
 External calls happen only through the Admin-only `analyzePattern` command. Beforehand,
 `previewLlmDisclosure` shows the exact allow-listed payload and destination origin.
+The Admin-only connection test sends a synthetic pattern containing no household data;
+for a remote provider it performs one small model request and may therefore be billable.
 The payload contains aggregate evidence and selected semantic context features, but no
 state IDs, room names, raw values, person data, or API key. Keys are declared both
 protected and encrypted native configuration. Responses are size/time bounded and
@@ -178,7 +240,7 @@ response. The LLM layer has no dependency on or route into the Action Executor.
 
 ## Persistent action feedback
 
-Before the single foreign-state write boundary may run, SmartBrain atomically persists
+Before the single foreign-state write boundary may run, Freya atomically persists
 a schema-versioned `requested` action record in its ioBroker instance data directory.
 If this fails, execution fails closed. Completion, correlation ID, pattern, target,
 expected value, safety reasons, error code, and feedback are retained in a bounded
@@ -188,7 +250,7 @@ Admin-only; `getFeedbackSummary` exposes aggregate counters.
 
 `submitFeedback` accepts explicit positive, negative, or neutral feedback only from an
 ioBroker Admin instance. Explicit feedback supersedes an earlier implicit result.
-Implicit attribution considers only the newest executed SmartBrain action for the same
+Implicit attribution considers only the newest executed Freya action for the same
 target inside the configured window. An opposite Admin change is conservatively
 negative, an opposite change from another source remains `unknown`, unrelated or equal
 changes are ignored, and expiry without an opposite change becomes neutral. Only
@@ -231,12 +293,13 @@ visible in the local Admin UI.
 
 ## Changelog
 
-### 0.9.1 (2026-08-20)
+### 0.10.0 (2026-08-21)
 
-- Added release hardening, eleven-language JSON Config translations, security/privacy
-  documentation, safer dependency automation, and release-package smoke testing.
+- Added independent presence-on/light-on and presence-off/light-off learning.
+- Added semantic same-room illuminance as an explainable feature selected only when it
+  improves held-out predictive quality.
 
-Older details are available in [CHANGELOG.md](CHANGELOG.md).
+Older release history is available in [CHANGELOG_OLD.md](CHANGELOG_OLD.md).
 
 ## License
 

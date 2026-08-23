@@ -8,6 +8,7 @@ export type PatternFeatureKey =
     | 'sun.elevationBand'
     | 'sun.sunriseOffset'
     | 'sun.sunsetOffset'
+    | 'room.illuminanceBand'
     | 'environment.illuminanceBand'
     | 'environment.temperatureBand'
     | 'presence.home';
@@ -29,12 +30,26 @@ export interface PatternExample {
     features: PatternFeatures;
 }
 
+/** Restart-safe evidence for one bounded learned relationship. */
+export interface PersistedPatternRecord {
+    key: string;
+    triggerStateId: string;
+    actionStateId: string;
+    rooms: string[];
+    examples: PatternExample[];
+    firstSeen: number;
+    lastSeen: number;
+    positiveFeedback: number;
+    negativeFeedback: number;
+    expectedAction: boolean;
+}
+
 export interface LearnableState {
     id: string;
     semanticType: SemanticType;
     valueType?: ioBroker.CommonType;
     rooms: string[];
-    canSuggest?: boolean;
+    canBeSuggested?: boolean;
 }
 
 export interface PatternSelection {
@@ -57,7 +72,7 @@ export interface LearnedPattern {
     id: string;
     triggerStateId: string;
     actionStateId: string;
-    expectedAction: true;
+    expectedAction: boolean;
     actionWindowMs: number;
     suggestionEligible: boolean;
     rooms: string[];
@@ -80,6 +95,7 @@ export interface PendingOpportunity {
     key: string;
     triggerStateId: string;
     actionStateId: string;
+    expectedAction: boolean;
     timestamp: number;
     expiresAt: number;
     rooms: string[];

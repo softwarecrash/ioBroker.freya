@@ -3,10 +3,18 @@ import type { Observation } from '../observation/types';
 import { calculateConfidence } from './confidence';
 import { extractPatternFeatures } from './features';
 import { selectPatternFeatures } from './featureSelection';
-import type { LearnableState, LearnedPattern, PatternExample, PatternSummary, PendingOpportunity } from './types';
+import type {
+    LearnableState,
+    LearnedPattern,
+    PatternExample,
+    PatternSummary,
+    PendingOpportunity,
+    PersistedPatternRecord,
+} from './types';
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const TRIGGER_TYPES = new Set(['motion', 'presence', 'contact', 'switch']);
+const NON_BEHAVIORAL_ORIGINS = new Set(['self', 'external-command', 'confirmation']);
 
 interface CandidateRecord {
     trigger: LearnableState;
@@ -17,6 +25,7 @@ interface CandidateRecord {
     lastSeen: number;
     positiveFeedback: number;
     negativeFeedback: number;
+    expectedAction: boolean;
 }
 
 export interface PatternEngineOptions {
@@ -31,6 +40,7 @@ export interface PatternEngineOptions {
 /** Learns bounded, explainable trigger-to-light candidates without performing actions. */
 export class PatternEngine {
     private readonly states = new Map<string, LearnableState>();
+    private readonly latestBooleanValues = new Map<string, boolean>();
     private readonly records = new Map<string, CandidateRecord>();
     private readonly pending = new Map<string, PendingOpportunity>();
     private lastEvaluationTimestamp = 0;
@@ -60,15 +70,24 @@ export class PatternEngine {
         }
         this.flush(observation.timestamp);
         const state = this.states.get(observation.stateId);
-        if (!state || state.valueType !== 'boolean' || observation.deleted || observation.value !== true) {
+        if (!state || state.valueType !== 'boolean' || observation.deleted || typeof observation.value !== 'boolean') {
             return;
         }
-        if (TRIGGER_TYPES.has(state.semanticType) && observation.previousValue !== true) {
-            this.createOpportunities(state, observation);
+        if (observation.attribution && NON_BEHAVIORAL_ORIGINS.has(observation.attribution.kind)) {
+            this.latestBooleanValues.set(state.id, observation.value);
+            return;
         }
-        if (state.semanticType === 'light' && observation.previousValue !== true) {
-            this.matchAction(state, observation.timestamp);
+        if (observation.previousValue === observation.value) {
+            this.latestBooleanValues.set(state.id, observation.value);
+            return;
         }
+        if (TRIGGER_TYPES.has(state.semanticType) && (observation.value || state.semanticType === 'presence')) {
+            this.createOpportunities(state, observation, observation.value);
+        }
+        if (state.semanticType === 'light') {
+            this.matchAction(state, observation.timestamp, observation.value);
+        }
+        this.latestBooleanValues.set(state.id, observation.value);
     }
 
     public flush(timestamp: number): void {
@@ -117,7 +136,99 @@ export class PatternEngine {
         return false;
     }
 
-    private createOpportunities(trigger: LearnableState, observation: Observation): void {
+    /** Keep the relationship but discard all evidence so it must mature again from zero. */
+    public resetPattern(patternId: string, timestamp = Date.now()): boolean {
+        for (const [key, record] of this.records) {
+            if (this.patternId(key) !== patternId) {
+                continue;
+            }
+            record.examples = [];
+            record.firstSeen = timestamp;
+            record.lastSeen = timestamp;
+            record.positiveFeedback = 0;
+            record.negativeFeedback = 0;
+            this.pending.delete(key);
+            this.lastEvaluationTimestamp = Math.max(this.lastEvaluationTimestamp, timestamp);
+            return true;
+        }
+        return false;
+    }
+
+    /** Remove the learned relationship. Future observations may discover it again. */
+    public deletePattern(patternId: string): boolean {
+        for (const key of this.records.keys()) {
+            if (this.patternId(key) !== patternId) {
+                continue;
+            }
+            this.records.delete(key);
+            this.pending.delete(key);
+            return true;
+        }
+        return false;
+    }
+
+    /** Export bounded learning evidence. Pending action windows are deliberately excluded. */
+    public snapshot(): PersistedPatternRecord[] {
+        return [...this.records.entries()].map(([key, record]) => ({
+            key,
+            triggerStateId: record.trigger.id,
+            actionStateId: record.action.id,
+            rooms: [...record.rooms],
+            examples: record.examples.map(example => ({
+                timestamp: example.timestamp,
+                matched: example.matched,
+                features: { values: { ...example.features.values } },
+            })),
+            firstSeen: record.firstSeen,
+            lastSeen: record.lastSeen,
+            positiveFeedback: record.positiveFeedback,
+            negativeFeedback: record.negativeFeedback,
+            expectedAction: record.expectedAction,
+        }));
+    }
+
+    /** Restore validated evidence only when both configured states still match the record. */
+    public restore(records: PersistedPatternRecord[]): number {
+        let restored = 0;
+        for (const persisted of records.slice(-this.maxPatterns)) {
+            const trigger = this.states.get(persisted.triggerStateId);
+            const action = this.states.get(persisted.actionStateId);
+            const expectedKey = `${persisted.triggerStateId}\u0000${persisted.actionStateId}\u0000${String(persisted.expectedAction)}`;
+            if (
+                !trigger ||
+                !action ||
+                action.semanticType !== 'light' ||
+                action.valueType !== 'boolean' ||
+                persisted.key !== expectedKey
+            ) {
+                continue;
+            }
+            const rooms = persisted.rooms.filter(room => trigger.rooms.includes(room) && action.rooms.includes(room));
+            if (!rooms.length) {
+                continue;
+            }
+            this.records.set(persisted.key, {
+                trigger,
+                action,
+                rooms: rooms.slice(0, 20),
+                examples: persisted.examples.slice(-this.maxExamples).map(example => ({
+                    timestamp: example.timestamp,
+                    matched: example.matched,
+                    features: { values: { ...example.features.values } },
+                })),
+                firstSeen: persisted.firstSeen,
+                lastSeen: persisted.lastSeen,
+                positiveFeedback: Math.max(0, Math.min(persisted.positiveFeedback, 1_000)),
+                negativeFeedback: Math.max(0, Math.min(persisted.negativeFeedback, 1_000)),
+                expectedAction: persisted.expectedAction,
+            });
+            this.lastEvaluationTimestamp = Math.max(this.lastEvaluationTimestamp, persisted.lastSeen);
+            restored++;
+        }
+        return restored;
+    }
+
+    private createOpportunities(trigger: LearnableState, observation: Observation, expectedAction: boolean): void {
         for (const action of this.states.values()) {
             if (action.semanticType !== 'light' || action.valueType !== 'boolean' || action.id === trigger.id) {
                 continue;
@@ -126,7 +237,16 @@ export class PatternEngine {
             if (!rooms.length) {
                 continue;
             }
-            const key = `${trigger.id}\u0000${action.id}`;
+            const key = `${trigger.id}\u0000${action.id}\u0000${String(expectedAction)}`;
+            const contextualValue = observation.context?.states?.[action.id];
+            const currentActionValue =
+                typeof contextualValue === 'boolean' ? contextualValue : this.latestBooleanValues.get(action.id);
+            if (currentActionValue === expectedAction) {
+                // The desired state already exists, so this trigger cannot reveal whether an action would follow.
+                // In particular, repeated presence pulses while a light remains on must not become failures.
+                this.pending.delete(key);
+                continue;
+            }
             const previous = this.pending.get(key);
             if (previous) {
                 this.retainExample(previous, false);
@@ -141,6 +261,7 @@ export class PatternEngine {
                 key,
                 triggerStateId: trigger.id,
                 actionStateId: action.id,
+                expectedAction,
                 timestamp: observation.timestamp,
                 expiresAt: observation.timestamp + this.actionWindowMs,
                 rooms,
@@ -149,9 +270,13 @@ export class PatternEngine {
         }
     }
 
-    private matchAction(action: LearnableState, timestamp: number): void {
+    private matchAction(action: LearnableState, timestamp: number, observedValue: boolean): void {
         for (const [key, opportunity] of this.pending) {
-            if (opportunity.actionStateId === action.id && opportunity.timestamp <= timestamp) {
+            if (
+                opportunity.actionStateId === action.id &&
+                opportunity.expectedAction === observedValue &&
+                opportunity.timestamp <= timestamp
+            ) {
                 this.retainExample(opportunity, true);
                 this.pending.delete(key);
             }
@@ -183,13 +308,21 @@ export class PatternEngine {
                 lastSeen: opportunity.timestamp,
                 positiveFeedback: 0,
                 negativeFeedback: 0,
+                expectedAction: opportunity.expectedAction,
             };
             this.records.set(opportunity.key, record);
+        }
+        if (record.examples.some(example => example.timestamp === opportunity.timestamp)) {
+            return;
         }
         record.examples.push({
             timestamp: opportunity.timestamp,
             matched,
-            features: extractPatternFeatures(opportunity.context, opportunity.rooms),
+            features: extractPatternFeatures(
+                opportunity.context,
+                opportunity.rooms,
+                this.localIlluminance(opportunity),
+            ),
         });
         if (record.examples.length > this.maxExamples) {
             record.examples.splice(0, record.examples.length - this.maxExamples);
@@ -224,12 +357,12 @@ export class PatternEngine {
                 : 'learning';
         const conditions = selection.conditions.map(condition => `${condition.feature} = ${String(condition.value)}`);
         return {
-            id: createHash('sha256').update(key).digest('hex').slice(0, 16),
+            id: this.patternId(key),
             triggerStateId: record.trigger.id,
             actionStateId: record.action.id,
-            expectedAction: true,
+            expectedAction: record.expectedAction,
             actionWindowMs: this.actionWindowMs,
-            suggestionEligible: record.trigger.canSuggest === true && record.action.canSuggest === true,
+            suggestionEligible: record.action.canBeSuggested === true,
             rooms: [...record.rooms],
             conditions: selection.conditions,
             opportunities: selectedExamples.length,
@@ -244,10 +377,31 @@ export class PatternEngine {
             lastSeen: record.lastSeen,
             status,
             explanation: conditions.length
-                ? `After ${record.trigger.semanticType}, ${record.action.semanticType} became true when ${conditions.join(' and ')}.`
+                ? `After ${record.trigger.semanticType} became ${String(record.expectedAction)}, ${record.action.semanticType} became ${String(record.expectedAction)} when ${conditions.join(' and ')}.`
                 : status === 'candidate'
-                  ? `After ${record.trigger.semanticType}, ${record.action.semanticType} reliably became true without an additional context condition.`
-                  : `Still learning whether ${record.trigger.semanticType} predicts ${record.action.semanticType}.`,
+                  ? `After ${record.trigger.semanticType} became ${String(record.expectedAction)}, ${record.action.semanticType} reliably became ${String(record.expectedAction)} without an additional context condition.`
+                  : `Still learning whether ${record.trigger.semanticType} becoming ${String(record.expectedAction)} predicts ${record.action.semanticType} becoming ${String(record.expectedAction)}.`,
         };
+    }
+
+    private patternId(key: string): string {
+        return createHash('sha256').update(key).digest('hex').slice(0, 16);
+    }
+
+    private localIlluminance(opportunity: PendingOpportunity): number | undefined {
+        const contextStates = opportunity.context?.states;
+        if (!contextStates) {
+            return undefined;
+        }
+        return [...this.states.values()]
+            .filter(
+                state =>
+                    state.semanticType === 'illuminance' &&
+                    state.rooms.some(room => opportunity.rooms.includes(room)) &&
+                    typeof contextStates[state.id] === 'number' &&
+                    Number.isFinite(contextStates[state.id]),
+            )
+            .sort((left, right) => left.id.localeCompare(right.id))
+            .map(state => contextStates[state.id] as number)[0];
     }
 }

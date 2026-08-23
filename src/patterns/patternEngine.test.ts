@@ -23,30 +23,67 @@ function observation(
     semanticType: Observation['semanticType'],
     timestamp: number,
     snapshot?: ContextSnapshot,
+    value = true,
+    rooms = ['living'],
 ): Observation {
     return {
         sequence: timestamp,
         stateId,
-        value: true,
-        previousValue: false,
+        value,
+        previousValue: !value,
         timestamp,
         receivedAt: timestamp,
         ack: true,
         quality: 0,
         deleted: false,
         semanticType,
-        rooms: ['living'],
+        rooms,
         functions: [],
         context: snapshot,
     };
 }
 
 describe('PatternEngine', () => {
+    it('does not learn its own actions or generic external commands as user behavior', () => {
+        const engine = new PatternEngine(
+            [
+                { id: 'motion', semanticType: 'motion', valueType: 'boolean', rooms: ['living'] },
+                { id: 'light', semanticType: 'light', valueType: 'boolean', rooms: ['living'] },
+            ],
+            { enabled: true, actionWindowMs: 60_000 },
+        );
+        const trigger = observation('motion', 'motion', 1_000);
+        engine.observe(trigger);
+        const ownAction = observation('light', 'light', 2_000);
+        ownAction.attribution = {
+            kind: 'self',
+            source: 'system.adapter.freya.0',
+            confidence: 1,
+            reason: 'self_source',
+        };
+        engine.observe(ownAction);
+        const externalAction = observation('light', 'light', 3_000, undefined, false);
+        externalAction.attribution = {
+            kind: 'external-command',
+            source: 'system.adapter.any-logic.0',
+            confidence: 0.8,
+            reason: 'foreign_command',
+        };
+        engine.observe(externalAction);
+        expect(engine.patterns(4_000)).to.have.length(0);
+    });
+
     it('learns an explainable dark-context trigger-to-light candidate', () => {
         const engine = new PatternEngine(
             [
                 { id: 'sensor.motion', semanticType: 'motion', valueType: 'boolean', rooms: ['living'] },
-                { id: 'lamp.on', semanticType: 'light', valueType: 'boolean', rooms: ['living'], canSuggest: true },
+                {
+                    id: 'lamp.on',
+                    semanticType: 'light',
+                    valueType: 'boolean',
+                    rooms: ['living'],
+                    canBeSuggested: true,
+                },
             ],
             { enabled: true, actionWindowMs: 60_000 },
         );
@@ -54,7 +91,9 @@ describe('PatternEngine', () => {
         for (let index = 0; index < 24; index++) {
             const timestamp = start + index * DAY_MS;
             const dark = index % 2 === 0;
-            engine.observe(observation('sensor.motion', 'motion', timestamp, context(timestamp, dark)));
+            const snapshot = context(timestamp, dark);
+            snapshot.states = { 'lamp.on': false };
+            engine.observe(observation('sensor.motion', 'motion', timestamp, snapshot));
             if (dark) {
                 engine.observe(observation('lamp.on', 'light', timestamp + 5_000));
             } else {
@@ -69,7 +108,128 @@ describe('PatternEngine', () => {
         expect(pattern.opportunities).to.equal(12);
         expect(pattern.matches).to.equal(12);
         expect(pattern.explanation).to.contain('environment.illuminanceBand = dark');
-        expect(pattern.suggestionEligible).to.equal(false);
+        expect(pattern.suggestionEligible).to.equal(true);
+    });
+
+    it('uses a same-room illuminance state as context without exposing its state id', () => {
+        const engine = new PatternEngine(
+            [
+                { id: 'kitchen.presence', semanticType: 'presence', valueType: 'boolean', rooms: ['kitchen'] },
+                { id: 'kitchen.light', semanticType: 'light', valueType: 'boolean', rooms: ['kitchen'] },
+                { id: 'kitchen.lux', semanticType: 'illuminance', valueType: 'number', rooms: ['kitchen'] },
+            ],
+            { enabled: true, actionWindowMs: 60_000 },
+        );
+        const start = Date.UTC(2026, 0, 1);
+        for (let index = 0; index < 24; index++) {
+            const timestamp = start + index * DAY_MS;
+            const dark = index % 2 === 0;
+            const snapshot = context(timestamp, true);
+            snapshot.environment = { outsideIlluminance: 5_000 };
+            snapshot.states = { 'kitchen.lux': dark ? 5 : 500, 'kitchen.light': false };
+            engine.observe(observation('kitchen.presence', 'presence', timestamp, snapshot, true, ['kitchen']));
+            if (dark) {
+                engine.observe(observation('kitchen.light', 'light', timestamp + 5_000, undefined, true, ['kitchen']));
+            } else {
+                engine.flush(timestamp + 61_000);
+            }
+        }
+
+        const [pattern] = engine.patterns(start + 24 * DAY_MS);
+        expect(pattern.status).to.equal('candidate');
+        expect(pattern.conditions).to.include.deep.members([{ feature: 'room.illuminanceBand', value: 'dark' }]);
+        expect(pattern.conditions.some(item => item.feature === 'environment.illuminanceBand')).to.equal(false);
+        expect(JSON.stringify(pattern.conditions)).not.to.contain('kitchen.lux');
+    });
+
+    it('learns presence-off to light-off separately from presence-on to light-on', () => {
+        const engine = new PatternEngine(
+            [
+                {
+                    id: 'kitchen.presence',
+                    semanticType: 'presence',
+                    valueType: 'boolean',
+                    rooms: ['kitchen'],
+                    canBeSuggested: false,
+                },
+                {
+                    id: 'kitchen.light',
+                    semanticType: 'light',
+                    valueType: 'boolean',
+                    rooms: ['kitchen'],
+                    canBeSuggested: true,
+                },
+            ],
+            { enabled: true, actionWindowMs: 60_000 },
+        );
+        const start = Date.UTC(2026, 0, 1);
+        for (let index = 0; index < 12; index++) {
+            const timestamp = start + index * DAY_MS;
+            engine.observe(
+                observation('kitchen.presence', 'presence', timestamp, context(timestamp, true), true, ['kitchen']),
+            );
+            engine.observe(observation('kitchen.light', 'light', timestamp + 1_000, undefined, true, ['kitchen']));
+            engine.observe(
+                observation('kitchen.presence', 'presence', timestamp + 120_000, context(timestamp, true), false, [
+                    'kitchen',
+                ]),
+            );
+            engine.observe(observation('kitchen.light', 'light', timestamp + 121_000, undefined, false, ['kitchen']));
+        }
+
+        const patterns = engine.patterns(start + 12 * DAY_MS);
+        expect(patterns).to.have.length(2);
+        expect(patterns.map(pattern => pattern.expectedAction).sort()).to.deep.equal([false, true]);
+        expect(patterns.every(pattern => pattern.status === 'candidate' && pattern.suggestionEligible)).to.equal(true);
+        expect(patterns.find(pattern => !pattern.expectedAction)?.explanation).to.contain('became false');
+    });
+
+    it('does not interpret a motion-off transition as an action opportunity', () => {
+        const engine = new PatternEngine(
+            [
+                { id: 'motion', semanticType: 'motion', valueType: 'boolean', rooms: ['hall'] },
+                { id: 'light', semanticType: 'light', valueType: 'boolean', rooms: ['hall'] },
+            ],
+            { enabled: true },
+        );
+        engine.observe(observation('motion', 'motion', 1, context(1, true), false, ['hall']));
+        expect(engine.summary(2).pendingOpportunities).to.equal(0);
+    });
+
+    it('does not count a trigger when the light already has the expected state', () => {
+        const engine = new PatternEngine(
+            [
+                { id: 'kitchen.presence', semanticType: 'presence', valueType: 'boolean', rooms: ['kitchen'] },
+                { id: 'kitchen.light', semanticType: 'light', valueType: 'boolean', rooms: ['kitchen'] },
+            ],
+            { enabled: true, actionWindowMs: 5_000 },
+        );
+        const alreadyOn = context(1_000, true);
+        alreadyOn.states = { 'kitchen.light': true };
+        engine.observe(observation('kitchen.presence', 'presence', 1_000, alreadyOn, true, ['kitchen']));
+        engine.flush(7_000);
+
+        const alreadyOff = context(8_000, true);
+        alreadyOff.states = { 'kitchen.light': false };
+        engine.observe(observation('kitchen.presence', 'presence', 8_000, alreadyOff, false, ['kitchen']));
+        engine.flush(14_000);
+
+        expect(engine.summary(14_000)).to.include({ retainedExamples: 0, pendingOpportunities: 0 });
+    });
+
+    it('uses the last observed light value when a context snapshot has no device state', () => {
+        const engine = new PatternEngine(
+            [
+                { id: 'kitchen.presence', semanticType: 'presence', valueType: 'boolean', rooms: ['kitchen'] },
+                { id: 'kitchen.light', semanticType: 'light', valueType: 'boolean', rooms: ['kitchen'] },
+            ],
+            { enabled: true, actionWindowMs: 5_000 },
+        );
+        engine.observe(observation('kitchen.light', 'light', 1_000, undefined, true, ['kitchen']));
+        engine.observe(observation('kitchen.presence', 'presence', 2_000, context(2_000, true), true, ['kitchen']));
+        engine.flush(8_000);
+
+        expect(engine.summary(8_000)).to.include({ retainedExamples: 0, pendingOpportunities: 0 });
     });
 
     it('remains inert when disabled and never correlates rooms that do not overlap', () => {
@@ -105,7 +265,9 @@ describe('PatternEngine', () => {
         const start = Date.UTC(2026, 0, 1);
         for (let index = 0; index < 12; index++) {
             const timestamp = start + index * DAY_MS;
-            engine.observe(observation('motion', 'motion', timestamp, context(timestamp, true)));
+            const snapshot = context(timestamp, true);
+            snapshot.states = { light: false };
+            engine.observe(observation('motion', 'motion', timestamp, snapshot));
             engine.observe(observation('light', 'light', timestamp + 1_000));
         }
         const [pattern] = engine.patterns(start + 12 * DAY_MS);
@@ -132,6 +294,25 @@ describe('PatternEngine', () => {
         expect(engine.patterns(2 * DAY_MS)).to.have.length(0);
     });
 
+    it('can reset evidence or delete a learned relationship without affecting other patterns', () => {
+        const engine = new PatternEngine(
+            [
+                { id: 'motion', semanticType: 'motion', valueType: 'boolean', rooms: ['hall'] },
+                { id: 'light', semanticType: 'light', valueType: 'boolean', rooms: ['hall'] },
+            ],
+            { enabled: true, actionWindowMs: 5_000 },
+        );
+        engine.observe(observation('motion', 'motion', 1, context(1, true)));
+        engine.observe(observation('light', 'light', 2));
+        const patternId = engine.patterns(3)[0].id;
+
+        expect(engine.resetPattern(patternId, 10)).to.equal(true);
+        expect(engine.patterns(11)[0]).to.include({ id: patternId, opportunities: 0, matches: 0, status: 'learning' });
+        expect(engine.deletePattern(patternId)).to.equal(true);
+        expect(engine.patterns(12)).to.have.length(0);
+        expect(engine.deletePattern(patternId)).to.equal(false);
+    });
+
     it('hard-bounds simultaneous pending opportunities', () => {
         const states = [
             { id: 'motion', semanticType: 'motion' as const, valueType: 'boolean' as const, rooms: ['hall'] },
@@ -145,5 +326,21 @@ describe('PatternEngine', () => {
         const engine = new PatternEngine(states, { enabled: true, maxPendingOpportunities: 10 });
         engine.observe(observation('motion', 'motion', 1, context(1, true)));
         expect(engine.summary(2).pendingOpportunities).to.equal(10);
+    });
+
+    it('restores bounded evidence but never restores pending trigger windows', () => {
+        const states = [
+            { id: 'motion', semanticType: 'motion' as const, valueType: 'boolean' as const, rooms: ['hall'] },
+            { id: 'light', semanticType: 'light' as const, valueType: 'boolean' as const, rooms: ['hall'] },
+        ];
+        const original = new PatternEngine(states, { enabled: true, actionWindowMs: 5_000 });
+        original.observe(observation('motion', 'motion', 1, context(1, true)));
+        original.observe(observation('light', 'light', 2, undefined, true, ['hall']));
+        original.observe(observation('motion', 'motion', 3, context(3, true)));
+
+        const restored = new PatternEngine(states, { enabled: true, actionWindowMs: 5_000 });
+        expect(restored.restore(original.snapshot())).to.equal(1);
+        expect(restored.summary(4)).to.include({ retainedExamples: 1, pendingOpportunities: 0 });
+        expect(restored.snapshot()).to.deep.equal(original.snapshot());
     });
 });

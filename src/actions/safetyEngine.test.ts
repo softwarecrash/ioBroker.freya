@@ -13,6 +13,7 @@ function request(overrides: Partial<FrozenActionRequest> = {}): FrozenActionRequ
         createdAt: NOW - 100,
         expiresAt: NOW + 5_000,
         contextTimestamp: NOW - 50,
+        authorization: 'automatic',
         ...overrides,
     };
 }
@@ -48,7 +49,7 @@ describe('SafetyEngine', () => {
     });
 
     const denials: Array<[SafetyReasonCode, FrozenActionRequest, SafetyEnvironment]> = [
-        ['autonomy_denied', request(), environment({ autonomyLevel: 2 })],
+        ['autonomy_denied', request({ authorization: 'automatic' }), environment({ autonomyLevel: 2 })],
         ['pattern_missing', request(), environment({ pattern: undefined })],
         [
             'pattern_not_approved',
@@ -69,6 +70,7 @@ describe('SafetyEngine', () => {
         ['target_missing', request(), environment({ target: { exists: false } })],
         ['target_not_state', request(), environment({ target: { ...environment().target, objectType: 'channel' } })],
         ['target_not_writable', request(), environment({ target: { ...environment().target, write: false } })],
+        ['target_already_set', request(), environment({ target: { ...environment().target, currentValue: true } })],
         [
             'control_permission_denied',
             request(),
@@ -104,4 +106,10 @@ describe('SafetyEngine', () => {
             expect(decision.reasons).to.include(reason);
         });
     }
+
+    it('allows a one-shot Admin-approved request at autonomy level 2', () => {
+        expect(
+            safety.validate(request({ authorization: 'one-shot' }), environment({ autonomyLevel: 2 })),
+        ).to.deep.include({ allowed: true, reasons: [] });
+    });
 });

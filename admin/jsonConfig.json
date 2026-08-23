@@ -98,12 +98,69 @@
                     "lg": 3,
                     "xl": 3
                 },
+                "historyLearningStatus": {
+                    "type": "state",
+                    "label": "Historical learning status",
+                    "oid": "history.learningStatus",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "historyLearningStates": {
+                    "type": "state",
+                    "label": "History states used for learning",
+                    "oid": "history.learningStateCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "historyLearningEvents": {
+                    "type": "state",
+                    "label": "Historical changes replayed for learning",
+                    "oid": "history.learningEventCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "historyLearningFailures": {
+                    "type": "state",
+                    "label": "History states unavailable for learning",
+                    "oid": "history.learningFailedStateCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
+                },
                 "autonomyLevel": {
-                    "type": "number",
+                    "type": "select",
                     "label": "Autonomy level",
-                    "min": 0,
-                    "max": 3,
-                    "help": "0 observe, 1 learn/suggest, 2 reserved for per-action approval, 3 controlled execution of approved patterns",
+                    "options": [
+                        {
+                            "label": "Level 0 - Observe only",
+                            "value": 0
+                        },
+                        {
+                            "label": "Level 1 - Learn and suggest",
+                            "value": 1
+                        },
+                        {
+                            "label": "Level 2 - Individual approval",
+                            "value": 2
+                        },
+                        {
+                            "label": "Level 3 - Controlled automatic execution",
+                            "value": 3
+                        }
+                    ],
+                    "help": "The autonomy level limits what Freya may do. Learning and state permissions are configured separately.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 4,
@@ -229,7 +286,7 @@
                             "attr": "stateId",
                             "title": "State",
                             "types": ["state"],
-                            "width": "32%",
+                            "width": "25%",
                             "filter": false,
                             "sort": false
                         },
@@ -237,7 +294,7 @@
                             "type": "select",
                             "attr": "semanticType",
                             "title": "Semantic type",
-                            "width": "18%",
+                            "width": "14%",
                             "default": "auto",
                             "options": [
                                 {
@@ -307,6 +364,35 @@
                             ]
                         },
                         {
+                            "type": "select",
+                            "attr": "scope",
+                            "title": "Scope",
+                            "width": "12%",
+                            "default": "auto",
+                            "options": [
+                                {
+                                    "label": "Automatic scope",
+                                    "value": "auto"
+                                },
+                                {
+                                    "label": "Room related",
+                                    "value": "room"
+                                },
+                                {
+                                    "label": "Global",
+                                    "value": "global"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "attr": "roomAssignment",
+                            "title": "Rooms",
+                            "width": "17%",
+                            "readOnly": true,
+                            "doNotSave": true
+                        },
+                        {
                             "type": "checkbox",
                             "attr": "observe",
                             "title": "Observe",
@@ -323,7 +409,7 @@
                         {
                             "type": "checkbox",
                             "attr": "suggest",
-                            "title": "Suggest",
+                            "title": "Suggest target",
                             "width": "8%",
                             "default": false
                         },
@@ -335,6 +421,31 @@
                             "default": false
                         }
                     ]
+                },
+                "roomDiagnosticsNotice": {
+                    "type": "staticText",
+                    "text": "Room status shows a warning only when a learned room-relevant state has no room and its scope is not explicitly Global. Assign a room or choose Global for intentional whole-home states.",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_refreshRoomDiagnostics": {
+                    "type": "sendTo",
+                    "label": "Refresh room status",
+                    "command": "getRoomDiagnostics",
+                    "useNative": true,
+                    "onLoaded": true,
+                    "variant": "outlined",
+                    "icon": "refresh",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 3,
+                    "xl": 3
                 }
             }
         },
@@ -454,7 +565,7 @@
             "items": {
                 "patternNotice": {
                     "type": "staticText",
-                    "text": "Suggestions require explicit Suggest permission on both trigger and light. Approve/disable transitions are accepted only from ioBroker Admin and never grant Control permission. Execution additionally requires level 3 and every current safety check.",
+                    "text": "Learn allows a state to contribute as a trigger or context source. Suggest applies only when the state is the proposed action target. Approval never grants Control permission; execution additionally requires level 3 and every current safety check.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
@@ -462,21 +573,244 @@
                     "lg": 12,
                     "xl": 12
                 },
+                "_patternDisplay": {
+                    "type": "textSendTo",
+                    "label": "Learned patterns",
+                    "command": "getPatternAdminData",
+                    "container": "html",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_selectedPattern": {
+                    "type": "selectSendTo",
+                    "label": "Selected pattern",
+                    "command": "getPatternOptions",
+                    "manual": false,
+                    "doNotSave": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "_approvePattern": {
+                    "type": "sendTo",
+                    "label": "Approve pattern",
+                    "command": "setPatternStatus",
+                    "jsonData": "{\"patternId\":\"${data._selectedPattern}\",\"status\":\"approved\"}",
+                    "disabled": "!data._selectedPattern",
+                    "variant": "contained",
+                    "color": "primary",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "_disablePattern": {
+                    "type": "sendTo",
+                    "label": "Ignore pattern",
+                    "command": "setPatternStatus",
+                    "jsonData": "{\"patternId\":\"${data._selectedPattern}\",\"status\":\"disabled\"}",
+                    "disabled": "!data._selectedPattern",
+                    "variant": "outlined",
+                    "color": "secondary",
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "_continuePattern": {
+                    "type": "sendTo",
+                    "label": "Continue learning",
+                    "command": "setPatternStatus",
+                    "jsonData": "{\"patternId\":\"${data._selectedPattern}\",\"status\":\"candidate\"}",
+                    "disabled": "!data._selectedPattern",
+                    "variant": "outlined",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "_resetPattern": {
+                    "type": "sendTo",
+                    "label": "Reset learning data",
+                    "command": "resetPatternLearning",
+                    "jsonData": "{\"patternId\":\"${data._selectedPattern}\"}",
+                    "disabled": "!data._selectedPattern",
+                    "confirm": {
+                        "text": "Discard all evidence and feedback for this pattern and learn it again from zero?",
+                        "title": "Reset learning data",
+                        "ok": "Reset",
+                        "cancel": "Cancel"
+                    },
+                    "variant": "outlined",
+                    "color": "secondary",
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "_deletePattern": {
+                    "type": "sendTo",
+                    "label": "Delete pattern",
+                    "command": "deletePattern",
+                    "jsonData": "{\"patternId\":\"${data._selectedPattern}\"}",
+                    "disabled": "!data._selectedPattern",
+                    "confirm": {
+                        "text": "Delete this learned pattern? It can be discovered again from future observations.",
+                        "title": "Delete pattern",
+                        "ok": "Delete",
+                        "cancel": "Cancel"
+                    },
+                    "variant": "outlined",
+                    "color": "secondary",
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "_executePattern": {
+                    "type": "sendTo",
+                    "label": "Execute once",
+                    "command": "executePattern",
+                    "jsonData": "{\"patternId\":\"${data._selectedPattern}\"}",
+                    "disabled": "!data._selectedPattern",
+                    "confirm": {
+                        "text": "Execute the selected approved pattern once after all current safety checks?",
+                        "title": "Confirm execution",
+                        "ok": "Execute",
+                        "cancel": "Cancel"
+                    },
+                    "variant": "outlined",
+                    "color": "secondary",
+                    "xs": 12,
+                    "sm": 4,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "pendingActionsHeader": {
+                    "type": "header",
+                    "text": "Pending one-shot actions",
+                    "size": 4,
+                    "newLine": true
+                },
+                "_pendingActionDisplay": {
+                    "type": "textSendTo",
+                    "label": "Action proposals",
+                    "command": "getPendingActionAdminData",
+                    "container": "html",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 12,
+                    "md": 12,
+                    "lg": 12,
+                    "xl": 12
+                },
+                "_selectedPendingAction": {
+                    "type": "selectSendTo",
+                    "label": "Selected action proposal",
+                    "command": "getPendingActionOptions",
+                    "manual": false,
+                    "doNotSave": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 6,
+                    "lg": 6,
+                    "xl": 6
+                },
+                "_approvePendingAction": {
+                    "type": "sendTo",
+                    "label": "Approve and execute once",
+                    "command": "approvePendingAction",
+                    "jsonData": "{\"pendingActionId\":\"${data._selectedPendingAction}\"}",
+                    "disabled": "!data._selectedPendingAction",
+                    "confirm": {
+                        "text": "Approve this exact action proposal and execute it once after all current safety checks?",
+                        "title": "Confirm one-shot action",
+                        "ok": "Approve and execute",
+                        "cancel": "Cancel"
+                    },
+                    "variant": "contained",
+                    "color": "primary",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "_rejectPendingAction": {
+                    "type": "sendTo",
+                    "label": "Reject action proposal",
+                    "command": "rejectPendingAction",
+                    "jsonData": "{\"pendingActionId\":\"${data._selectedPendingAction}\"}",
+                    "disabled": "!data._selectedPendingAction",
+                    "variant": "outlined",
+                    "color": "secondary",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
                 "candidatePatterns": {
                     "type": "state",
                     "label": "Candidate patterns",
                     "oid": "suggestions.candidateCount",
                     "newLine": true,
                     "xs": 12,
-                    "sm": 4,
-                    "md": 4,
-                    "lg": 4,
-                    "xl": 4
+                    "sm": 6,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "learningPatterns": {
+                    "type": "state",
+                    "label": "Relationships still learning",
+                    "oid": "patterns.learningCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "openLearningWindows": {
+                    "type": "state",
+                    "label": "Open learning windows",
+                    "oid": "patterns.pendingOpportunityCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
+                },
+                "retainedLearningExamples": {
+                    "type": "state",
+                    "label": "Retained learning examples",
+                    "oid": "patterns.retainedExampleCount",
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 3,
+                    "lg": 3,
+                    "xl": 3
                 },
                 "approvedPatterns": {
                     "type": "state",
                     "label": "Approved patterns",
                     "oid": "patterns.approvedCount",
+                    "newLine": true,
                     "xs": 12,
                     "sm": 4,
                     "md": 4,
@@ -594,11 +928,22 @@
                     "lg": 4,
                     "xl": 4
                 },
+                "_testLlmConnection": {
+                    "type": "sendTo",
+                    "label": "Test connection",
+                    "command": "testLlmConnection",
+                    "variant": "outlined",
+                    "newLine": true,
+                    "xs": 12,
+                    "sm": 6,
+                    "md": 4,
+                    "lg": 4,
+                    "xl": 4
+                },
                 "llmEffectiveProvider": {
                     "type": "state",
                     "label": "Effective provider",
                     "oid": "llm.provider",
-                    "newLine": true,
                     "xs": 12,
                     "sm": 6,
                     "md": 4,

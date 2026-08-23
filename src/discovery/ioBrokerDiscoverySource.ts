@@ -32,6 +32,25 @@ function primitiveHint(value: unknown): string | undefined {
     return undefined;
 }
 
+function directHistorySource(
+    object: ioBroker.StateObject,
+    stateObjects: Record<string, ioBroker.StateObject | undefined>,
+): string | undefined {
+    const alias = object.common.alias as { id?: unknown; read?: unknown; write?: unknown } | undefined;
+    if (
+        !alias ||
+        typeof alias.id !== 'string' ||
+        !alias.id ||
+        alias.id === object._id ||
+        (typeof alias.read === 'string' && alias.read.trim()) ||
+        (typeof alias.write === 'string' && alias.write.trim())
+    ) {
+        return undefined;
+    }
+    const target = stateObjects[alias.id];
+    return target?.type === 'state' && target.common.type === object.common.type ? target._id : undefined;
+}
+
 /** Read state/object metadata without reading state values or changing ioBroker. */
 export class IoBrokerDiscoverySource implements DiscoverySource {
     public constructor(private readonly adapter: ioBroker.Adapter) {}
@@ -40,17 +59,22 @@ export class IoBrokerDiscoverySource implements DiscoverySource {
     public async load(
         maxStates: number,
     ): Promise<{ descriptors: StateDescriptor[]; totalAvailable: number; truncated: boolean }> {
-        const objects = await this.adapter.getForeignObjectsAsync('*');
-        const enumObjects = Object.values(objects).filter(
-            (object): object is ioBroker.EnumObject => object?.type === 'enum',
-        );
-        const stateObjects = Object.values(objects)
+        const stateObjectMap = await this.adapter.getForeignObjectsAsync('*', 'state', []);
+        const stateObjects = Object.values(stateObjectMap)
             .filter(
                 (object): object is ioBroker.StateObject =>
                     object?.type === 'state' && !object._id.startsWith(`${this.adapter.namespace}.`),
             )
             .sort((a, b) => a._id.localeCompare(b._id));
         const selected = stateObjects.slice(0, maxStates);
+        const selectedAncestorIds = [...new Set(selected.flatMap(object => ancestorIds(object._id)))];
+        const [ancestorObjects, enumGroups] = await Promise.all([
+            selectedAncestorIds.length
+                ? this.adapter.getForeignObjectsAsync(selectedAncestorIds)
+                : Promise.resolve({} as Record<string, ioBroker.Object>),
+            this.adapter.getEnumsAsync(['rooms', 'functions']),
+        ]);
+        const enumObjects = Object.values(enumGroups).flatMap(group => Object.values(group));
 
         const descriptors = selected.map(object => {
             const ancestors = ancestorIds(object._id);
@@ -65,7 +89,7 @@ export class IoBrokerDiscoverySource implements DiscoverySource {
                 .filter(item => item._id.startsWith('enum.functions.'))
                 .map(item => displayName(item.common.name));
             const ancestorNames = ancestors
-                .map(id => objects[id])
+                .map(id => ancestorObjects[id])
                 .filter((item): item is ioBroker.Object => !!item)
                 .map(item => displayName(item.common.name));
             const nativeHints = NATIVE_HINT_KEYS.map(key => primitiveHint(object.native?.[key])).filter(
@@ -84,6 +108,7 @@ export class IoBrokerDiscoverySource implements DiscoverySource {
                 functions,
                 ancestorNames,
                 nativeHints,
+                historySourceId: directHistorySource(object, stateObjectMap),
             };
         });
 

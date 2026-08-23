@@ -14,7 +14,11 @@ function offsetBucket(value: number | undefined): number | undefined {
 }
 
 /** Convert provider-neutral context into bounded, explainable categorical features. */
-export function extractPatternFeatures(context: ContextSnapshot | undefined, rooms: string[]): PatternFeatures {
+export function extractPatternFeatures(
+    context: ContextSnapshot | undefined,
+    rooms: string[],
+    localIlluminance?: number,
+): PatternFeatures {
     const values: PatternFeatures['values'] = {};
     if (!context) {
         return { values };
@@ -37,6 +41,10 @@ export function extractPatternFeatures(context: ContextSnapshot | undefined, roo
     );
     if (sunsetOffset !== undefined) {
         values['sun.sunsetOffset'] = sunsetOffset;
+    }
+    const roomIlluminance = band(localIlluminance, [20, 200, 1_000], ['dark', 'dim', 'lit', 'bright']);
+    if (roomIlluminance !== undefined) {
+        values['room.illuminanceBand'] = roomIlluminance;
     }
     const illuminance = band(
         context.environment?.outsideIlluminance,

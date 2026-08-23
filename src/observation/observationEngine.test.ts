@@ -52,13 +52,21 @@ describe('ObservationEngine', () => {
         engine.prime({ 'fixture.0.light': state(false, 1) });
 
         expect(engine.ingest('fixture.0.light', state(false, 1), metadata)).to.equal(false);
-        expect(engine.ingest('fixture.0.light', state(true, 2), metadata)).to.equal(true);
+        expect(
+            engine.ingest('fixture.0.light', state(true, 2), metadata, {
+                kind: 'device-originated',
+                source: 'system.adapter.fixture.0',
+                confidence: 0.7,
+                reason: 'unsolicited_acknowledged_change',
+            }),
+        ).to.equal(true);
         expect(engine.ingest('fixture.0.light', state(false, 3), metadata)).to.equal(true);
         await completed;
 
         expect(observations.map(item => item.sequence)).to.deep.equal([1, 2]);
         expect(observations.map(item => item.previousValue)).to.deep.equal([false, true]);
         expect(observations.map(item => item.value)).to.deep.equal([true, false]);
+        expect(observations[0].attribution?.kind).to.equal('device-originated');
         await engine.stop();
     });
 

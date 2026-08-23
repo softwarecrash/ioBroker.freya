@@ -4,6 +4,7 @@ export interface HistoryServiceOptions {
     maxRangeMs: number;
     maxResults: number;
     maxConcurrent: number;
+    sourceStateIds?: Record<string, string>;
 }
 
 /** Permission and resource boundary around the selected read-only history provider. */
@@ -42,10 +43,20 @@ export class HistoryService {
             }
             const boundedLimit = Math.max(1, Math.min(this.options.maxResults, Math.floor(limit ?? 500)));
             this.queryCount++;
-            const entries = await this.provider.getHistory(stateId, start, end, {
+            let entries = await this.provider.getHistory(stateId, start, end, {
                 limit: boundedLimit,
                 signal,
             });
+            const sourceStateId = this.options.sourceStateIds?.[stateId];
+            if (entries.length < 2 && sourceStateId && sourceStateId !== stateId) {
+                const sourceEntries = await this.provider.getHistory(sourceStateId, start, end, {
+                    limit: boundedLimit,
+                    signal,
+                });
+                if (sourceEntries.length > entries.length) {
+                    entries = sourceEntries;
+                }
+            }
             this.lastQueryTimestamp = Date.now();
             return entries.slice(-boundedLimit);
         } catch (error) {

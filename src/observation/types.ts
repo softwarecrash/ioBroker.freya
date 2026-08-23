@@ -1,5 +1,6 @@
 import type { ContextSnapshot } from '../context/types';
 import type { SemanticType } from '../discovery/types';
+import type { ChangeAttribution } from '../attribution/sourceAttribution';
 
 export interface ObservationMetadata {
     semanticType: SemanticType;
@@ -19,6 +20,7 @@ export interface Observation {
     ack: boolean;
     quality: number;
     source?: string;
+    attribution?: ChangeAttribution;
     deleted: boolean;
     semanticType: SemanticType;
     role?: string;

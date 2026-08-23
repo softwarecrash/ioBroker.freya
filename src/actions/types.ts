@@ -17,6 +17,7 @@ export type SafetyReasonCode =
     | 'target_missing'
     | 'target_not_state'
     | 'target_not_writable'
+    | 'target_already_set'
     | 'control_permission_denied'
     | 'target_blocked'
     | 'cooldown_active'
@@ -32,6 +33,8 @@ export interface FrozenActionRequest {
     readonly createdAt: number;
     readonly expiresAt: number;
     readonly contextTimestamp: number;
+    /** One-shot requires an explicit Admin approval; automatic is level-3 only. */
+    readonly authorization: 'one-shot' | 'automatic';
 }
 
 export interface SafetyPatternView {
@@ -50,6 +53,7 @@ export interface ActionTargetMetadata {
     min?: number;
     max?: number;
     states?: ioBroker.StateCommon['states'];
+    currentValue?: ioBroker.StateValue;
 }
 
 export interface SafetyEnvironment {

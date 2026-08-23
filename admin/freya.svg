@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Freya smart home">
+    <rect width="256" height="256" rx="52" fill="#21162F"/>
+    <circle cx="128" cy="128" r="78" fill="none" stroke="#F0BF62" stroke-width="10"/>
+    <g fill="#55D6C2" stroke="#21162F" stroke-width="4">
+        <circle cx="128" cy="50" r="10"/>
+        <circle cx="202" cy="104" r="10"/>
+        <circle cx="174" cy="191" r="10"/>
+        <circle cx="82" cy="191" r="10"/>
+        <circle cx="54" cy="104" r="10"/>
+    </g>
+    <path d="M82 126 128 87l46 39v52H82z" fill="#21162F" stroke="#55D6C2" stroke-width="11" stroke-linejoin="round"/>
+    <path d="M128 112v25m0 0-20 19m20-19 20 19" fill="none" stroke="#F0BF62" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="#F0BF62">
+        <circle cx="128" cy="108" r="8"/>
+        <circle cx="106" cy="158" r="8"/>
+        <circle cx="150" cy="158" r="8"/>
+    </g>
+</svg>

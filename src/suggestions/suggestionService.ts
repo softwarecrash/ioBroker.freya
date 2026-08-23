@@ -13,7 +13,7 @@ function explanation(pattern: LearnedPattern): string {
     const seconds = Math.round(pattern.actionWindowMs / 1_000);
     const percent = Math.round(pattern.confidence * 100);
     const components = pattern.confidenceComponents;
-    return `When the trigger becomes true, the light usually becomes true within ${seconds} seconds ${conditionText(pattern)} (${pattern.matches}/${pattern.opportunities}, confidence ${percent}%; match ${Math.round(components.smoothedMatchRate * 100)}%, maturity ${Math.round(components.sampleMaturity * 100)}%, repeatability ${Math.round(components.repeatability * 100)}%, recency ${Math.round(components.recency * 100)}%).`;
+    return `When the trigger becomes ${String(pattern.expectedAction)}, the light usually becomes ${String(pattern.expectedAction)} within ${seconds} seconds ${conditionText(pattern)} (${pattern.matches}/${pattern.opportunities}, confidence ${percent}%; match ${Math.round(components.smoothedMatchRate * 100)}%, maturity ${Math.round(components.sampleMaturity * 100)}%, repeatability ${Math.round(components.repeatability * 100)}%, recency ${Math.round(components.recency * 100)}%).`;
 }
 
 function copySuggestion(suggestion: PatternSuggestion): PatternSuggestion {
@@ -94,7 +94,7 @@ export class SuggestionService {
         }
         const valid =
             (suggestion.status === 'candidate' && (status === 'approved' || status === 'disabled')) ||
-            (suggestion.status === 'approved' && status === 'disabled') ||
+            (suggestion.status === 'approved' && (status === 'candidate' || status === 'disabled')) ||
             (suggestion.status === 'disabled' && status === 'candidate' && suggestion.eligible);
         if (!valid) {
             return this.reject(
@@ -122,6 +122,26 @@ export class SuggestionService {
 
     public rejectCommand(patternId: string, actor: string, reason: string, timestamp: number): TransitionResult {
         return this.reject(patternId, actor, timestamp, reason);
+    }
+
+    public remove(
+        patternId: string,
+        actor: string,
+        timestamp: number,
+        reason: 'learning_reset' | 'pattern_deleted',
+    ): boolean {
+        const removed = this.suggestions.delete(patternId);
+        if (removed) {
+            this.activity.append({
+                timestamp,
+                type: reason,
+                patternId,
+                actor: actor.slice(0, 120),
+                outcome: 'accepted',
+                reason: `explicit_user_${reason}`,
+            });
+        }
+        return removed;
     }
 
     public list(
@@ -169,6 +189,20 @@ export class SuggestionService {
         return suggestion ? copySuggestion(suggestion) : undefined;
     }
 
+    /** Export restart-safe suggestions, including explicit approval state. */
+    public snapshot(): PatternSuggestion[] {
+        return [...this.suggestions.values()].map(copySuggestion);
+    }
+
+    /** Restore validated suggestions before synchronizing them with current evidence. */
+    public restore(suggestions: PatternSuggestion[]): number {
+        this.suggestions.clear();
+        for (const suggestion of suggestions.slice(-this.maximum)) {
+            this.suggestions.set(suggestion.id, copySuggestion(suggestion));
+        }
+        return this.suggestions.size;
+    }
+
     private fromPattern(pattern: LearnedPattern, timestamp: number): PatternSuggestion {
         return {
             id: pattern.id,
@@ -177,7 +211,7 @@ export class SuggestionService {
             eligible: true,
             triggerStateId: pattern.triggerStateId,
             actionStateId: pattern.actionStateId,
-            expectedAction: true,
+            expectedAction: pattern.expectedAction,
             rooms: [...pattern.rooms],
             conditions: pattern.conditions.map(condition => ({ ...condition })),
             opportunities: pattern.opportunities,

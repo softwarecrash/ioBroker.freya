@@ -15,17 +15,22 @@ function request(index = 1): FrozenActionRequest {
         createdAt: 1_000,
         expiresAt: 2_000,
         contextTimestamp: 1_000,
+        authorization: 'automatic',
     };
 }
 
 const executed: ActionResult = { correlationId: 'correlation-1', executed: true, reasons: [] };
+
+function state(value: ioBroker.StateValue, ack: boolean, source: string, timestamp: number): ioBroker.State {
+    return { val: value, ack, ts: timestamp, lc: timestamp, from: source, q: 0 };
+}
 
 describe('action persistence and feedback attribution', () => {
     let directory = '';
     let filename = '';
 
     beforeEach(async () => {
-        directory = await mkdtemp(join(tmpdir(), 'smartbrain-feedback-'));
+        directory = await mkdtemp(join(tmpdir(), 'freya-feedback-'));
         filename = join(directory, 'actions.json');
     });
 
@@ -86,7 +91,7 @@ describe('action persistence and feedback attribution', () => {
         await repository.load();
         await repository.requested(request(), 1_000);
         await repository.completed(request(), executed, 1_100);
-        const service = new FeedbackService(repository, 'system.adapter.smartbrain.0', 10_000);
+        const service = new FeedbackService(repository, 'system.adapter.freya.0', 10_000);
 
         await service.observe(
             'alias.0.unrelated',
@@ -113,7 +118,7 @@ describe('action persistence and feedback attribution', () => {
         await repository.load();
         await repository.requested(request(), 1_000);
         await repository.completed(request(), executed, 1_100);
-        const service = new FeedbackService(repository, 'system.adapter.smartbrain.0', 10_000);
+        const service = new FeedbackService(repository, 'system.adapter.freya.0', 10_000);
         await service.observe(
             'alias.0.room.light',
             { val: false, ack: false, ts: 1_400, lc: 1_400, from: 'system.adapter.admin.0' },
@@ -128,14 +133,67 @@ describe('action persistence and feedback attribution', () => {
         expect(repository.find('correlation-1')?.feedback).to.include({ outcome: 'positive', source: 'explicit' });
     });
 
+    it('treats unsolicited device reversals as negative but foreign commands as ambiguous', async () => {
+        const deviceRepository = new ActionRepository(filename);
+        await deviceRepository.load();
+        await deviceRepository.requested(request(), 1_000);
+        await deviceRepository.completed(request(), executed, 1_100);
+        const deviceService = new FeedbackService(deviceRepository, 'system.adapter.freya.0', 10_000);
+        const opposing = state(false, true, 'system.adapter.device.0', 1_400);
+        await deviceService.observe('alias.0.room.light', opposing, 1_400, {
+            kind: 'device-originated',
+            source: opposing.from,
+            confidence: 0.7,
+            reason: 'unsolicited_acknowledged_change',
+        });
+        expect(deviceRepository.find('correlation-1')?.feedback).to.include({ outcome: 'negative' });
+
+        const secondRequest = request(2);
+        await deviceRepository.requested(secondRequest, 2_000);
+        await deviceRepository.completed(
+            secondRequest,
+            { correlationId: 'correlation-2', executed: true, reasons: [] },
+            2_100,
+        );
+        const foreign = state(false, false, 'system.adapter.any-logic.0', 2_400);
+        await deviceService.observe('alias.0.room.light', foreign, 2_400, {
+            kind: 'external-command',
+            source: foreign.from,
+            confidence: 0.8,
+            reason: 'foreign_command',
+        });
+        expect(deviceRepository.find('correlation-2')?.feedback).to.include({ outcome: 'unknown' });
+    });
+
     it('expires unchanged actions as neutral without changing confidence totals', async () => {
         const repository = new ActionRepository(filename);
         await repository.load();
         await repository.requested(request(), 1_000);
         await repository.completed(request(), executed, 1_100);
-        const service = new FeedbackService(repository, 'system.adapter.smartbrain.0', 5_000);
+        const service = new FeedbackService(repository, 'system.adapter.freya.0', 5_000);
         await service.expire(6_101);
         expect(repository.find('correlation-1')?.feedback).to.include({ outcome: 'neutral', source: 'implicit' });
         expect(repository.totals('0123456789abcdef')).to.deep.equal({ positive: 0, negative: 0 });
+    });
+
+    it('preserves reset feedback in the audit but excludes it from future learning totals', async () => {
+        const repository = new ActionRepository(filename);
+        await repository.load();
+        await repository.requested(request(), 1_000);
+        await repository.completed(request(), executed, 1_100);
+        await repository.feedback('correlation-1', 'negative', 'explicit', 1_200, 'system.adapter.admin.0');
+
+        expect(repository.totals('0123456789abcdef')).to.deep.equal({ positive: 0, negative: 1 });
+        expect(await repository.excludePatternFeedback('0123456789abcdef')).to.equal(1);
+        expect(repository.totals('0123456789abcdef')).to.deep.equal({ positive: 0, negative: 0 });
+        expect(repository.find('correlation-1')?.feedback).to.include({
+            outcome: 'negative',
+            excludedFromLearning: true,
+        });
+
+        const restored = new ActionRepository(filename);
+        await restored.load();
+        expect(restored.allTotals().has('0123456789abcdef')).to.equal(false);
+        expect(restored.find('correlation-1')?.feedback?.excludedFromLearning).to.equal(true);
     });
 });

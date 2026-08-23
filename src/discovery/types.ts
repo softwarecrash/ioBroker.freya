@@ -35,6 +35,8 @@ export interface StateDescriptor {
     functions: string[];
     ancestorNames: string[];
     nativeHints: string[];
+    /** Direct, type-compatible, transformation-free alias target usable only for read-only history lookup. */
+    historySourceId?: string;
 }
 
 export interface SemanticClassification {
@@ -51,14 +53,22 @@ export interface StatePermissions {
     control: boolean;
 }
 
+export type StateScope = 'auto' | 'room' | 'global';
+export type RoomAssignmentStatus = 'resolved' | 'global' | 'unresolved' | 'missing' | 'not-required';
+
 export interface StatePolicyInput extends StatePermissions {
     stateId: string;
     semanticType?: SemanticType | 'auto';
+    scope?: StateScope;
+    /** Cached Admin-only display value; ignored by permission and learning logic. */
+    roomAssignment?: string;
 }
 
 export interface EffectiveStatePolicy {
     stateId: string;
     semanticType: SemanticType;
+    scope: StateScope;
+    roomStatus: RoomAssignmentStatus;
     permissions: StatePermissions;
     violations: string[];
 }
@@ -93,6 +103,8 @@ export interface DiscoveredStateView {
     rooms: string[];
     functions: string[];
     semanticType: SemanticType;
+    scope: StateScope;
+    roomStatus: RoomAssignmentStatus;
     confidence: number;
     sensitive: boolean;
     permissions: StatePermissions;
@@ -116,4 +128,5 @@ export interface DiscoveryResult {
     summary: DiscoverySummary;
     states: DiscoveredStateView[];
     environment: Record<EnvironmentKey, EnvironmentCandidate[]>;
+    historySources?: Record<string, string>;
 }

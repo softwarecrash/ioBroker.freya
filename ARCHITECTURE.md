@@ -1,4 +1,4 @@
-# SmartBrain Architecture
+# Freya Architecture
 
 ## Status and scope
 
@@ -298,7 +298,7 @@ interface LearnedPattern {
     confidence: number;
     firstSeen: number;
     lastSeen: number;
-    status: "learning" | "candidate" | "approved" | "trusted" | "disabled";
+    status: 'learning' | 'candidate' | 'approved' | 'disabled';
 }
 ```
 
@@ -320,6 +320,10 @@ The Decision Engine converts eligible candidates into deterministic suggestions.
 rules-only explanation includes the trigger, conditions, match count, opportunity
 count, time window, and confidence components. Approval changes pattern lifecycle but
 does not itself grant state control permission or raise autonomy.
+Returning an approval to candidate status continues learning without discarding evidence.
+Ignoring maps to the persistent disabled status. Reset discards evidence and excludes old
+feedback from future confidence while preserving the action audit; delete removes the
+relationship. Reset and delete reject any outstanding one-shot proposal.
 
 ### Autonomy and safety
 
@@ -327,8 +331,9 @@ Supported levels are:
 
 - 0: observe only (installation default)
 - 1: learn and generate suggestions
-- 2: explicit approval required for each proposed action
-- 3: execute only explicitly approved/trusted patterns
+- 2: matching approved patterns create expiring action proposals; ioBroker Admin must
+  approve each exact proposal once
+- 3: matching approved patterns are submitted automatically to the same Safety Engine
 
 Immediately before an action, the Safety Engine validates a frozen action request:
 
@@ -346,15 +351,19 @@ only an approved result and is the sole module allowed to call `setForeignStateA
 It rechecks the target identifier and records the outcome. Tests will assert that no
 other production module contains a foreign-state write.
 
+Pending actions are persisted before they can be claimed. A level-2 Admin approval and a
+level-3 automatic dispatch use distinct authorization types. Any `executing` record found
+after restart becomes denied with `execution_interrupted`; it is never replayed.
+
 ### Action attribution and feedback
 
-Each SmartBrain action receives a correlation ID and is recorded before and after the
+Each Freya action receives a correlation ID and is recorded before and after the
 write. ioBroker's state `from`, `ack`, timestamps, and the correlation window help
 classify subsequent changes. These signals cannot reliably distinguish every user,
 script, adapter, and external device action. Ambiguous events remain `unknown`; they
 must not be described as certain user feedback.
 
-An opposing change shortly after a correlated SmartBrain action is candidate negative
+An opposing change shortly after a correlated Freya action is candidate negative
 feedback. Lack of an opposing change becomes neutral or weak positive evidence only
 after a configurable window. Explicit user feedback always remains distinct.
 
@@ -362,7 +371,7 @@ after a configurable window. Explicit user feedback always remains distinct.
 
 MVP persistence uses the ioBroker instance data directory returned by
 `getAbsoluteInstanceDataDir(adapter)`. `io-package.json` will declare
-`common.dataFolder: "smartbrain.%INSTANCE%"` so normal ioBroker backups include it.
+`common.dataFolder: "freya.%INSTANCE%"` so normal ioBroker backups include it.
 
 The action/feedback implementation uses a bounded schema-versioned JSON snapshot:
 
@@ -381,19 +390,24 @@ volume demonstrates the need.
 Only bounded integration/status states will be exposed, for example:
 
 ```text
-smartbrain.0.info.connection
-smartbrain.0.info.status
-smartbrain.0.learning.enabled
-smartbrain.0.learning.observedStateCount
-smartbrain.0.patterns.candidateCount
-smartbrain.0.patterns.approvedCount
-smartbrain.0.suggestions.latest
-smartbrain.0.actions.lastResult
-smartbrain.0.feedback.pendingCount
-smartbrain.0.ai.status
+freya.0.info.connection
+freya.0.info.status
+freya.0.learning.enabled
+freya.0.learning.observedStateCount
+freya.0.patterns.candidateCount
+freya.0.patterns.learningCount
+freya.0.patterns.pendingOpportunityCount
+freya.0.patterns.retainedExampleCount
+freya.0.patterns.approvedCount
+freya.0.history.learningStatus
+freya.0.history.learningEventCount
+freya.0.suggestions.latest
+freya.0.actions.lastResult
+freya.0.feedback.pendingCount
+freya.0.ai.status
 ```
 
-Internal observations and patterns remain in persistence; SmartBrain will not create a
+Internal observations and patterns remain in persistence; Freya will not create a
 state object per event or pattern. Secrets are stored only in protected adapter native
 configuration, never in ordinary states or logs.
 
@@ -417,10 +431,11 @@ payloads, and logs.
 
 ### Admin UI
 
-Phase 1 uses JSON Config for safe bootstrap settings. Overview, Devices/States,
-Patterns, Activity, and AI views will be added incrementally. Admin 7.8.23 on the
-development host can support a JSON-defined adapter tab, but UI architecture must
-remain compatible with the adapter's declared minimum Admin version.
+Freya uses JSON Config for Overview, Devices/States, environment mappings, Patterns,
+Activity, feedback, and optional advisory-provider settings. The Patterns view exposes
+learning progress and separates persistent pattern approval from short-lived level-2
+action approval. Admin 7.8.23 on the development host supports the JSON-defined tab;
+the UI remains compatible with the adapter's declared minimum Admin version.
 
 ### Resource limits
 
@@ -428,6 +443,14 @@ All queues, caches, context relations, analysis batches, history ranges, activit
 records, and provider responses have configurable hard limits. Overload drops or
 coalesces low-value observations with metrics and debug logging; it never creates an
 unbounded queue. History analysis is batched and scheduled, not continuously replayed.
+The startup history batch is restricted to a seven-day window, 25 explicitly
+learn-enabled states, 1,000 entries per state, two concurrent reads, and 10,000 merged
+changes. It feeds only the Pattern Engine before live subscriptions start. Historical
+events never enter action dispatch, the first value per state is a baseline, and
+persisted example timestamps make repeated startup backfills idempotent.
+Direct aliases with no read/write expression may resolve to a type-compatible source
+state inside `HistoryService`; the permission gate remains keyed by the selected alias.
+The source ID is neither made controllable nor used by live observation/action paths.
 
 ### Testing strategy
 
@@ -439,7 +462,7 @@ unbounded queue. History analysis is batched and scheduled, not continuously rep
   failed check, and Action Executor as the single write boundary.
 - CI: build, lint, package tests, and unit tests on supported Node.js versions.
 - Production installation: read-only inspection only until controlled-action phases
-  are complete; writes are tested with mocks or SmartBrain-owned test states.
+  are complete; writes are tested with mocks or Freya-owned test states.
 
 ## Deliberate deviations and open decisions
 

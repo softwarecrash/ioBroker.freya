@@ -4,7 +4,7 @@
     "items": {
         "notice": {
             "type": "staticText",
-            "text": "This policy is synchronized with SmartBrain's Devices / States table. All permissions default to off; Control remains deny-by-default and requires the complete permission chain.",
+            "text": "This policy is synchronized with Freya's Devices / States table. All permissions default to off; Control remains deny-by-default and requires the complete permission chain.",
             "newLine": true,
             "xs": 12,
             "sm": 12,
@@ -89,6 +89,31 @@
                 }
             ]
         },
+        "scope": {
+            "type": "select",
+            "label": "Scope",
+            "help": "Choose Room related when local pattern learning requires a room, or Global for intentional whole-home and context states.",
+            "default": "auto",
+            "xs": 12,
+            "sm": 12,
+            "md": 6,
+            "lg": 6,
+            "xl": 6,
+            "options": [
+                {
+                    "label": "Automatic scope",
+                    "value": "auto"
+                },
+                {
+                    "label": "Room related",
+                    "value": "room"
+                },
+                {
+                    "label": "Global",
+                    "value": "global"
+                }
+            ]
+        },
         "observe": {
             "type": "checkbox",
             "label": "Observe",
@@ -112,7 +137,8 @@
         },
         "suggest": {
             "type": "checkbox",
-            "label": "Suggest",
+            "label": "Suggest target",
+            "help": "Only required when this state may be the target of a proposed action; trigger and context sources need only Learn.",
             "default": false,
             "xs": 12,
             "sm": 6,

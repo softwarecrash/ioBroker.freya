@@ -3,6 +3,7 @@ import type { PatternSuggestion } from '../suggestions/types';
 import { parseLlmAnalysis } from './contract';
 import { buildPatternDisclosure, disclosurePreview } from './disclosure';
 import { boundedJson, type JsonHttpTransport } from './httpTransport';
+import { LlmService } from './llmService';
 import {
     DisabledLlmProvider,
     OllamaLlmProvider,
@@ -104,6 +105,16 @@ describe('LLM advisory boundary', () => {
         const rules = await new RulesOnlyLlmProvider().analyze(disclosure);
         expect(rules).to.include({ riskLevel: 'low' });
         expect(rules.summary).to.contain('27 of 30');
+    });
+
+    it('tests a provider connection with a data-free synthetic disclosure', async () => {
+        const service = new LlmService(new RulesOnlyLlmProvider());
+        expect(await service.testConnection('connection-test')).to.deep.equal({
+            ok: true,
+            provider: 'rules',
+            external: false,
+            endpointOrigin: undefined,
+        });
     });
 
     it('uses local-only non-streaming structured Ollama requests', async () => {

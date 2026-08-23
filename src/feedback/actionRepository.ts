@@ -28,7 +28,9 @@ function validRecord(value: unknown): value is PersistedActionRecord {
             (record.feedback.actor === undefined ||
                 (typeof record.feedback.actor === 'string' && record.feedback.actor.length <= 120)) &&
             (record.feedback.reason === undefined ||
-                (typeof record.feedback.reason === 'string' && record.feedback.reason.length <= 200)));
+                (typeof record.feedback.reason === 'string' && record.feedback.reason.length <= 200)) &&
+            (record.feedback.excludedFromLearning === undefined ||
+                typeof record.feedback.excludedFromLearning === 'boolean'));
     return (
         typeof record.correlationId === 'string' &&
         /^[a-z0-9-]{1,80}$/i.test(record.correlationId) &&
@@ -226,7 +228,10 @@ export class ActionRepository {
     }
 
     public totals(patternId: string): FeedbackTotals {
-        const feedback = this.records.filter(record => record.patternId === patternId).map(record => record.feedback);
+        const feedback = this.records
+            .filter(record => record.patternId === patternId)
+            .map(record => record.feedback)
+            .filter(item => !item?.excludedFromLearning);
         return {
             positive: feedback.filter(item => item?.outcome === 'positive').length,
             negative: feedback.filter(item => item?.outcome === 'negative').length,
@@ -236,7 +241,11 @@ export class ActionRepository {
     public allTotals(): Map<string, FeedbackTotals> {
         const result = new Map<string, FeedbackTotals>();
         for (const record of this.records) {
-            if (!record.feedback || !['positive', 'negative'].includes(record.feedback.outcome)) {
+            if (
+                !record.feedback ||
+                record.feedback.excludedFromLearning ||
+                !['positive', 'negative'].includes(record.feedback.outcome)
+            ) {
                 continue;
             }
             const totals = result.get(record.patternId) ?? { positive: 0, negative: 0 };
@@ -248,6 +257,19 @@ export class ActionRepository {
             result.set(record.patternId, totals);
         }
         return result;
+    }
+
+    /** Preserve the audit outcome while preventing pre-reset feedback from biasing relearning. */
+    public excludePatternFeedback(patternId: string): Promise<number> {
+        let changed = 0;
+        return this.mutate(() => {
+            for (const record of this.records) {
+                if (record.patternId === patternId && record.feedback && !record.feedback.excludedFromLearning) {
+                    record.feedback.excludedFromLearning = true;
+                    changed++;
+                }
+            }
+        }).then(() => changed);
     }
 
     public summary(): FeedbackSummary {

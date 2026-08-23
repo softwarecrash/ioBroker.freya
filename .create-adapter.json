@@ -1,8 +1,8 @@
 {
     "cli": true,
     "target": "directory",
-    "adapterName": "smartbrain",
-    "title": "SmartBrain",
+    "adapterName": "freya",
+    "title": "Freya",
     "description": "Learns explainable smart-home patterns and proposes safety-controlled automations",
     "keywords": ["automation", "learning", "patterns", "smart-home", "local-first"],
     "expert": "yes",

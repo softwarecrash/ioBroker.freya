@@ -224,10 +224,15 @@ describe('HistoryService', () => {
 
     it('allows only permission-gated states and clamps results', async () => {
         let receivedLimit: number | undefined;
+        const receivedStateIds: string[] = [];
         const service = new HistoryService(
             'auto',
-            provider((_stateId, _start, _end, options) => {
+            provider((stateId, _start, _end, options) => {
+                receivedStateIds.push(stateId);
                 receivedLimit = options?.limit;
+                if (stateId === 'fixture.0.allowed') {
+                    return Promise.resolve([]);
+                }
                 return Promise.resolve([
                     { timestamp: 1, value: 1 },
                     { timestamp: 2, value: 2 },
@@ -235,14 +240,45 @@ describe('HistoryService', () => {
             }),
             [influx],
             ['fixture.0.allowed'],
-            { maxRangeMs: 1_000, maxResults: 1, maxConcurrent: 1 },
+            {
+                maxRangeMs: 1_000,
+                maxResults: 1,
+                maxConcurrent: 1,
+                sourceStateIds: { 'fixture.0.allowed': 'fixture.0.physical' },
+            },
         );
 
         const entries = await service.query('fixture.0.allowed', 0, 10, 100);
 
         expect(receivedLimit).to.equal(1);
+        expect(receivedStateIds).to.deep.equal(['fixture.0.allowed', 'fixture.0.physical']);
         expect(entries).to.deep.equal([{ timestamp: 2, value: 2 }]);
         expect((await service.summary()).queryCount).to.equal(1);
+    });
+
+    it('keeps sufficient alias history without querying its fallback source', async () => {
+        const receivedStateIds: string[] = [];
+        const service = new HistoryService(
+            'auto',
+            provider(stateId => {
+                receivedStateIds.push(stateId);
+                return Promise.resolve([
+                    { timestamp: 1, value: false },
+                    { timestamp: 2, value: true },
+                ]);
+            }),
+            [influx],
+            ['fixture.0.alias'],
+            {
+                maxRangeMs: 1_000,
+                maxResults: 10,
+                maxConcurrent: 1,
+                sourceStateIds: { 'fixture.0.alias': 'fixture.0.physical' },
+            },
+        );
+
+        expect(await service.query('fixture.0.alias', 0, 10)).to.have.length(2);
+        expect(receivedStateIds).to.deep.equal(['fixture.0.alias']);
     });
 
     it('rejects denied states, invalid ranges and excessive ranges before dispatch', async () => {

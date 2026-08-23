@@ -1,4 +1,5 @@
 import type { ContextEngine } from '../context/contextEngine';
+import type { ChangeAttribution } from '../attribution/sourceAttribution';
 import type { Observation, ObservationMetadata, ObservationSummary } from './types';
 
 interface PendingEvent {
@@ -6,6 +7,7 @@ interface PendingEvent {
     stateId: string;
     state: ioBroker.State | null;
     metadata: ObservationMetadata;
+    attribution?: ChangeAttribution;
     receivedAt: number;
 }
 
@@ -56,7 +58,12 @@ export class ObservationEngine {
         }
     }
 
-    public ingest(stateId: string, state: ioBroker.State | null, metadata: ObservationMetadata): boolean {
+    public ingest(
+        stateId: string,
+        state: ioBroker.State | null,
+        metadata: ObservationMetadata,
+        attribution?: ChangeAttribution,
+    ): boolean {
         if (!this.accepting) {
             return false;
         }
@@ -69,7 +76,7 @@ export class ObservationEngine {
             this.queue.shift();
             this.droppedEvents++;
         }
-        this.queue.push({ sequence: ++this.sequence, stateId, state, metadata, receivedAt: Date.now() });
+        this.queue.push({ sequence: ++this.sequence, stateId, state, metadata, attribution, receivedAt: Date.now() });
         this.port.debug(`[Observation] Queued state metadata for ${stateId}`);
         this.ensureProcessing();
         return true;
@@ -152,6 +159,7 @@ export class ObservationEngine {
             ack: event.state?.ack === true,
             quality: event.state?.q ?? 0,
             source: event.state?.from.slice(0, 160),
+            attribution: event.attribution,
             deleted: event.state === null,
             semanticType: event.metadata.semanticType,
             role: event.metadata.role,

@@ -30,7 +30,10 @@ function valueReasons(value: ioBroker.StateValue, target: ActionTargetMetadata):
 export class SafetyEngine {
     public validate(request: FrozenActionRequest, environment: SafetyEnvironment): SafetyDecision {
         const reasons: SafetyReasonCode[] = [];
-        if (environment.autonomyLevel !== 3) {
+        if (
+            environment.autonomyLevel < 2 ||
+            (environment.autonomyLevel === 2 && request.authorization !== 'one-shot')
+        ) {
             reasons.push('autonomy_denied');
         }
         if (!environment.pattern) {
@@ -78,6 +81,9 @@ export class SafetyEngine {
             }
             if (environment.target.write !== true) {
                 reasons.push('target_not_writable');
+            }
+            if (environment.target.currentValue === request.value) {
+                reasons.push('target_already_set');
             }
             reasons.push(...valueReasons(request.value, environment.target));
         }

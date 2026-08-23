@@ -7,6 +7,86 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The Admin pattern table now shows relationships while they are still learning, with
+  confidence, matches/opportunities, distinct learning days, and explanations instead
+  of remaining empty until a suggestion becomes eligible.
+- Bounded runtime counters expose learning relationships, open trigger windows, and
+  retained learning examples for direct local observation.
+- A bounded, read-only seven-day history backfill now feeds explicitly learn-enabled
+  states into the same Pattern Engine before live observation starts. It excludes
+  foreign commands and confirmations, never dispatches actions, and deduplicates
+  persisted examples across restarts.
+- Direct, transformation-free aliases can use the history of a type-compatible source
+  state while permissions, live observations, suggestions, and actions remain keyed to
+  the user-selected alias.
+
+### Fixed
+
+- Corrected JSON Config table, responsive layout, and button-color schema violations
+  reported by the local ioBroker repository checker.
+- Synchronized newly introduced Admin translation keys across every declared locale;
+  reviewed German text remains localized and untranslated values safely fall back to
+  English.
+- Context providers now honor Learn permission as well as Observe permission before a
+  state value can influence pattern conditions.
+- Historical `0`/`1` and exact `true`/`false` representations are normalized only for
+  metadata-declared Boolean states before replay, matching live ioBroker Boolean values.
+
+### Security
+
+- Re-audited the release dependency tree and package contents: production dependencies
+  report no known vulnerabilities, no secret-like files are packaged, and the only
+  foreign-state write remains inside the Action Executor boundary. Remaining audit
+  findings are confined to upstream development/test tooling and are not shipped.
+
+## [0.10.0] - 2026-08-21
+
+### Added
+
+- Behaviorally distinct autonomy paths: level 2 creates expiring, persistent one-shot
+  proposals for Admin approval, while level 3 dispatches matching approved live triggers
+  automatically through the same Safety Engine and exactly-once claim.
+- Pending-action Admin table, approve/reject controls, bounded action counters, restart
+  interruption handling, and last-moment target-value deduplication.
+- Shared trigger-condition matching that re-evaluates same-room illuminance during both
+  live dispatch and final action validation.
+- An actionable local Admin pattern view with bounded pattern rows, target/trigger,
+  confidence and evidence details, explicit approve/disable controls, and confirmed
+  one-shot execution through the existing safety boundary.
+- Schema-versioned, atomically replaced persistence for bounded learning evidence,
+  suggestions, and explicit approval/disabled states, with validated backup recovery.
+- Independent presence-on/light-on and presence-off/light-off learning, including safe
+  propagation of boolean off actions into suggestions.
+- Semantic same-room illuminance bands as explainable candidate features without
+  hardcoded state IDs.
+- Room diagnostics integrated into the Admin state-policy table with resolved room names,
+  warning symbols, and an explicit Automatic/Room/Global scope synchronized with
+  per-object custom settings.
+- Generic command/device-confirmation attribution that excludes Freya and foreign
+  command effects from behavioral learning, recognizes probable device-local reversals,
+  and accepts short-lived per-event user/automation intent from local bridges.
+
+### Changed
+
+- Corrected the implementation plan so summary-only pattern UI, one-shot approval,
+  automatic level-3 dispatch, and end-to-end production verification remain open.
+- Replaced the free-form autonomy-level number input with a descriptive four-level
+  dropdown while preserving the numeric configuration values.
+- Renamed the project, npm package, adapter namespace, data folder, Admin assets, and
+  documentation from SmartBrain/`smartbrain` to Freya/`freya` before the first public
+  release.
+- Arrival events without a light transition remain negative evidence and cannot be
+  misinterpreted as an instruction to switch a light off.
+- Suggest permission now applies only to the proposed action target; learned trigger
+  and context states no longer need Suggest permission to contribute to a suggestion.
+
+### Fixed
+
+- Room and function assignments on parent folders now propagate reliably to deeply
+  nested alias states by loading state metadata, ancestors, and enums explicitly.
+
 ## [0.9.1] - 2026-08-20
 
 ### Added
@@ -168,7 +248,7 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 - History remains disabled by default and can read only states carrying an explicit
   `observe` permission.
-- History access is message-based and read-only; SmartBrain does not connect directly
+- History access is message-based and read-only; Freya does not connect directly
   to provider databases or write foreign states.
 
 ## [0.3.0] - 2026-08-20
@@ -199,7 +279,7 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 - Time, Sun, Environment, Weather, Presence, and bounded Device context providers.
 - Local sunrise, sunset, elevation, azimuth, phase, and relative-time calculation using
   ioBroker system coordinates or an optional manual override.
-- Per-object SmartBrain custom settings synchronized with the central state-policy
+- Per-object Freya custom settings synchronized with the central state-policy
   table using last-edit timestamps.
 - A pinned local ioBroker repository-checker release gate and guarded npm-only
   Dependabot patch/minor auto-merge workflow.
@@ -229,7 +309,7 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 
 ### Security
 
-- Discovery reads object metadata only and excludes SmartBrain-owned states; it does
+- Discovery reads object metadata only and excludes Freya-owned states; it does
   not read foreign values, subscribe to changes, access history, or execute actions.
 
 ## [0.0.1] - 2026-08-20
@@ -248,7 +328,7 @@ and this project intends to use [Semantic Versioning](https://semver.org/).
 - TypeScript daemon skeleton generated from `@iobroker/create-adapter` 3.1.5 conventions.
 - JSON Config settings, adapter-owned status states, modular lifecycle service, tests,
   lint/build configuration, and multi-platform GitHub Actions workflow.
-- Canonical `ioBroker.smartbrain` repository metadata and a paired GitHub/local
+- Canonical `ioBroker.freya` repository metadata and a paired GitHub/local
   development deployment workflow.
 
 ### Security

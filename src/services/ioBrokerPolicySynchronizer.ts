@@ -7,6 +7,17 @@ export interface PolicySynchronizationResult {
     instanceUpdated: boolean;
 }
 
+export function mergeRoomAssignments(
+    policies: StatePolicyInput[],
+    diagnostics: Array<Pick<StatePolicyInput, 'stateId' | 'roomAssignment'>>,
+): StatePolicyInput[] {
+    const assignments = new Map(diagnostics.map(row => [row.stateId, row.roomAssignment]));
+    return policies.map(policy => {
+        const roomAssignment = assignments.get(policy.stateId);
+        return roomAssignment === undefined ? { ...policy } : { ...policy, roomAssignment };
+    });
+}
+
 export class IoBrokerPolicySynchronizer {
     public constructor(private readonly adapter: ioBroker.Adapter) {}
 
@@ -51,5 +62,27 @@ export class IoBrokerPolicySynchronizer {
             });
         }
         return { policies: plan.policies, instanceUpdated: plan.updateNative };
+    }
+
+    /** Persist display-only room diagnostics so opening Admin does not create a dirty form. */
+    public async synchronizeRoomAssignments(
+        diagnostics: Array<Pick<StatePolicyInput, 'stateId' | 'roomAssignment'>>,
+    ): Promise<boolean> {
+        const instanceId = `system.adapter.${this.adapter.namespace}`;
+        const instance = await this.adapter.getForeignObjectAsync(instanceId);
+        if (!instance || instance.type !== 'instance') {
+            throw new Error('adapter_instance_object_missing');
+        }
+        const native = instance.native as Record<string, unknown>;
+        const current = Array.isArray(native.statePolicies) ? (native.statePolicies as StatePolicyInput[]) : [];
+        const updated = mergeRoomAssignments(current, diagnostics);
+        if (JSON.stringify(current) === JSON.stringify(updated)) {
+            return false;
+        }
+        await this.adapter.setForeignObjectAsync(instanceId, {
+            ...instance,
+            native: { ...instance.native, statePolicies: updated },
+        });
+        return true;
     }
 }

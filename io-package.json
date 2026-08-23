@@ -1,8 +1,21 @@
 {
     "common": {
-        "name": "smartbrain",
-        "version": "0.9.1",
+        "name": "freya",
+        "version": "0.10.0",
         "news": {
+            "0.10.0": {
+                "en": "Learn presence-based light on and off patterns with semantic same-room illuminance context",
+                "de": "Präsenzbasierte Licht-Ein- und Ausschaltmuster mit semantischem Raum-Helligkeitskontext lernen",
+                "ru": "Изучение включения и выключения света по присутствию с учетом освещенности в комнате",
+                "pt": "Aprenda padrões de ligar e desligar luz por presença com contexto semântico de iluminação do ambiente",
+                "nl": "Leer op aanwezigheid gebaseerde licht-aan- en uitpatronen met semantische kamerverlichting",
+                "fr": "Apprentissage de l'allumage et de l'extinction selon la présence avec la luminosité sémantique de la pièce",
+                "it": "Apprendimento di accensione e spegnimento in base alla presenza con luminosità semantica della stanza",
+                "es": "Aprende patrones de encendido y apagado por presencia con iluminación semántica de la habitación",
+                "pl": "Uczenie włączania i wyłączania światła na podstawie obecności i semantycznego oświetlenia pomieszczenia",
+                "uk": "Вивчення ввімкнення та вимкнення світла за присутністю з урахуванням освітленості кімнати",
+                "zh-cn": "学习基于存在状态的开关灯模式，并使用语义化房间照度上下文"
+            },
             "0.9.1": {
                 "en": "Add pre-release hardening, complete UI translations, privacy documentation, and package smoke tests",
                 "de": "Pre-Release-Härtung, vollständige UI-Übersetzungen, Datenschutzdokumentation und Paket-Smoke-Tests hinzugefügt",
@@ -80,33 +93,20 @@
                 "pl": "Napraw powtarzające się ponowne uruchamianie normalizacji zasad i wyścigi zamykania",
                 "uk": "Виправлення повторних перезапусків нормалізації політики та гонок завершення роботи",
                 "zh-cn": "修复重复的政策正常化重启和关闭竞赛"
-            },
-            "0.5.0": {
-                "en": "Add bounded explainable trigger-to-light pattern learning",
-                "de": "Begrenztes, erklärbares Lernen von Auslöser-zu-Licht-Mustern hinzugefügt",
-                "ru": "Добавьте ограниченное объяснимое обучение шаблону «триггер-свет»",
-                "pt": "Adicione aprendizado de padrão de gatilho para luz explicável e limitado",
-                "nl": "Voeg begrensd, verklaarbaar trigger-to-light-patroonleren toe",
-                "fr": "Ajouter un apprentissage de modèles de déclenchement à la lumière explicable et limité",
-                "it": "Aggiungi l'apprendimento limitato e spiegabile del modello trigger-to-light",
-                "es": "Agregue aprendizaje de patrones de disparador a luz explicable y limitado",
-                "pl": "Dodaj ograniczone, możliwe do wyjaśnienia wzorce uczenia się od wyzwalacza do światła",
-                "uk": "Додайте обмежене, пояснюване, навчання шаблону тригера до світла",
-                "zh-cn": "添加有界可解释的触发光模式学习"
             }
         },
         "titleLang": {
-            "en": "SmartBrain",
-            "de": "SmartBrain",
-            "ru": "SmartBrain",
-            "pt": "SmartBrain",
-            "nl": "SmartBrain",
-            "fr": "SmartBrain",
-            "it": "SmartBrain",
-            "es": "SmartBrain",
-            "pl": "SmartBrain",
-            "uk": "SmartBrain",
-            "zh-cn": "SmartBrain"
+            "en": "Freya",
+            "de": "Freya",
+            "ru": "Freya",
+            "pt": "Freya",
+            "nl": "Freya",
+            "fr": "Freya",
+            "it": "Freya",
+            "es": "Freya",
+            "pl": "Freya",
+            "uk": "Freya",
+            "zh-cn": "Freya"
         },
         "desc": {
             "en": "Learns explainable smart-home patterns and proposes safety-controlled automations",
@@ -128,10 +128,10 @@
             "license": "MIT"
         },
         "platform": "Javascript/Node.js",
-        "icon": "smartbrain.svg",
+        "icon": "freya.svg",
         "enabled": false,
-        "extIcon": "https://raw.githubusercontent.com/softwarecrash/ioBroker.smartbrain/codex/phase-0-analysis/admin/smartbrain.svg",
-        "readme": "https://github.com/softwarecrash/ioBroker.smartbrain/blob/codex/phase-0-analysis/README.md",
+        "extIcon": "https://raw.githubusercontent.com/softwarecrash/ioBroker.freya/codex/phase-0-analysis/admin/freya.svg",
+        "readme": "https://github.com/softwarecrash/ioBroker.freya/blob/codex/phase-0-analysis/README.md",
         "loglevel": "info",
         "tier": 3,
         "mode": "daemon",
@@ -139,7 +139,7 @@
         "compact": true,
         "connectionType": "local",
         "dataSource": "assumption",
-        "dataFolder": "smartbrain.%INSTANCE%",
+        "dataFolder": "freya.%INSTANCE%",
         "messagebox": true,
         "supportCustoms": true,
         "adminUI": {
@@ -269,6 +269,39 @@
             "native": {}
         },
         {
+            "_id": "learning.persistenceStatus",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Learning persistence status",
+                    "de": "Status der Lern-Persistenz"
+                },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": "initializing"
+            },
+            "native": {}
+        },
+        {
+            "_id": "learning.persistedPatternCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Persisted learned relationships",
+                    "de": "Persistierte gelernte Beziehungen"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
             "_id": "learning.observedStateCount",
             "type": "state",
             "common": {
@@ -303,6 +336,57 @@
                 "name": {
                     "en": "Candidate patterns",
                     "de": "Musterkandidaten"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "patterns.learningCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Relationships still learning",
+                    "de": "Noch lernende Beziehungen"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "patterns.pendingOpportunityCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Open learning windows",
+                    "de": "Offene Lernfenster"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "patterns.retainedExampleCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Retained learning examples",
+                    "de": "Gespeicherte Lernbeispiele"
                 },
                 "type": "number",
                 "role": "value",
@@ -721,6 +805,73 @@
             "native": {}
         },
         {
+            "_id": "history.learningStatus",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Historical learning status",
+                    "de": "Status des historischen Lernens"
+                },
+                "type": "string",
+                "role": "text",
+                "read": true,
+                "write": false,
+                "def": "idle"
+            },
+            "native": {}
+        },
+        {
+            "_id": "history.learningStateCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "History states used for learning",
+                    "de": "Für Lernen verwendete History-States"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "history.learningEventCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Historical changes replayed for learning",
+                    "de": "Für Lernen ausgewertete historische Änderungen"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "history.learningFailedStateCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "History states unavailable for learning",
+                    "de": "Für Lernen nicht verfügbare History-States"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
             "_id": "history.lastQueryTimestamp",
             "type": "state",
             "common": {
@@ -848,6 +999,57 @@
                 "name": {
                     "en": "Action audit records",
                     "de": "Aktions-Audit-Einträge"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "actions.pendingCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Pending one-shot actions",
+                    "de": "Ausstehende Einzelaktionen"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "actions.executedCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Executed action records",
+                    "de": "Ausgeführte Aktionen"
+                },
+                "type": "number",
+                "role": "value",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "def": 0
+            },
+            "native": {}
+        },
+        {
+            "_id": "actions.deniedCount",
+            "type": "state",
+            "common": {
+                "name": {
+                    "en": "Denied action records",
+                    "de": "Abgewiesene Aktionen"
                 },
                 "type": "number",
                 "role": "value",

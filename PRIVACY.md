@@ -1,11 +1,11 @@
 # Privacy information
 
-SmartBrain is local-first. It has no telemetry, advertising, or analytics service. Its
+Freya is local-first. It has no telemetry, advertising, or analytics service. Its
 rules-only default does not make external network requests.
 
 ## Data processed locally
 
-Depending on the permissions and features enabled by the user, SmartBrain processes:
+Depending on the permissions and features enabled by the user, Freya processes:
 
 - ioBroker object metadata and enum assignments used for semantic and room discovery;
 - values and timestamps of explicitly observed states;
@@ -42,4 +42,4 @@ level. Set the provider to Rules Only or Disabled to prevent external LLM calls.
 To remove persisted action history, stop the instance and delete `actions.v1.json` and
 its `.bak` file from that instance's ioBroker data directory. Removing the adapter
 instance removes its configuration objects; check the ioBroker host's backup policy for
-copies retained outside SmartBrain.
+copies retained outside Freya.
