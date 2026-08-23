@@ -573,95 +573,17 @@
                     "lg": 12,
                     "xl": 12
                 },
-                "_patternRows": {
-                    "type": "table",
+                "_patternDisplay": {
+                    "type": "textSendTo",
                     "label": "Learned patterns",
+                    "command": "getPatternAdminData",
+                    "container": "html",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
-                    "xl": 12,
-                    "items": [
-                        {
-                            "type": "text",
-                            "attr": "status",
-                            "title": "Status",
-                            "width": "8%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "eligible",
-                            "title": "Eligible",
-                            "width": "5%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "rooms",
-                            "title": "Rooms",
-                            "width": "10%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "trigger",
-                            "title": "Trigger",
-                            "width": "16%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "target",
-                            "title": "Target",
-                            "width": "16%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "action",
-                            "title": "Action",
-                            "width": "6%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "confidence",
-                            "title": "Confidence",
-                            "width": "7%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "evidence",
-                            "title": "Evidence",
-                            "width": "7%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "explanation",
-                            "title": "Explanation",
-                            "width": "25%",
-                            "readOnly": true
-                        }
-                    ]
-                },
-                "_refreshPatterns": {
-                    "type": "sendTo",
-                    "label": "Refresh patterns",
-                    "command": "getPatternAdminData",
-                    "useNative": true,
-                    "onLoaded": true,
-                    "variant": "outlined",
-                    "icon": "refresh",
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 6,
-                    "md": 3,
-                    "lg": 3,
-                    "xl": 3
+                    "xl": 12
                 },
                 "_selectedPattern": {
                     "type": "selectSendTo",
@@ -784,88 +706,17 @@
                     "size": 4,
                     "newLine": true
                 },
-                "_pendingActionRows": {
-                    "type": "table",
+                "_pendingActionDisplay": {
+                    "type": "textSendTo",
                     "label": "Action proposals",
+                    "command": "getPendingActionAdminData",
+                    "container": "html",
                     "newLine": true,
                     "xs": 12,
                     "sm": 12,
                     "md": 12,
                     "lg": 12,
-                    "xl": 12,
-                    "items": [
-                        {
-                            "type": "text",
-                            "attr": "status",
-                            "title": "Status",
-                            "width": "8%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "rooms",
-                            "title": "Rooms",
-                            "width": "10%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "trigger",
-                            "title": "Trigger",
-                            "width": "18%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "target",
-                            "title": "Target",
-                            "width": "18%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "action",
-                            "title": "Action",
-                            "width": "7%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "confidence",
-                            "title": "Confidence",
-                            "width": "8%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "expires",
-                            "title": "Expires",
-                            "width": "14%",
-                            "readOnly": true
-                        },
-                        {
-                            "type": "text",
-                            "attr": "result",
-                            "title": "Result",
-                            "width": "17%",
-                            "readOnly": true
-                        }
-                    ]
-                },
-                "_refreshPendingActions": {
-                    "type": "sendTo",
-                    "label": "Refresh action proposals",
-                    "command": "getPendingActionAdminData",
-                    "useNative": true,
-                    "onLoaded": true,
-                    "variant": "outlined",
-                    "icon": "refresh",
-                    "newLine": true,
-                    "xs": 12,
-                    "sm": 6,
-                    "md": 3,
-                    "lg": 3,
-                    "xl": 3
+                    "xl": 12
                 },
                 "_selectedPendingAction": {
                     "type": "selectSendTo",

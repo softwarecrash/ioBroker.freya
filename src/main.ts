@@ -701,13 +701,25 @@ class FreyaAdapter extends utils.Adapter {
         }
         if (message.command === 'getPatternAdminData') {
             if (!isTrustedApprovalSource(message.from)) {
-                this.sendTo(message.from, message.command, { error: 'pattern_view_source_denied' }, message.callback);
+                this.sendTo(message.from, message.command, { text: 'Pattern view denied.' }, message.callback);
                 return;
             }
             this.sendTo(
                 message.from,
                 message.command,
-                { native: { _patternRows: this.patternAdminRows() } },
+                {
+                    text: this.adminTableHtml(this.patternAdminRows(), [
+                        ['status', 'Status'],
+                        ['eligible', 'Eligible'],
+                        ['rooms', 'Rooms'],
+                        ['trigger', 'Trigger'],
+                        ['target', 'Target'],
+                        ['action', 'Action'],
+                        ['confidence', 'Confidence'],
+                        ['evidence', 'Evidence'],
+                        ['explanation', 'Explanation'],
+                    ]),
+                },
                 message.callback,
             );
             return;
@@ -751,7 +763,7 @@ class FreyaAdapter extends utils.Adapter {
         }
         if (message.command === 'getPendingActionAdminData') {
             if (!isTrustedApprovalSource(message.from)) {
-                this.sendTo(message.from, message.command, { error: 'pending_view_source_denied' }, message.callback);
+                this.sendTo(message.from, message.command, { text: 'Action proposal view denied.' }, message.callback);
                 return;
             }
             this.pendingActions.expire(Date.now());
@@ -760,7 +772,18 @@ class FreyaAdapter extends utils.Adapter {
             this.sendTo(
                 message.from,
                 message.command,
-                { native: { _pendingActionRows: this.pendingActionAdminRows() } },
+                {
+                    text: this.adminTableHtml(this.pendingActionAdminRows(), [
+                        ['status', 'Status'],
+                        ['rooms', 'Rooms'],
+                        ['trigger', 'Trigger'],
+                        ['target', 'Target'],
+                        ['action', 'Action'],
+                        ['confidence', 'Confidence'],
+                        ['expires', 'Expires'],
+                        ['result', 'Result'],
+                    ]),
+                },
                 message.callback,
             );
             return;
@@ -1335,6 +1358,49 @@ class FreyaAdapter extends utils.Adapter {
             });
         }
         return rows.slice(0, 100);
+    }
+
+    private adminTableHtml(
+        rows: Array<Record<string, ioBroker.StateValue>>,
+        columns: Array<[key: string, title: string]>,
+    ): string {
+        const escape = (value: ioBroker.StateValue | undefined): string => {
+            const text =
+                value === null || value === undefined
+                    ? ''
+                    : typeof value === 'string'
+                      ? value
+                      : typeof value === 'number' || typeof value === 'boolean'
+                        ? String(value)
+                        : JSON.stringify(value);
+            return text
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        };
+        if (!rows.length) {
+            return '<div style="padding:8px 0;opacity:.75">No entries available.</div>';
+        }
+        const header = columns
+            .map(
+                ([, title]) =>
+                    `<th style="padding:6px;text-align:left;border-bottom:1px solid currentColor">${escape(title)}</th>`,
+            )
+            .join('');
+        const body = rows
+            .map(
+                row =>
+                    `<tr>${columns
+                        .map(
+                            ([key]) =>
+                                `<td style="padding:6px;vertical-align:top;border-bottom:1px solid rgba(127,127,127,.3);overflow-wrap:anywhere">${escape(row[key])}</td>`,
+                        )
+                        .join('')}</tr>`,
+            )
+            .join('');
+        return `<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:smaller"><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table></div>`;
     }
 
     private async publishActionResult(result: Awaited<ReturnType<ActionExecutor['execute']>>): Promise<void> {
