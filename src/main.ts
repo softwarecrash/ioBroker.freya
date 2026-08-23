@@ -1360,7 +1360,7 @@ class FreyaAdapter extends utils.Adapter {
         return rows.slice(0, 100);
     }
 
-    /** Runtime-only cards keep the admin configuration clean while remaining readable on narrow screens. */
+    /** Runtime-only compact rows keep the admin configuration clean without wasting vertical space. */
     private adminCardListHtml(
         rows: Array<Record<string, ioBroker.StateValue>>,
         columns: Array<[key: string, title: string]>,
@@ -1382,26 +1382,30 @@ class FreyaAdapter extends utils.Adapter {
                 .replaceAll("'", '&#39;');
         };
         if (!rows.length) {
-            return '<div style="padding:12px 0;font-size:14px;opacity:.75">No entries available.</div>';
+            return '<div style="padding:8px 0;font-size:14px;opacity:.75">No entries available.</div>';
         }
-        const cards = rows
+        const entries = rows
             .map(row => {
                 const status = escape(row.status);
                 const rooms = escape(row.rooms);
                 const fields = columns
-                    .filter(([key]) => !['status', 'rooms', 'explanation'].includes(key))
+                    .filter(([key]) => !['status', 'rooms', 'trigger', 'target', 'explanation'].includes(key))
                     .map(
                         ([key, title]) =>
-                            `<div style="min-width:180px;flex:1 1 220px;padding:4px 0"><span style="display:block;font-size:12px;opacity:.7">${escape(title)}</span><span style="overflow-wrap:anywhere">${escape(row[key])}</span></div>`,
+                            `<span style="white-space:nowrap"><span style="opacity:.65">${escape(title)}:</span> ${escape(row[key])}</span>`,
                     )
                     .join('');
+                const relation =
+                    row.trigger && row.target
+                        ? `<div style="margin-top:3px;overflow-wrap:anywhere"><strong>${escape(row.trigger)}</strong> <span style="opacity:.65">→</span> <strong>${escape(row.target)}</strong></div>`
+                        : '';
                 const explanation = row.explanation
-                    ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(127,127,127,.3);line-height:1.45"><span style="display:block;font-size:12px;opacity:.7">Explanation</span>${escape(row.explanation)}</div>`
+                    ? `<div style="margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.78" title="${escape(row.explanation)}">${escape(row.explanation)}</div>`
                     : '';
-                return `<div style="margin:10px 0;padding:14px 16px;border:1px solid rgba(127,127,127,.45);border-radius:6px;font-size:14px;line-height:1.35"><div style="display:flex;gap:12px;justify-content:space-between;align-items:baseline;flex-wrap:wrap"><strong style="font-size:15px">${status}</strong><span style="opacity:.8">${rooms}</span></div><div style="display:flex;gap:8px 18px;flex-wrap:wrap;margin-top:8px">${fields}</div>${explanation}</div>`;
+                return `<div style="margin:4px 0;padding:8px 10px;border:1px solid rgba(127,127,127,.35);border-radius:4px;font-size:13px;line-height:1.3"><div style="display:flex;gap:7px 14px;align-items:baseline;flex-wrap:wrap"><strong>${status}</strong><span>${rooms}</span><span style="display:flex;gap:7px 14px;flex-wrap:wrap;opacity:.9">${fields}</span></div>${relation}${explanation}</div>`;
             })
             .join('');
-        return `<div style="width:100%;max-width:100%">${cards}</div>`;
+        return `<div style="width:100%;max-width:100%">${entries}</div>`;
     }
 
     private async publishActionResult(result: Awaited<ReturnType<ActionExecutor['execute']>>): Promise<void> {
