@@ -708,7 +708,7 @@ class FreyaAdapter extends utils.Adapter {
                 message.from,
                 message.command,
                 {
-                    text: this.adminTableHtml(this.patternAdminRows(), [
+                    text: this.adminCardListHtml(this.patternAdminRows(), [
                         ['status', 'Status'],
                         ['eligible', 'Eligible'],
                         ['rooms', 'Rooms'],
@@ -773,7 +773,7 @@ class FreyaAdapter extends utils.Adapter {
                 message.from,
                 message.command,
                 {
-                    text: this.adminTableHtml(this.pendingActionAdminRows(), [
+                    text: this.adminCardListHtml(this.pendingActionAdminRows(), [
                         ['status', 'Status'],
                         ['rooms', 'Rooms'],
                         ['trigger', 'Trigger'],
@@ -1360,7 +1360,8 @@ class FreyaAdapter extends utils.Adapter {
         return rows.slice(0, 100);
     }
 
-    private adminTableHtml(
+    /** Runtime-only cards keep the admin configuration clean while remaining readable on narrow screens. */
+    private adminCardListHtml(
         rows: Array<Record<string, ioBroker.StateValue>>,
         columns: Array<[key: string, title: string]>,
     ): string {
@@ -1381,26 +1382,26 @@ class FreyaAdapter extends utils.Adapter {
                 .replaceAll("'", '&#39;');
         };
         if (!rows.length) {
-            return '<div style="padding:8px 0;opacity:.75">No entries available.</div>';
+            return '<div style="padding:12px 0;font-size:14px;opacity:.75">No entries available.</div>';
         }
-        const header = columns
-            .map(
-                ([, title]) =>
-                    `<th style="padding:6px;text-align:left;border-bottom:1px solid currentColor">${escape(title)}</th>`,
-            )
+        const cards = rows
+            .map(row => {
+                const status = escape(row.status);
+                const rooms = escape(row.rooms);
+                const fields = columns
+                    .filter(([key]) => !['status', 'rooms', 'explanation'].includes(key))
+                    .map(
+                        ([key, title]) =>
+                            `<div style="min-width:180px;flex:1 1 220px;padding:4px 0"><span style="display:block;font-size:12px;opacity:.7">${escape(title)}</span><span style="overflow-wrap:anywhere">${escape(row[key])}</span></div>`,
+                    )
+                    .join('');
+                const explanation = row.explanation
+                    ? `<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(127,127,127,.3);line-height:1.45"><span style="display:block;font-size:12px;opacity:.7">Explanation</span>${escape(row.explanation)}</div>`
+                    : '';
+                return `<div style="margin:10px 0;padding:14px 16px;border:1px solid rgba(127,127,127,.45);border-radius:6px;font-size:14px;line-height:1.35"><div style="display:flex;gap:12px;justify-content:space-between;align-items:baseline;flex-wrap:wrap"><strong style="font-size:15px">${status}</strong><span style="opacity:.8">${rooms}</span></div><div style="display:flex;gap:8px 18px;flex-wrap:wrap;margin-top:8px">${fields}</div>${explanation}</div>`;
+            })
             .join('');
-        const body = rows
-            .map(
-                row =>
-                    `<tr>${columns
-                        .map(
-                            ([key]) =>
-                                `<td style="padding:6px;vertical-align:top;border-bottom:1px solid rgba(127,127,127,.3);overflow-wrap:anywhere">${escape(row[key])}</td>`,
-                        )
-                        .join('')}</tr>`,
-            )
-            .join('');
-        return `<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:smaller"><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table></div>`;
+        return `<div style="width:100%;max-width:100%">${cards}</div>`;
     }
 
     private async publishActionResult(result: Awaited<ReturnType<ActionExecutor['execute']>>): Promise<void> {
