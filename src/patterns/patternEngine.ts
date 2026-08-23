@@ -40,6 +40,7 @@ export interface PatternEngineOptions {
 /** Learns bounded, explainable trigger-to-light candidates without performing actions. */
 export class PatternEngine {
     private readonly states = new Map<string, LearnableState>();
+    private readonly latestBooleanValues = new Map<string, boolean>();
     private readonly records = new Map<string, CandidateRecord>();
     private readonly pending = new Map<string, PendingOpportunity>();
     private lastEvaluationTimestamp = 0;
@@ -73,9 +74,11 @@ export class PatternEngine {
             return;
         }
         if (observation.attribution && NON_BEHAVIORAL_ORIGINS.has(observation.attribution.kind)) {
+            this.latestBooleanValues.set(state.id, observation.value);
             return;
         }
         if (observation.previousValue === observation.value) {
+            this.latestBooleanValues.set(state.id, observation.value);
             return;
         }
         if (TRIGGER_TYPES.has(state.semanticType) && (observation.value || state.semanticType === 'presence')) {
@@ -84,6 +87,7 @@ export class PatternEngine {
         if (state.semanticType === 'light') {
             this.matchAction(state, observation.timestamp, observation.value);
         }
+        this.latestBooleanValues.set(state.id, observation.value);
     }
 
     public flush(timestamp: number): void {
@@ -234,6 +238,15 @@ export class PatternEngine {
                 continue;
             }
             const key = `${trigger.id}\u0000${action.id}\u0000${String(expectedAction)}`;
+            const contextualValue = observation.context?.states?.[action.id];
+            const currentActionValue =
+                typeof contextualValue === 'boolean' ? contextualValue : this.latestBooleanValues.get(action.id);
+            if (currentActionValue === expectedAction) {
+                // The desired state already exists, so this trigger cannot reveal whether an action would follow.
+                // In particular, repeated presence pulses while a light remains on must not become failures.
+                this.pending.delete(key);
+                continue;
+            }
             const previous = this.pending.get(key);
             if (previous) {
                 this.retainExample(previous, false);
