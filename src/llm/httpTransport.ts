@@ -10,6 +10,10 @@ export interface JsonHttpTransport {
     ): Promise<unknown>;
 }
 
+export function boundedLlmTimeoutMs(timeoutMs: number): number {
+    return Number.isFinite(timeoutMs) ? Math.max(100, Math.min(timeoutMs, 300_000)) : 20_000;
+}
+
 export async function boundedJson(response: Response, maximumBytes = 65_536): Promise<unknown> {
     if (!response.ok) {
         throw new Error(`llm_http_${response.status}`);
@@ -54,7 +58,7 @@ export class FetchJsonTransport implements JsonHttpTransport {
         signal?: AbortSignal,
     ): Promise<unknown> {
         const controller = new AbortController();
-        const timeout = scheduleTimeout(() => controller.abort(), Math.max(100, Math.min(timeoutMs, 60_000)));
+        const timeout = scheduleTimeout(() => controller.abort(), boundedLlmTimeoutMs(timeoutMs));
         const abort = (): void => controller.abort();
         signal?.addEventListener('abort', abort, { once: true });
         try {

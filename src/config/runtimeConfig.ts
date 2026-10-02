@@ -106,7 +106,7 @@ export function createRuntimeConfig(config: Partial<ioBroker.AdapterConfig>): Ru
             typeof config.llmBaseUrl === 'string' ? config.llmBaseUrl.trim().slice(0, 500) : 'http://127.0.0.1:11434',
         llmApiKey: typeof config.llmApiKey === 'string' ? config.llmApiKey : '',
         llmTimeoutSeconds: Number.isFinite(requestedLlmTimeout)
-            ? Math.max(1, Math.min(60, Math.floor(requestedLlmTimeout)))
+            ? Math.max(1, Math.min(300, Math.floor(requestedLlmTimeout)))
             : 20,
         feedbackWindowSeconds: Number.isFinite(requestedFeedbackWindow)
             ? Math.max(5, Math.min(1_800, Math.floor(requestedFeedbackWindow)))

@@ -227,6 +227,8 @@ the corresponding structured response format. Model names are always explicit an
 Freya does not silently substitute one. See the official
 [OpenAI Responses API](https://developers.openai.com/api/reference/typescript/resources/beta/subresources/responses/methods/create)
 and [Ollama structured output documentation](https://docs.ollama.com/capabilities/structured-outputs).
+The configurable request timeout defaults to 20 seconds and can be raised to 300
+seconds for slower remote models.
 
 External calls happen only through the Admin-only `analyzePattern` command. Beforehand,
 `previewLlmDisclosure` shows the exact allow-listed payload and destination origin.

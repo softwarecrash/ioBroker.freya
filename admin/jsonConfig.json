@@ -932,7 +932,7 @@
                     "type": "number",
                     "label": "Timeout (seconds)",
                     "min": 1,
-                    "max": 60,
+                    "max": 300,
                     "xs": 12,
                     "sm": 6,
                     "md": 4,

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import type { PatternSuggestion } from '../suggestions/types';
 import { parseLlmAnalysis } from './contract';
 import { buildPatternDisclosure, disclosurePreview } from './disclosure';
-import { boundedJson, type JsonHttpTransport } from './httpTransport';
+import { boundedJson, boundedLlmTimeoutMs, type JsonHttpTransport } from './httpTransport';
 import { LlmService } from './llmService';
 import {
     DisabledLlmProvider,
@@ -55,6 +55,12 @@ class RecordingTransport implements JsonHttpTransport {
 describe('LLM advisory boundary', () => {
     const disclosure = buildPatternDisclosure(suggestion(), 'request-1');
     const analysis = { summary: 'A bounded explanation.', riskLevel: 'low', concerns: [], hypothesis: null };
+
+    it('permits a five-minute transport timeout while retaining an upper bound', () => {
+        expect(boundedLlmTimeoutMs(300_000)).to.equal(300_000);
+        expect(boundedLlmTimeoutMs(500_000)).to.equal(300_000);
+        expect(boundedLlmTimeoutMs(Number.NaN)).to.equal(20_000);
+    });
 
     it('discloses only allow-listed aggregate pattern data', () => {
         const serialized = JSON.stringify(disclosure);

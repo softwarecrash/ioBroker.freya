@@ -68,8 +68,9 @@ describe('runtime configuration', () => {
             llmModel: 'gemma3:latest',
             llmBaseUrl: 'http://localhost:11434',
             llmApiKey: 'secret-value',
-            llmTimeoutSeconds: 60,
+            llmTimeoutSeconds: 300,
         });
+        expect(createRuntimeConfig({ llmTimeoutSeconds: 300 }).llmTimeoutSeconds).to.equal(300);
         expect(createRuntimeConfig({ llmProvider: 'unknown' }).llmProvider).to.equal('disabled');
         expect(createRuntimeConfig({ llmProvider: 'ollama-remote' }).llmProvider).to.equal('ollama-remote');
     });
