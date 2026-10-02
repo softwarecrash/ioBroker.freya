@@ -217,6 +217,38 @@ describe('PatternEngine', () => {
         expect(engine.summary(14_000)).to.include({ retainedExamples: 0, pendingOpportunities: 0 });
     });
 
+    it('provides aggregated context counts without state identifiers or room names', () => {
+        const engine = new PatternEngine(
+            [
+                { id: 'private.presence', semanticType: 'presence', valueType: 'boolean', rooms: ['Private Kitchen'] },
+                { id: 'private.light', semanticType: 'light', valueType: 'boolean', rooms: ['Private Kitchen'] },
+                { id: 'private.lux', semanticType: 'illuminance', valueType: 'number', rooms: ['Private Kitchen'] },
+            ],
+            { enabled: true, actionWindowMs: 5_000 },
+        );
+        for (let index = 0; index < 12; index++) {
+            const timestamp = 1_000 + index * DAY_MS;
+            const snapshot = context(timestamp, true);
+            snapshot.states = { 'private.light': false, 'private.lux': index < 6 ? 5 : 500 };
+            engine.observe(observation('private.presence', 'presence', timestamp, snapshot, true, ['Private Kitchen']));
+            if (index < 6) {
+                engine.observe(
+                    observation('private.light', 'light', timestamp + 1_000, undefined, true, ['Private Kitchen']),
+                );
+            } else {
+                engine.flush(timestamp + 6_000);
+            }
+        }
+        const patternId = engine.patterns(12 * DAY_MS + 1_000)[0].id;
+        const evidence = engine.advisoryEvidence(patternId);
+        expect(evidence?.evidence).to.include.deep.members([
+            { feature: 'room.illuminanceBand', value: 'dark', opportunities: 6, matches: 6 },
+            { feature: 'room.illuminanceBand', value: 'lit', opportunities: 6, matches: 0 },
+        ]);
+        expect(JSON.stringify(evidence)).not.to.contain('Private Kitchen');
+        expect(JSON.stringify(evidence)).not.to.contain('private.');
+    });
+
     it('uses the last observed light value when a context snapshot has no device state', () => {
         const engine = new PatternEngine(
             [

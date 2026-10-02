@@ -1307,10 +1307,10 @@ class FreyaAdapter extends utils.Adapter {
         if (!/^[a-f0-9]{16}$/.test(patternId)) {
             return undefined;
         }
-        return (
+        const pattern =
             this.suggestionService?.find(patternId) ??
-            this.patternEngine?.patterns().find(pattern => pattern.id === patternId)
-        );
+            this.patternEngine?.patterns().find(pattern => pattern.id === patternId);
+        return pattern ? { ...pattern, ...this.patternEngine?.advisoryEvidence(patternId) } : undefined;
     }
 
     private async publishSuggestionSummary(): Promise<void> {

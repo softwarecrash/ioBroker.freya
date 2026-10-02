@@ -232,8 +232,12 @@ External calls happen only through the Admin-only `analyzePattern` command. Befo
 `previewLlmDisclosure` shows the exact allow-listed payload and destination origin.
 The Admin-only connection test sends a synthetic pattern containing no household data;
 for a remote provider it performs one small model request and may therefore be billable.
-The payload contains aggregate evidence and selected semantic context features, but no
-state IDs, room names, raw values, person data, or API key. Keys are declared both
+The payload contains bounded per-context opportunity and match counts, aggregate evidence,
+and selected semantic context features, but no state IDs, room names, raw values, person
+data, or API key. The model is asked for a German evidence-based explanation and concrete
+data gaps; its result is advisory and does not retrain or approve a pattern. Low-confidence
+or immature relationships always retain a high automation-risk rating regardless of the
+model's answer. Keys are declared both
 protected and encrypted native configuration. Responses are size/time bounded and
 must contain exactly a short summary, risk level, and bounded concerns. Extra fields,
 including targets, values, approval, or execution instructions, invalidate the entire

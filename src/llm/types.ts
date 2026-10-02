@@ -10,6 +10,16 @@ export interface LlmPatternDisclosure {
         matches: number;
         actionWindowSeconds: number;
         roomCount: number;
+        triggerType?: string;
+        targetType?: string;
+        expectedAction?: boolean;
+        distinctDays?: number;
+        evidence?: Array<{
+            feature: string;
+            value: string | number | boolean;
+            opportunities: number;
+            matches: number;
+        }>;
     };
 }
 
@@ -27,6 +37,16 @@ export interface LlmPatternInput {
     opportunities: number;
     matches: number;
     actionWindowMs: number;
+    triggerType?: string;
+    targetType?: string;
+    expectedAction?: boolean;
+    distinctDays?: number;
+    evidence?: Array<{
+        feature: string;
+        value: string | number | boolean;
+        opportunities: number;
+        matches: number;
+    }>;
 }
 
 export interface LlmProvider {

@@ -24,8 +24,13 @@ export class LlmService {
         );
     }
 
-    public analyze(pattern: LlmPatternInput, requestId: string, signal?: AbortSignal): Promise<LlmAnalysis> {
-        return this.provider.analyze(buildPatternDisclosure(pattern, requestId), signal);
+    public async analyze(pattern: LlmPatternInput, requestId: string, signal?: AbortSignal): Promise<LlmAnalysis> {
+        const analysis = await this.provider.analyze(buildPatternDisclosure(pattern, requestId), signal);
+        // The model may explain evidence, but cannot downgrade the automation risk of an immature relationship.
+        if (pattern.confidence < 0.58 || pattern.matches < 5 || (pattern.distinctDays ?? 0) < 3) {
+            return { ...analysis, riskLevel: 'high' };
+        }
+        return analysis;
     }
 
     /** Explicit, data-free provider/model/authentication check. Remote providers may bill one tiny request. */

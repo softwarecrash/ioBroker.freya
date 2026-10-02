@@ -11,10 +11,22 @@ import type {
     PendingOpportunity,
     PersistedPatternRecord,
 } from './types';
+import type { LlmPatternInput } from '../llm/types';
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const TRIGGER_TYPES = new Set(['motion', 'presence', 'contact', 'switch']);
 const NON_BEHAVIORAL_ORIGINS = new Set(['self', 'external-command', 'confirmation']);
+const ADVISORY_FEATURES = [
+    'room.illuminanceBand',
+    'sun.elevationBand',
+    'sun.sunsetOffset',
+    'sun.sunriseOffset',
+    'time.halfHour',
+    'time.weekend',
+    'environment.illuminanceBand',
+    'environment.temperatureBand',
+    'presence.home',
+] as const;
 
 interface CandidateRecord {
     trigger: LearnableState;
@@ -111,6 +123,53 @@ export class PatternEngine {
         return [...this.records.entries()]
             .map(([key, record]) => this.toPattern(key, record, now))
             .sort((left, right) => right.confidence - left.confidence || left.id.localeCompare(right.id));
+    }
+
+    /** Summarize bounded, non-identifying context evidence for a selected advisory analysis. */
+    public advisoryEvidence(
+        patternId: string,
+    ):
+        | Pick<LlmPatternInput, 'triggerType' | 'targetType' | 'expectedAction' | 'distinctDays' | 'evidence'>
+        | undefined {
+        const record = [...this.records.entries()].find(([key]) => this.patternId(key) === patternId)?.[1];
+        if (!record) {
+            return undefined;
+        }
+        const evidence: NonNullable<LlmPatternInput['evidence']> = [];
+        for (const feature of ADVISORY_FEATURES) {
+            const buckets = new Map<string, NonNullable<LlmPatternInput['evidence']>[number]>();
+            for (const example of record.examples) {
+                const raw = example.features.values[feature];
+                if (raw === undefined) {
+                    continue;
+                }
+                const value =
+                    (feature === 'sun.sunsetOffset' || feature === 'sun.sunriseOffset') && typeof raw === 'number'
+                        ? Math.round(raw / 30) * 30
+                        : raw;
+                if (typeof value === 'string' && !/^[a-z0-9_-]{1,30}$/i.test(value)) {
+                    continue;
+                }
+                const key = `${typeof value}:${String(value)}`;
+                const bucket = buckets.get(key) ?? { feature, value, opportunities: 0, matches: 0 };
+                bucket.opportunities++;
+                bucket.matches += Number(example.matched);
+                buckets.set(key, bucket);
+            }
+            evidence.push(
+                ...[...buckets.values()]
+                    .filter(bucket => bucket.opportunities >= 5)
+                    .sort((a, b) => b.matches - a.matches || b.opportunities - a.opportunities)
+                    .slice(0, 3),
+            );
+        }
+        return {
+            triggerType: record.trigger.semanticType,
+            targetType: record.action.semanticType,
+            expectedAction: record.expectedAction,
+            distinctDays: new Set(record.examples.map(example => Math.floor(example.timestamp / DAY_MS))).size,
+            evidence: evidence.slice(0, 20),
+        };
     }
 
     public summary(now = Date.now()): PatternSummary {

@@ -68,6 +68,30 @@ describe('LLM advisory boundary', () => {
         });
     });
 
+    it('includes aggregate context evidence but excludes room names from selected conditions', () => {
+        const enriched = buildPatternDisclosure(
+            {
+                ...suggestion(),
+                conditions: [
+                    { feature: 'location.room', value: 'Private Room Name' },
+                    { feature: 'room.illuminanceBand', value: 'dark' },
+                ],
+                triggerType: 'presence',
+                targetType: 'light',
+                distinctDays: 4,
+                evidence: [
+                    { feature: 'room.illuminanceBand', value: 'dark', opportunities: 30, matches: 12 },
+                    { feature: 'room.illuminanceBand', value: 'dim', opportunities: 25, matches: 0 },
+                ],
+            },
+            'request-2',
+        );
+        expect(JSON.stringify(enriched)).not.to.contain('Private Room Name');
+        expect(enriched.pattern.conditions).to.deep.equal([{ feature: 'room.illuminanceBand', value: 'dark' }]);
+        expect(enriched.pattern.evidence).to.have.length(2);
+        expect(enriched.pattern.triggerType).to.equal('presence');
+    });
+
     it('strictly rejects executable or malformed response fields', () => {
         expect(() => parseLlmAnalysis({ ...analysis, targetStateId: 'state.0.target', value: true })).to.throw(
             'llm_response_schema_invalid',
@@ -116,6 +140,14 @@ describe('LLM advisory boundary', () => {
             external: false,
             endpointOrigin: undefined,
         });
+    });
+
+    it('cannot report low automation risk for an immature learned relationship', async () => {
+        const transport = new RecordingTransport({ response: JSON.stringify(analysis) });
+        const service = new LlmService(new OllamaLlmProvider(transport, 'http://127.0.0.1:11434', 'gemma3', 5_000));
+        const result = await service.analyze({ ...suggestion(), confidence: 0.16, distinctDays: 4 }, 'request-3');
+        expect(result.riskLevel).to.equal('high');
+        expect(result.summary).to.equal(analysis.summary);
     });
 
     it('uses local-only non-streaming structured Ollama requests', async () => {

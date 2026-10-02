@@ -2,11 +2,12 @@ import type { DisclosurePreview, LlmPatternDisclosure, LlmPatternInput, LlmProvi
 
 /** Build an allow-listed payload with no state IDs, names, raw values or person data. */
 export function buildPatternDisclosure(pattern: LlmPatternInput, requestId: string): LlmPatternDisclosure {
+    const conditions = pattern.conditions.filter(condition => condition.feature !== 'location.room').slice(0, 3);
     return {
         requestId: requestId.slice(0, 80),
         pattern: {
-            conditionCount: pattern.conditions.length,
-            conditions: pattern.conditions.slice(0, 3).map(condition => ({
+            conditionCount: conditions.length,
+            conditions: conditions.map(condition => ({
                 feature: condition.feature,
                 value: condition.value,
             })),
@@ -15,6 +16,11 @@ export function buildPatternDisclosure(pattern: LlmPatternInput, requestId: stri
             matches: Math.max(0, Math.min(100_000, pattern.matches)),
             actionWindowSeconds: Math.max(1, Math.min(3_600, Math.round(pattern.actionWindowMs / 1_000))),
             roomCount: Math.min(pattern.rooms.length, 20),
+            ...(pattern.triggerType ? { triggerType: pattern.triggerType } : {}),
+            ...(pattern.targetType ? { targetType: pattern.targetType } : {}),
+            ...(typeof pattern.expectedAction === 'boolean' ? { expectedAction: pattern.expectedAction } : {}),
+            ...(typeof pattern.distinctDays === 'number' ? { distinctDays: Math.min(pattern.distinctDays, 365) } : {}),
+            ...(pattern.evidence?.length ? { evidence: pattern.evidence.slice(0, 20) } : {}),
         },
     };
 }
@@ -38,6 +44,11 @@ export function disclosurePreview(
             'pattern.matches',
             'pattern.actionWindowSeconds',
             'pattern.roomCount',
+            'pattern.triggerType',
+            'pattern.targetType',
+            'pattern.expectedAction',
+            'pattern.distinctDays',
+            'pattern.evidence',
         ],
         payload,
     };
