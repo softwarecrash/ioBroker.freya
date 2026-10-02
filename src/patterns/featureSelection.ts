@@ -19,7 +19,14 @@ const REDUNDANT_GROUPS: PatternFeatureKey[][] = [
 ];
 
 function matches(example: PatternExample, conditions: PatternCondition[]): boolean {
-    return conditions.every(condition => example.features.values[condition.feature] === condition.value);
+    return conditions.every(condition => matchesCondition(example, condition));
+}
+
+export function matchesCondition(example: PatternExample, condition: PatternCondition): boolean {
+    const raw = example.features.values[condition.feature];
+    return condition.bucketMinutes === 30 && typeof raw === 'number'
+        ? Math.round(raw / 30) * 30 === condition.value
+        : raw === condition.value;
 }
 
 function rate(examples: PatternExample[]): number {
@@ -71,7 +78,12 @@ function atomKey(feature: PatternFeatureKey, value: PatternFeatureValue): string
 /** Select the smallest deterministic condition set that improves held-out prediction. */
 export function selectPatternFeatures(
     examples: PatternExample[],
-    options: { minimumBranchSupport?: number; minimumImprovement?: number; maximumConditions?: number } = {},
+    options: {
+        minimumBranchSupport?: number;
+        minimumImprovement?: number;
+        maximumConditions?: number;
+        extraCondition?: PatternCondition;
+    } = {},
 ): PatternSelection {
     if (examples.length < 8) {
         return { ...DEFAULT_SELECTION };
@@ -95,6 +107,14 @@ export function selectPatternFeatures(
             }
         }
     }
+    if (options.extraCondition) {
+        const condition = options.extraCondition;
+        const key = `${atomKey(condition.feature, condition.value)}:bucket${condition.bucketMinutes ?? 0}`;
+        atoms.set(key, {
+            condition,
+            positiveSupport: training.filter(example => example.matched && matchesCondition(example, condition)).length,
+        });
+    }
     const minimumSupport = options.minimumBranchSupport ?? 3;
     const minimumImprovement = options.minimumImprovement ?? 0.025;
     const candidates = combinations(
@@ -102,6 +122,8 @@ export function selectPatternFeatures(
             .filter(atom => atom.positiveSupport >= minimumSupport)
             .sort(
                 (left, right) =>
+                    Number(right.condition === options.extraCondition) -
+                        Number(left.condition === options.extraCondition) ||
                     right.positiveSupport - left.positiveSupport ||
                     atomKey(left.condition.feature, left.condition.value).localeCompare(
                         atomKey(right.condition.feature, right.condition.value),

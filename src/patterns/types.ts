@@ -22,6 +22,7 @@ export interface PatternFeatures {
 export interface PatternCondition {
     feature: PatternFeatureKey;
     value: PatternFeatureValue;
+    bucketMinutes?: 30;
 }
 
 export interface PatternExample {
@@ -42,6 +43,14 @@ export interface PersistedPatternRecord {
     positiveFeedback: number;
     negativeFeedback: number;
     expectedAction: boolean;
+    llmHypothesis?: PatternHypothesis;
+    llmFinding?: { summary: string; analyzedAt: number };
+}
+
+export interface PatternHypothesis {
+    feature: PatternFeatureKey;
+    value: PatternFeatureValue;
+    createdAt: number;
 }
 
 export interface LearnableState {

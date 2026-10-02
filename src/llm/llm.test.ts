@@ -54,7 +54,7 @@ class RecordingTransport implements JsonHttpTransport {
 
 describe('LLM advisory boundary', () => {
     const disclosure = buildPatternDisclosure(suggestion(), 'request-1');
-    const analysis = { summary: 'A bounded explanation.', riskLevel: 'low', concerns: [] };
+    const analysis = { summary: 'A bounded explanation.', riskLevel: 'low', concerns: [], hypothesis: null };
 
     it('discloses only allow-listed aggregate pattern data', () => {
         const serialized = JSON.stringify(disclosure);
@@ -100,6 +100,30 @@ describe('LLM advisory boundary', () => {
         expect(() => parseLlmAnalysis('{private remote text')).to.throw('llm_response_json_invalid');
         const parsed = parseLlmAnalysis(analysis);
         expect(parsed).not.to.have.any.keys('targetStateId', 'value', 'execute', 'approved');
+        expect(() =>
+            parseLlmAnalysis({
+                ...analysis,
+                hypothesis: { feature: 'room.illuminanceBand', value: 'dark', target: 'light' },
+            }),
+        ).to.throw('llm_response_schema_invalid');
+    });
+
+    it('accepts a test hypothesis only when it names an actual disclosed evidence bucket', async () => {
+        const response = { ...analysis, hypothesis: { feature: 'room.illuminanceBand', value: 'dark' } };
+        const service = new LlmService(
+            new OllamaLlmProvider(
+                new RecordingTransport({ response: JSON.stringify(response) }),
+                'http://127.0.0.1:11434',
+                'gemma3',
+                5_000,
+            ),
+        );
+        const pattern = {
+            ...suggestion(),
+            evidence: [{ feature: 'room.illuminanceBand', value: 'dark', opportunities: 20, matches: 8 }],
+        };
+        expect((await service.analyze(pattern, 'request-4')).hypothesis).to.deep.equal(response.hypothesis);
+        expect((await service.analyze({ ...pattern, evidence: [] }, 'request-5')).hypothesis).to.equal(null);
     });
 
     it('bounds transport responses and normalizes invalid JSON', async () => {

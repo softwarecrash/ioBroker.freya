@@ -420,8 +420,12 @@ only aggregate evidence and semantic condition values, never state IDs, room nam
 raw values, person data, prior explanations, or secrets. The exact payload and endpoint
 origin are previewable before transmission.
 
-Responses validate against a closed schema containing only `summary`, `riskLevel`, and
-bounded `concerns`. Extra keys invalidate the complete response. The LLM modules import
+Responses validate against a closed schema containing only `summary`, `riskLevel`,
+bounded `concerns`, and one nullable evidence-backed hypothesis. A hypothesis is
+persisted with its pattern and tested only on subsequent observations. It may enter
+feature selection only after prospective support and the regular held-out improvement
+checks; it never changes permissions or bypasses pattern confidence thresholds. Extra
+keys invalidate the complete response. The LLM modules import
 neither the Action Executor nor its request types; advisory output cannot authorize,
 target, parameterize, or execute an action. External calls occur only through an
 explicit Admin command, have time and response-size bounds, are cancelled on shutdown,

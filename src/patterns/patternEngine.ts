@@ -2,11 +2,13 @@ import { createHash } from 'node:crypto';
 import type { Observation } from '../observation/types';
 import { calculateConfidence } from './confidence';
 import { extractPatternFeatures } from './features';
-import { selectPatternFeatures } from './featureSelection';
+import { matchesCondition, selectPatternFeatures } from './featureSelection';
 import type {
     LearnableState,
     LearnedPattern,
     PatternExample,
+    PatternCondition,
+    PatternHypothesis,
     PatternSummary,
     PendingOpportunity,
     PersistedPatternRecord,
@@ -38,6 +40,8 @@ interface CandidateRecord {
     positiveFeedback: number;
     negativeFeedback: number;
     expectedAction: boolean;
+    llmHypothesis?: PatternHypothesis;
+    llmFinding?: { summary: string; analyzedAt: number };
 }
 
 export interface PatternEngineOptions {
@@ -172,6 +176,96 @@ export class PatternEngine {
         };
     }
 
+    /** The model requests a test; only future independent observations can validate it. */
+    public setLlmHypothesis(
+        patternId: string,
+        hypothesis: Omit<PatternHypothesis, 'createdAt'>,
+        now = Date.now(),
+    ): boolean {
+        const record = [...this.records.entries()].find(([key]) => this.patternId(key) === patternId)?.[1];
+        if (!record || !ADVISORY_FEATURES.some(feature => feature === hypothesis.feature)) {
+            return false;
+        }
+        if (record.llmHypothesis?.feature === hypothesis.feature && record.llmHypothesis.value === hypothesis.value) {
+            return true;
+        }
+        record.llmHypothesis = { ...hypothesis, createdAt: now };
+        return true;
+    }
+
+    public setLlmFinding(patternId: string, summary: string, now = Date.now()): boolean {
+        const record = [...this.records.entries()].find(([key]) => this.patternId(key) === patternId)?.[1];
+        if (!record || !summary.trim()) {
+            return false;
+        }
+        record.llmFinding = { summary: summary.trim().slice(0, 500), analyzedAt: now };
+        return true;
+    }
+
+    public llmFinding(patternId: string): string | undefined {
+        const record = [...this.records.entries()].find(([key]) => this.patternId(key) === patternId)?.[1];
+        return record?.llmFinding?.summary;
+    }
+
+    public hypothesisStatus(patternId: string): string {
+        const record = [...this.records.entries()].find(([key]) => this.patternId(key) === patternId)?.[1];
+        const hypothesis = record?.llmHypothesis;
+        if (!record || !hypothesis) {
+            return '—';
+        }
+        const recent = record.examples.filter(example => example.timestamp > hypothesis.createdAt);
+        const selected = recent.filter(example => this.matchesHypothesis(example, hypothesis));
+        const matches = selected.filter(example => example.matched).length;
+        const days = new Set(selected.map(example => Math.floor(example.timestamp / DAY_MS))).size;
+        const baseline = recent.length ? recent.filter(example => example.matched).length / recent.length : 0;
+        const branch = selected.length ? matches / selected.length : 0;
+        const label = `${hypothesis.feature} = ${String(hypothesis.value)}: ${matches}/${selected.length} (${recent.length} neu)`;
+        if (recent.length < 20 || selected.length < 8 || days < 3) {
+            return `Prüfung läuft · ${label}`;
+        }
+        return branch >= baseline + 0.15 && matches >= 5 ? `Bestätigt · ${label}` : `Nicht bestätigt · ${label}`;
+    }
+
+    private matchesHypothesis(example: PatternExample, hypothesis: PatternHypothesis): boolean {
+        const raw = example.features.values[hypothesis.feature];
+        const value =
+            (hypothesis.feature === 'sun.sunsetOffset' || hypothesis.feature === 'sun.sunriseOffset') &&
+            typeof raw === 'number'
+                ? Math.round(raw / 30) * 30
+                : raw;
+        return value === hypothesis.value;
+    }
+
+    private validatedHypothesis(record: CandidateRecord): PatternCondition | undefined {
+        const hypothesis = record.llmHypothesis;
+        if (!hypothesis) {
+            return undefined;
+        }
+        const recent = record.examples.filter(example => example.timestamp > hypothesis.createdAt);
+        const selected = recent.filter(example => this.matchesHypothesis(example, hypothesis));
+        const days = new Set(selected.map(example => Math.floor(example.timestamp / DAY_MS))).size;
+        if (
+            recent.length < 20 ||
+            selected.length < 8 ||
+            days < 3 ||
+            selected.filter(example => example.matched).length < 5
+        ) {
+            return undefined;
+        }
+        const baseline = recent.filter(example => example.matched).length / recent.length;
+        const branch = selected.filter(example => example.matched).length / selected.length;
+        if (branch < baseline + 0.15) {
+            return undefined;
+        }
+        return {
+            feature: hypothesis.feature,
+            value: hypothesis.value,
+            ...(hypothesis.feature === 'sun.sunsetOffset' || hypothesis.feature === 'sun.sunriseOffset'
+                ? { bucketMinutes: 30 as const }
+                : {}),
+        };
+    }
+
     public summary(now = Date.now()): PatternSummary {
         const patterns = this.patterns(now);
         return {
@@ -206,6 +300,8 @@ export class PatternEngine {
             record.lastSeen = timestamp;
             record.positiveFeedback = 0;
             record.negativeFeedback = 0;
+            record.llmHypothesis = undefined;
+            record.llmFinding = undefined;
             this.pending.delete(key);
             this.lastEvaluationTimestamp = Math.max(this.lastEvaluationTimestamp, timestamp);
             return true;
@@ -243,6 +339,8 @@ export class PatternEngine {
             positiveFeedback: record.positiveFeedback,
             negativeFeedback: record.negativeFeedback,
             expectedAction: record.expectedAction,
+            ...(record.llmHypothesis ? { llmHypothesis: { ...record.llmHypothesis } } : {}),
+            ...(record.llmFinding ? { llmFinding: { ...record.llmFinding } } : {}),
         }));
     }
 
@@ -280,6 +378,8 @@ export class PatternEngine {
                 positiveFeedback: Math.max(0, Math.min(persisted.positiveFeedback, 1_000)),
                 negativeFeedback: Math.max(0, Math.min(persisted.negativeFeedback, 1_000)),
                 expectedAction: persisted.expectedAction,
+                llmHypothesis: persisted.llmHypothesis ? { ...persisted.llmHypothesis } : undefined,
+                llmFinding: persisted.llmFinding ? { ...persisted.llmFinding } : undefined,
             });
             this.lastEvaluationTimestamp = Math.max(this.lastEvaluationTimestamp, persisted.lastSeen);
             restored++;
@@ -391,12 +491,10 @@ export class PatternEngine {
     }
 
     private toPattern(key: string, record: CandidateRecord, now: number): LearnedPattern {
-        const selection = selectPatternFeatures(record.examples);
+        const selection = selectPatternFeatures(record.examples, { extraCondition: this.validatedHypothesis(record) });
         const selectedExamples = selection.conditions.length
             ? record.examples.filter(example =>
-                  selection.conditions.every(
-                      condition => example.features.values[condition.feature] === condition.value,
-                  ),
+                  selection.conditions.every(condition => matchesCondition(example, condition)),
               )
             : record.examples;
         const matches = selectedExamples.filter(example => example.matched).length;

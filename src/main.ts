@@ -40,6 +40,7 @@ import {
 import { ObservationEngine } from './observation/observationEngine';
 import type { ObservationMetadata } from './observation/types';
 import { PatternEngine } from './patterns/patternEngine';
+import type { PatternFeatureKey } from './patterns/types';
 import { observationTriggersSuggestion, type ContextStateDescriptor } from './patterns/matching';
 import { LearningRepository, type LearningSnapshot } from './persistence/learningRepository';
 import { DiscoveryCoordinator } from './services/discoveryCoordinator';
@@ -720,6 +721,7 @@ class FreyaAdapter extends utils.Adapter {
                         ['action', 'Action'],
                         ['confidence', 'Confidence'],
                         ['evidence', 'Evidence'],
+                        ['hypothesis', 'LLM-Hypothese'],
                         ['explanation', 'Explanation'],
                     ]),
                 },
@@ -932,8 +934,29 @@ class FreyaAdapter extends utils.Adapter {
             this.llmControllers.add(controller);
             try {
                 const analysis = await this.llmService.analyze(pattern, requestId, controller.signal);
+                const findingSaved = this.patternEngine?.setLlmFinding(patternId, analysis.summary);
+                const hypothesisAccepted =
+                    analysis.hypothesis &&
+                    this.patternEngine?.setLlmHypothesis(
+                        patternId,
+                        analysis.hypothesis as { feature: PatternFeatureKey; value: string | number | boolean },
+                    );
+                if (findingSaved || hypothesisAccepted) {
+                    this.scheduleLearningSave();
+                }
                 await this.setOwnState('llm.lastResult', JSON.stringify({ requestId, ...analysis }).slice(0, 2_000));
-                this.sendTo(message.from, message.command, { requestId, analysis }, message.callback);
+                this.sendTo(
+                    message.from,
+                    message.command,
+                    {
+                        requestId,
+                        analysis,
+                        hypothesisStatus: hypothesisAccepted
+                            ? this.patternEngine?.hypothesisStatus(patternId)
+                            : 'Keine prüfbare Hypothese',
+                    },
+                    message.callback,
+                );
             } catch (error) {
                 const rawCode = (error as Error).message;
                 const errorCode = /^llm_[a-z0-9_]+$/.test(rawCode) ? rawCode : 'llm_failed';
@@ -1354,6 +1377,10 @@ class FreyaAdapter extends utils.Adapter {
                 action: String(pattern.expectedAction),
                 confidence: `${Math.round(pattern.confidence * 100)} %`,
                 evidence: `${pattern.matches}/${pattern.opportunities} · ${pattern.distinctDays} d`,
+                hypothesis:
+                    [this.patternEngine?.llmFinding(pattern.id), this.patternEngine?.hypothesisStatus(pattern.id)]
+                        .filter(value => value && value !== '—')
+                        .join('\n') || '—',
                 explanation: pattern.explanation.slice(0, 2_000),
             };
         });
@@ -1368,6 +1395,10 @@ class FreyaAdapter extends utils.Adapter {
                 action: String(suggestion.expectedAction),
                 confidence: `${Math.round(suggestion.confidence * 100)} %`,
                 evidence: `${suggestion.matches}/${suggestion.opportunities}`,
+                hypothesis:
+                    [this.patternEngine?.llmFinding(suggestion.id), this.patternEngine?.hypothesisStatus(suggestion.id)]
+                        .filter(value => value && value !== '—')
+                        .join('\n') || '—',
                 explanation: suggestion.explanation.slice(0, 2_000),
             });
         }
@@ -1409,7 +1440,7 @@ class FreyaAdapter extends utils.Adapter {
                 const cells = columns
                     .map(
                         ([key]) =>
-                            `<td style="padding:8px;vertical-align:top;border-bottom:1px solid rgba(127,127,127,.3);overflow-wrap:anywhere">${escape(row[key])}</td>`,
+                            `<td style="padding:8px;vertical-align:top;border-bottom:1px solid rgba(127,127,127,.3);overflow-wrap:anywhere;white-space:pre-line">${escape(row[key])}</td>`,
                     )
                     .join('');
                 return `<tr>${cells}</tr>`;

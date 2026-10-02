@@ -235,11 +235,16 @@ for a remote provider it performs one small model request and may therefore be b
 The payload contains bounded per-context opportunity and match counts, aggregate evidence,
 and selected semantic context features, but no state IDs, room names, raw values, person
 data, or API key. The model is asked for a German evidence-based explanation and concrete
-data gaps; its result is advisory and does not retrain or approve a pattern. Low-confidence
+data gaps. It can also name one context bucket already present in the disclosed evidence
+as a hypothesis. Freya stores the finding with the pattern, tests that hypothesis against
+observations arriving after the analysis, shows the result in the Patterns view, and may include a validated condition
+in its normal held-out feature selection. The model cannot directly change a rule,
+approve a proposal, or grant action permission. Low-confidence
 or immature relationships always retain a high automation-risk rating regardless of the
 model's answer. Keys are declared both
 protected and encrypted native configuration. Responses are size/time bounded and
-must contain exactly a short summary, risk level, and bounded concerns. Extra fields,
+must contain exactly a short summary, risk level, bounded concerns, and a nullable
+evidence-backed hypothesis. Extra fields,
 including targets, values, approval, or execution instructions, invalidate the entire
 response. The LLM layer has no dependency on or route into the Action Executor.
 

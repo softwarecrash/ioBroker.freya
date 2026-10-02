@@ -58,6 +58,7 @@ export class RulesOnlyLlmProvider implements LlmProvider {
             summary: `The pattern matched ${pattern.matches} of ${pattern.opportunities} opportunities with ${percent}% confidence and ${pattern.conditionCount} selected context conditions.`,
             riskLevel: pattern.confidence >= 0.8 ? 'low' : pattern.confidence >= 0.65 ? 'medium' : 'high',
             concerns: pattern.opportunities < 20 ? ['Evidence is still limited.'] : [],
+            hypothesis: null,
         });
     }
 }

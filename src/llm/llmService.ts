@@ -26,11 +26,19 @@ export class LlmService {
 
     public async analyze(pattern: LlmPatternInput, requestId: string, signal?: AbortSignal): Promise<LlmAnalysis> {
         const analysis = await this.provider.analyze(buildPatternDisclosure(pattern, requestId), signal);
+        // A model may only request a prospective test of a bucket actually disclosed for this pattern.
+        const hypothesis =
+            analysis.hypothesis &&
+            pattern.evidence?.some(
+                row => row.feature === analysis.hypothesis?.feature && row.value === analysis.hypothesis.value,
+            )
+                ? analysis.hypothesis
+                : null;
         // The model may explain evidence, but cannot downgrade the automation risk of an immature relationship.
         if (pattern.confidence < 0.58 || pattern.matches < 5 || (pattern.distinctDays ?? 0) < 3) {
-            return { ...analysis, riskLevel: 'high' };
+            return { ...analysis, hypothesis, riskLevel: 'high' };
         }
-        return analysis;
+        return { ...analysis, hypothesis };
     }
 
     /** Explicit, data-free provider/model/authentication check. Remote providers may bill one tiny request. */

@@ -82,6 +82,18 @@ function validPattern(value: unknown): value is PersistedPatternRecord {
         finite(record.lastSeen) &&
         finite(record.positiveFeedback) &&
         finite(record.negativeFeedback) &&
+        (record.llmHypothesis === undefined ||
+            (typeof record.llmHypothesis === 'object' &&
+                FEATURE_KEYS.has(record.llmHypothesis.feature) &&
+                record.llmHypothesis.feature !== 'location.room' &&
+                featureValue(record.llmHypothesis.value) &&
+                finite(record.llmHypothesis.createdAt))) &&
+        (record.llmFinding === undefined ||
+            (record.llmFinding !== null &&
+                typeof record.llmFinding === 'object' &&
+                typeof record.llmFinding.summary === 'string' &&
+                record.llmFinding.summary.length <= 500 &&
+                finite(record.llmFinding.analyzedAt))) &&
         typeof record.expectedAction === 'boolean'
     );
 }
@@ -109,7 +121,10 @@ function validSuggestion(value: unknown): value is PatternSuggestion {
                 typeof condition === 'object' &&
                 condition !== null &&
                 FEATURE_KEYS.has(condition.feature) &&
-                featureValue(condition.value),
+                featureValue(condition.value) &&
+                (condition.bucketMinutes === undefined ||
+                    (condition.bucketMinutes === 30 &&
+                        ['sun.sunsetOffset', 'sun.sunriseOffset'].includes(condition.feature))),
         ) &&
         finite(suggestion.opportunities) &&
         finite(suggestion.matches) &&
@@ -168,6 +183,8 @@ function copySnapshot(snapshot: LearningSnapshot): LearningSnapshot {
                 ...example,
                 features: { values: { ...example.features.values } },
             })),
+            ...(pattern.llmHypothesis ? { llmHypothesis: { ...pattern.llmHypothesis } } : {}),
+            ...(pattern.llmFinding ? { llmFinding: { ...pattern.llmFinding } } : {}),
         })),
         suggestions: snapshot.suggestions.map(suggestion => ({
             ...suggestion,

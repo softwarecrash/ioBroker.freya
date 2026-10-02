@@ -1,6 +1,7 @@
 import type { Observation } from '../observation/types';
 import type { PatternSuggestion } from '../suggestions/types';
 import { extractPatternFeatures } from './features';
+import { matchesCondition } from './featureSelection';
 import type { PatternCondition } from './types';
 
 export interface ContextStateDescriptor {
@@ -38,7 +39,7 @@ export function conditionsMatchSnapshot(
     descriptors: ContextStateDescriptor[],
 ): boolean {
     const features = extractPatternFeatures(context, rooms, localIlluminance(context?.states, rooms, descriptors));
-    return conditions.every(condition => features.values[condition.feature] === condition.value);
+    return conditions.every(condition => matchesCondition({ timestamp: 0, matched: false, features }, condition));
 }
 
 /** Match only a fresh behavioral trigger transition against an approved suggestion. */

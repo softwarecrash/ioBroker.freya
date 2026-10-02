@@ -44,6 +44,52 @@ function observation(
 }
 
 describe('PatternEngine', () => {
+    it('prospectively tests and persists an LLM hypothesis without granting control', () => {
+        const states = [
+            { id: 'sensor.motion', semanticType: 'motion' as const, valueType: 'boolean' as const, rooms: ['living'] },
+            { id: 'lamp.on', semanticType: 'light' as const, valueType: 'boolean' as const, rooms: ['living'] },
+        ];
+        const engine = new PatternEngine(states, { enabled: true });
+        const start = Date.UTC(2026, 0, 1);
+        const examples = Array.from({ length: 20 }, (_, index) => ({
+            timestamp: start + index * DAY_MS,
+            matched: index % 5 === 0,
+            features: { values: { 'sun.sunsetOffset': index % 2 ? 30 : -180 } },
+        }));
+        engine.restore([
+            {
+                key: 'sensor.motion\u0000lamp.on\u0000true',
+                triggerStateId: 'sensor.motion',
+                actionStateId: 'lamp.on',
+                rooms: ['living'],
+                examples,
+                firstSeen: start,
+                lastSeen: start + 19 * DAY_MS,
+                positiveFeedback: 0,
+                negativeFeedback: 0,
+                expectedAction: true,
+            },
+        ]);
+        const patternId = engine.patterns(start + 19 * DAY_MS)[0].id;
+        expect(
+            engine.setLlmHypothesis(patternId, { feature: 'sun.sunsetOffset', value: 30 }, start + 20 * DAY_MS),
+        ).to.equal(true);
+        expect(engine.hypothesisStatus(patternId)).to.contain('Prüfung läuft');
+        const saved = engine.snapshot();
+        expect(saved[0].llmHypothesis?.value).to.equal(30);
+        for (let index = 0; index < 30; index++) {
+            saved[0].examples.push({
+                timestamp: start + (21 + index) * DAY_MS,
+                matched: index % 2 === 0 && index < 24,
+                features: { values: { 'sun.sunsetOffset': index % 2 === 0 ? 15 : -180 } },
+            });
+        }
+        saved[0].lastSeen = start + 50 * DAY_MS;
+        const restored = new PatternEngine(states, { enabled: true });
+        restored.restore(saved);
+        expect(restored.hypothesisStatus(patternId)).to.contain('Bestätigt');
+        expect(restored.patterns(start + 50 * DAY_MS)[0].status).to.equal('learning');
+    });
     it('does not learn its own actions or generic external commands as user behavior', () => {
         const engine = new PatternEngine(
             [

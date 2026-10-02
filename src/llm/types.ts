@@ -27,6 +27,7 @@ export interface LlmAnalysis {
     summary: string;
     riskLevel: 'low' | 'medium' | 'high';
     concerns: string[];
+    hypothesis: { feature: string; value: string | number | boolean } | null;
 }
 
 /** Bounded statistical fields that may be sent to an advisory model; no state IDs or names. */
