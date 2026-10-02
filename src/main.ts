@@ -30,6 +30,7 @@ import { ActionRepository } from './feedback/actionRepository';
 import { FeedbackService } from './feedback/feedbackService';
 import { LlmService } from './llm/llmService';
 import { createLlmProvider } from './llm/providerFactory';
+import type { LlmPatternInput } from './llm/types';
 import {
     HistoryProviderDiscovery,
     IoBrokerHistoryInstanceSource,
@@ -901,15 +902,15 @@ class FreyaAdapter extends utils.Adapter {
         if (message.command === 'previewLlmDisclosure') {
             const input = this.messageInput(message.message);
             const patternId = typeof input.patternId === 'string' ? input.patternId : '';
-            const suggestion = /^[a-f0-9]{16}$/.test(patternId) ? this.suggestionService?.find(patternId) : undefined;
-            if (!suggestion || !this.llmService) {
+            const pattern = this.resolveLlmPattern(patternId);
+            if (!pattern || !this.llmService) {
                 this.sendTo(message.from, message.command, { error: 'pattern_not_found' }, message.callback);
                 return;
             }
             this.sendTo(
                 message.from,
                 message.command,
-                this.llmService.preview(suggestion, randomUUID()),
+                this.llmService.preview(pattern, randomUUID()),
                 message.callback,
             );
             return;
@@ -921,8 +922,8 @@ class FreyaAdapter extends utils.Adapter {
                 this.sendTo(message.from, message.command, { error: 'analysis_source_denied' }, message.callback);
                 return;
             }
-            const suggestion = /^[a-f0-9]{16}$/.test(patternId) ? this.suggestionService?.find(patternId) : undefined;
-            if (!suggestion || !this.llmService) {
+            const pattern = this.resolveLlmPattern(patternId);
+            if (!pattern || !this.llmService) {
                 this.sendTo(message.from, message.command, { error: 'pattern_not_found' }, message.callback);
                 return;
             }
@@ -930,7 +931,7 @@ class FreyaAdapter extends utils.Adapter {
             const controller = new AbortController();
             this.llmControllers.add(controller);
             try {
-                const analysis = await this.llmService.analyze(suggestion, requestId, controller.signal);
+                const analysis = await this.llmService.analyze(pattern, requestId, controller.signal);
                 await this.setOwnState('llm.lastResult', JSON.stringify({ requestId, ...analysis }).slice(0, 2_000));
                 this.sendTo(message.from, message.command, { requestId, analysis }, message.callback);
             } catch (error) {
@@ -1299,6 +1300,17 @@ class FreyaAdapter extends utils.Adapter {
 
     private messageInput(message: ioBroker.Message['message']): Record<string, unknown> {
         return typeof message === 'object' && message ? (message as Record<string, unknown>) : {};
+    }
+
+    /** Suggestions may be absent while a relationship is still collecting evidence; both are safe advisory inputs. */
+    private resolveLlmPattern(patternId: string): LlmPatternInput | undefined {
+        if (!/^[a-f0-9]{16}$/.test(patternId)) {
+            return undefined;
+        }
+        return (
+            this.suggestionService?.find(patternId) ??
+            this.patternEngine?.patterns().find(pattern => pattern.id === patternId)
+        );
     }
 
     private async publishSuggestionSummary(): Promise<void> {

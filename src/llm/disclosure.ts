@@ -1,21 +1,20 @@
-import type { PatternSuggestion } from '../suggestions/types';
-import type { DisclosurePreview, LlmPatternDisclosure, LlmProviderKind } from './types';
+import type { DisclosurePreview, LlmPatternDisclosure, LlmPatternInput, LlmProviderKind } from './types';
 
 /** Build an allow-listed payload with no state IDs, names, raw values or person data. */
-export function buildPatternDisclosure(suggestion: PatternSuggestion, requestId: string): LlmPatternDisclosure {
+export function buildPatternDisclosure(pattern: LlmPatternInput, requestId: string): LlmPatternDisclosure {
     return {
         requestId: requestId.slice(0, 80),
         pattern: {
-            conditionCount: suggestion.conditions.length,
-            conditions: suggestion.conditions.slice(0, 3).map(condition => ({
+            conditionCount: pattern.conditions.length,
+            conditions: pattern.conditions.slice(0, 3).map(condition => ({
                 feature: condition.feature,
                 value: condition.value,
             })),
-            confidence: Math.round(suggestion.confidence * 1_000) / 1_000,
-            opportunities: Math.max(0, Math.min(100_000, suggestion.opportunities)),
-            matches: Math.max(0, Math.min(100_000, suggestion.matches)),
-            actionWindowSeconds: Math.max(1, Math.min(3_600, Math.round(suggestion.actionWindowMs / 1_000))),
-            roomCount: Math.min(suggestion.rooms.length, 20),
+            confidence: Math.round(pattern.confidence * 1_000) / 1_000,
+            opportunities: Math.max(0, Math.min(100_000, pattern.opportunities)),
+            matches: Math.max(0, Math.min(100_000, pattern.matches)),
+            actionWindowSeconds: Math.max(1, Math.min(3_600, Math.round(pattern.actionWindowMs / 1_000))),
+            roomCount: Math.min(pattern.rooms.length, 20),
         },
     };
 }

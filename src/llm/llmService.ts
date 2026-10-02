@@ -1,6 +1,5 @@
-import type { PatternSuggestion } from '../suggestions/types';
 import { buildPatternDisclosure, disclosurePreview } from './disclosure';
-import type { DisclosurePreview, LlmAnalysis, LlmPatternDisclosure, LlmProvider } from './types';
+import type { DisclosurePreview, LlmAnalysis, LlmPatternDisclosure, LlmPatternInput, LlmProvider } from './types';
 
 export interface LlmConnectionResult {
     ok: true;
@@ -16,17 +15,17 @@ export class LlmService {
         private readonly endpointOrigin?: string,
     ) {}
 
-    public preview(suggestion: PatternSuggestion, requestId: string): DisclosurePreview {
+    public preview(pattern: LlmPatternInput, requestId: string): DisclosurePreview {
         return disclosurePreview(
             this.provider.kind,
-            buildPatternDisclosure(suggestion, requestId),
+            buildPatternDisclosure(pattern, requestId),
             this.provider.external,
             this.endpointOrigin,
         );
     }
 
-    public analyze(suggestion: PatternSuggestion, requestId: string, signal?: AbortSignal): Promise<LlmAnalysis> {
-        return this.provider.analyze(buildPatternDisclosure(suggestion, requestId), signal);
+    public analyze(pattern: LlmPatternInput, requestId: string, signal?: AbortSignal): Promise<LlmAnalysis> {
+        return this.provider.analyze(buildPatternDisclosure(pattern, requestId), signal);
     }
 
     /** Explicit, data-free provider/model/authentication check. Remote providers may bill one tiny request. */

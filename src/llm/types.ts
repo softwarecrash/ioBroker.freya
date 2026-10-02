@@ -19,6 +19,16 @@ export interface LlmAnalysis {
     concerns: string[];
 }
 
+/** Bounded statistical fields that may be sent to an advisory model; no state IDs or names. */
+export interface LlmPatternInput {
+    rooms: string[];
+    conditions: Array<{ feature: string; value: string | number | boolean }>;
+    confidence: number;
+    opportunities: number;
+    matches: number;
+    actionWindowMs: number;
+}
+
 export interface LlmProvider {
     readonly kind: LlmProviderKind;
     readonly external: boolean;
