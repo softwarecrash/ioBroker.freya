@@ -71,6 +71,7 @@ describe('runtime configuration', () => {
             llmTimeoutSeconds: 60,
         });
         expect(createRuntimeConfig({ llmProvider: 'unknown' }).llmProvider).to.equal('disabled');
+        expect(createRuntimeConfig({ llmProvider: 'ollama-remote' }).llmProvider).to.equal('ollama-remote');
     });
 
     it('bounds the feedback attribution window', () => {

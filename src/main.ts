@@ -138,7 +138,9 @@ class FreyaAdapter extends utils.Adapter {
             const endpointOrigin =
                 provider.kind === 'openai'
                     ? 'https://api.openai.com'
-                    : provider.kind === 'ollama' || provider.kind === 'openai-compatible'
+                    : provider.kind === 'ollama' ||
+                        provider.kind === 'ollama-remote' ||
+                        provider.kind === 'openai-compatible'
                       ? new URL(config.llmBaseUrl).origin
                       : undefined;
             this.llmService = new LlmService(provider, endpointOrigin);

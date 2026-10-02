@@ -871,6 +871,10 @@
                             "value": "ollama"
                         },
                         {
+                            "label": "Remote Ollama (HTTPS + Bearer)",
+                            "value": "ollama-remote"
+                        },
+                        {
                             "label": "OpenAI",
                             "value": "openai"
                         },
@@ -910,7 +914,7 @@
                 "llmBaseUrl": {
                     "type": "text",
                     "label": "Base URL",
-                    "help": "Ollama accepts loopback HTTP only; compatible remote providers require HTTPS",
+                    "help": "Local Ollama accepts loopback HTTP only. Remote Ollama and compatible remote providers require HTTPS.",
                     "newLine": true,
                     "xs": 12,
                     "sm": 8,

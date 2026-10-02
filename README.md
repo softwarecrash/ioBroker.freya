@@ -219,11 +219,12 @@ feedback records are persisted locally while the operational audit view stays bo
 
 ## Optional LLM advisory
 
-`Rules Only` is the local, network-free default; `Disabled` is also available. Ollama
-is restricted to the loopback interface. OpenAI uses the Responses endpoint with
-`store: false` and a strict JSON schema; an OpenAI-compatible provider uses HTTPS (or
-loopback HTTP) and the corresponding structured response format. Model names are
-always explicit and Freya does not silently substitute one. See the official
+`Rules Only` is the local, network-free default; `Disabled` is also available. Local
+Ollama is restricted to the loopback interface. `Remote Ollama` uses HTTPS only and
+requires a bearer token. OpenAI uses the Responses endpoint with `store: false` and a
+strict JSON schema; an OpenAI-compatible provider uses HTTPS (or loopback HTTP) and
+the corresponding structured response format. Model names are always explicit and
+Freya does not silently substitute one. See the official
 [OpenAI Responses API](https://developers.openai.com/api/reference/typescript/resources/beta/subresources/responses/methods/create)
 and [Ollama structured output documentation](https://docs.ollama.com/capabilities/structured-outputs).
 

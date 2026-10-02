@@ -29,6 +29,15 @@ function endpoint(base: string, path: string, localOnly: boolean): string {
     return url.toString();
 }
 
+/** A remote model endpoint must be TLS-protected even if it is reachable from a trusted LAN. */
+function remoteEndpoint(base: string, path: string): string {
+    const url = new URL(endpoint(base, path, false));
+    if (url.protocol !== 'https:') {
+        throw new Error('llm_endpoint_https_required');
+    }
+    return url.toString();
+}
+
 export class DisabledLlmProvider implements LlmProvider {
     public readonly kind = 'disabled';
     public readonly external = false;
@@ -92,6 +101,46 @@ export class OllamaLlmProvider extends RemoteLlmProvider {
                     options: { temperature: 0 },
                 },
                 {},
+                this.timeoutMs,
+                signal,
+            ),
+        );
+        return parseLlmAnalysis(response?.response);
+    }
+}
+
+/** HTTPS Ollama endpoint guarded by an explicit bearer token, intended for a remote host or gateway. */
+export class RemoteOllamaLlmProvider extends RemoteLlmProvider {
+    public readonly kind = 'ollama-remote';
+    public readonly external = true;
+    private readonly url: string;
+
+    public constructor(
+        transport: JsonHttpTransport,
+        baseUrl: string,
+        model: string,
+        timeoutMs: number,
+        private readonly apiKey: string,
+    ) {
+        super(transport, model, timeoutMs);
+        if (!apiKey) {
+            throw new Error('llm_api_key_missing');
+        }
+        this.url = remoteEndpoint(baseUrl, '/api/generate');
+    }
+
+    public async analyze(disclosure: LlmPatternDisclosure, signal?: AbortSignal): Promise<LlmAnalysis> {
+        const response = object(
+            await this.transport.post(
+                this.url,
+                {
+                    model: this.model,
+                    prompt: analysisPrompt(disclosure),
+                    stream: false,
+                    format: LLM_ANALYSIS_SCHEMA,
+                    options: { temperature: 0 },
+                },
+                { authorization: `Bearer ${this.apiKey}` },
                 this.timeoutMs,
                 signal,
             ),

@@ -69,6 +69,7 @@ export function createRuntimeConfig(config: Partial<ioBroker.AdapterConfig>): Ru
         'disabled',
         'rules',
         'ollama',
+        'ollama-remote',
         'openai',
         'openai-compatible',
     ]);

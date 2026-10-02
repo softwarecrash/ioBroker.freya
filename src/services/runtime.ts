@@ -59,7 +59,10 @@ export class FreyaRuntime {
         await this.port.setState('actions.executedCount', 0);
         await this.port.setState('actions.deniedCount', 0);
         await this.port.setState('llm.provider', this.config.llmProvider);
-        await this.port.setState('llm.external', ['openai', 'openai-compatible'].includes(this.config.llmProvider));
+        await this.port.setState(
+            'llm.external',
+            ['ollama-remote', 'openai', 'openai-compatible'].includes(this.config.llmProvider),
+        );
         await this.port.setState('llm.lastResult', 'none');
         await this.port.setState('feedback.pendingCount', 0);
         await this.port.setState('feedback.positiveCount', 0);

@@ -1,4 +1,4 @@
-export type LlmProviderKind = 'disabled' | 'rules' | 'ollama' | 'openai' | 'openai-compatible';
+export type LlmProviderKind = 'disabled' | 'rules' | 'ollama' | 'ollama-remote' | 'openai' | 'openai-compatible';
 
 export interface LlmPatternDisclosure {
     requestId: string;

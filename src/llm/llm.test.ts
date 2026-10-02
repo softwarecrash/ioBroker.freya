@@ -9,6 +9,7 @@ import {
     OllamaLlmProvider,
     OpenAiCompatibleLlmProvider,
     OpenAiLlmProvider,
+    RemoteOllamaLlmProvider,
     RulesOnlyLlmProvider,
 } from './providers';
 
@@ -128,6 +129,29 @@ describe('LLM advisory boundary', () => {
         expect(() => new OllamaLlmProvider(transport, 'http://192.168.1.2:11434', 'gemma3', 5_000)).to.throw(
             'llm_endpoint_not_local',
         );
+    });
+
+    it('uses HTTPS and bearer authentication for remote Ollama', async () => {
+        const transport = new RecordingTransport({ response: JSON.stringify(analysis) });
+        const provider = new RemoteOllamaLlmProvider(
+            transport,
+            'https://ollama.example.test/gateway',
+            'gemma3',
+            5_000,
+            'remote-secret',
+        );
+        expect(await provider.analyze(disclosure)).to.deep.equal(analysis);
+        expect(transport.calls[0]).to.include({
+            url: 'https://ollama.example.test/gateway/api/generate',
+            timeoutMs: 5_000,
+        });
+        expect(transport.calls[0].headers.authorization).to.equal('Bearer remote-secret');
+        expect(() => new RemoteOllamaLlmProvider(transport, 'http://localhost:11434', 'gemma3', 5_000, 'key')).to.throw(
+            'llm_endpoint_https_required',
+        );
+        expect(
+            () => new RemoteOllamaLlmProvider(transport, 'https://ollama.example.test', 'gemma3', 5_000, ''),
+        ).to.throw('llm_api_key_missing');
     });
 
     it('uses OpenAI Responses with protected auth, no storage and strict schema', async () => {

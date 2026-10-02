@@ -3,6 +3,7 @@ import { FetchJsonTransport, type JsonHttpTransport } from './httpTransport';
 import {
     DisabledLlmProvider,
     OllamaLlmProvider,
+    RemoteOllamaLlmProvider,
     OpenAiCompatibleLlmProvider,
     OpenAiLlmProvider,
     RulesOnlyLlmProvider,
@@ -22,6 +23,14 @@ export function createLlmProvider(
                 config.llmBaseUrl,
                 config.llmModel,
                 config.llmTimeoutSeconds * 1_000,
+            );
+        case 'ollama-remote':
+            return new RemoteOllamaLlmProvider(
+                transport,
+                config.llmBaseUrl,
+                config.llmModel,
+                config.llmTimeoutSeconds * 1_000,
+                config.llmApiKey,
             );
         case 'openai':
             return new OpenAiLlmProvider(
